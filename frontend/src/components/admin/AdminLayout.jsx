@@ -1,7 +1,7 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { companyInfo } from '../../data/mockData';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { createContext, useContext, useState, useCallback } from 'react';
+import { getUser, logout as apiLogout } from '../../api';
 import ConfirmModal from './ConfirmModal';
 import LoadingOverlay from './LoadingOverlay';
 import StatusModal from './StatusModal';
@@ -15,21 +15,31 @@ export function useAdminModal() {
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const path = location.pathname;
+  const user = getUser();
+
+  const handleLogout = () => {
+    apiLogout();
+    navigate('/admin/login');
+  };
 
   // Global modal state — rendered at root level, outside scrollable content
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
 
-  const executeAction = useCallback((action) => {
+  const executeAction = useCallback(async (action) => {
     setConfirm(p => ({ ...p, show: false }));
     setLoading(true);
-    setTimeout(() => {
-      if (action) action();
+    try {
+      if (action) await action();
       setLoading(false);
       setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' });
-    }, 1200);
+    } catch (err) {
+      setLoading(false);
+      setStatusM({ show: true, status: 'error', message: err.message || 'เกิดข้อผิดพลาด' });
+    }
   }, []);
 
   const showConfirm = useCallback((opts) => setConfirm({ show: true, ...opts }), []);
@@ -63,11 +73,11 @@ export default function AdminLayout() {
             <div className="d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
               <img src="/logo-white.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%' }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
               <div className="bg-primary rounded-3 align-items-center justify-content-center" style={{ width: 36, height: 36, display: 'none' }}>
-                <span className="text-white fw-bold" style={{ fontSize: '.85rem' }}>{companyInfo.name?.charAt(0) || 'S'}</span>
+                <span className="text-white fw-bold" style={{ fontSize: '.85rem' }}>S</span>
               </div>
             </div>
             <div>
-              <h6 className="m-0 fw-bold text-white" style={{ fontSize: '.85rem', lineHeight: 1.2 }}>{companyInfo.name}</h6>
+              <h6 className="m-0 fw-bold text-white" style={{ fontSize: '.85rem', lineHeight: 1.2 }}>SUSPENDED TECH</h6>
               <small style={{ fontSize: '.65rem', color: 'rgba(255,255,255,0.4)' }}>Admin Panel</small>
             </div>
           </div>
@@ -101,9 +111,12 @@ export default function AdminLayout() {
           </div>
 
           <div className="p-3 mt-auto border-top" style={{ borderColor: 'rgba(255,255,255,0.05) !important' }}>
-            <Link to="/" className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 rounded-3" style={{ padding: '8px', border: '1px solid rgba(255,255,255,0.15)', fontSize: '.78rem' }}>
+            <Link to="/" className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 mb-2" style={{ padding: '8px', border: '1px solid rgba(255,255,255,0.15)', fontSize: '.78rem' }}>
               <i className="bi bi-box-arrow-left"></i> กลับไปเว็บไซต์หลัก
             </Link>
+            <button onClick={handleLogout} className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 rounded-3" style={{ padding: '8px', fontSize: '.78rem' }}>
+              <i className="bi bi-power"></i> ออกจากระบบ
+            </button>
           </div>
         </div>
 
@@ -122,8 +135,8 @@ export default function AdminLayout() {
               </button>
               <div className="d-flex align-items-center gap-3 border-start ps-4">
                 <div className="text-end">
-                  <div className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>Admin User</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>ผู้ดูแลระบบสูงสุด</div>
+                  <div className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>{user?.displayName || 'Admin'}</div>
+                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>{user?.username || 'admin'}</div>
                 </div>
                 <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: 45, height: 45 }}>
                   <i className="bi bi-person-fill fs-4"></i>

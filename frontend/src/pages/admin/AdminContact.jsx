@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { companyInfo } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { companyAPI, contactAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
@@ -12,18 +12,23 @@ const mockMessages = [
 ];
 
 export default function AdminContact() {
-  const [info, setInfo] = useState(companyInfo);
-  const [messages, setMessages] = useState(mockMessages);
+  const [info, setInfo] = useState({});
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    companyAPI.get().then(d => setInfo(d)).catch(() => {});
+    contactAPI.listMessages().then(d => setMessages(d)).catch(() => {});
+  }, []);
   const [viewMsg, setViewMsg] = useState(null);
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'warning' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
 
-  const exec = useCallback((action) => { setConfirm(p=>({...p,show:false})); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
   const handleInfoChange = (e) => { setInfo(p => ({ ...p, [e.target.name]: e.target.value })); };
-  const saveInfo = () => { setConfirm({ show: true, type: 'info', title: 'บันทึก', message: 'บันทึกข้อมูลติดต่อ?', action: () => {} }); };
-  const openMsg = (msg) => { setViewMsg(msg); setMessages(p => p.map(m => m.id === msg.id ? { ...m, status: 'read' } : m)); };
-  const deleteMsg = (msg) => { setConfirm({ show: true, type: 'danger', title: 'ลบข้อความ', message: `ลบข้อความจาก "${msg.name}" ?`, action: () => { setMessages(p => p.filter(m => m.id !== msg.id)); setViewMsg(null); } }); };
+  const saveInfo = () => { setConfirm({ show: true, type: 'info', title: 'บันทึก', message: 'บันทึกข้อมูลติดต่อ?', action: async () => { const u = await companyAPI.update(info); setInfo(u); } }); };
+  const openMsg = (msg) => { setViewMsg(msg); contactAPI.updateMessage(msg.id, { status: 'read' }).catch(() => {}); setMessages(p => p.map(m => m.id === msg.id ? { ...m, status: 'read' } : m)); };
+  const deleteMsg = (msg) => { setConfirm({ show: true, type: 'danger', title: 'ลบข้อความ', message: `ลบข้อความจาก "${msg.name}" ?`, action: async () => { await contactAPI.deleteMessage(msg.id); setMessages(p => p.filter(m => m.id !== msg.id)); setViewMsg(null); } }); };
 
   return (
     <div className="anim d1">

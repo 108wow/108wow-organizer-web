@@ -1,8 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
-import { companyInfo } from '../../data/mockData';
+import { useState, useEffect } from 'react';
+import { companyAPI } from '../../api';
 
 export default function Navbar() {
   const { pathname } = useLocation();
+  const [companyInfo, setCompanyInfo] = useState({ name: 'SUSPENDED TECH', logoUrl: '' });
+
+  useEffect(() => {
+    companyAPI.get().then(d => { 
+      const newName = d.name || 'SUSPENDED TECH';
+      setCompanyInfo({ name: newName, logoUrl: d.logoUrl || '' }); 
+      document.title = newName;
+    }).catch(() => {});
+  }, []);
   const links = [
     { to: '/', label: 'HOME' },
     { to: '/about', label: 'ABOUT US' },
@@ -17,7 +27,13 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-custom fixed-top">
       <div className="container">
-        <Link className="navbar-brand" to="/">{companyInfo.name}</Link>
+        <Link className="navbar-brand" to="/">
+          {companyInfo.logoUrl ? (
+            <img src={companyInfo.logoUrl} alt={companyInfo.name} style={{ maxHeight: '40px', maxWidth: '200px' }} onError={e => e.target.style.display = 'none'} />
+          ) : (
+            companyInfo.name
+          )}
+        </Link>
         <button className="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
           <i className="bi bi-list text-white fs-4"></i>
         </button>

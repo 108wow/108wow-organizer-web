@@ -1,15 +1,23 @@
-import { useState, useCallback } from 'react';
-import { homeConfig, services } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { homeConfigAPI, serviceAPI } from '../../api';
+import ImageUploader from '../../components/admin/ImageUploader';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 
 export default function AdminHomeConfig() {
-  const [config, setConfig] = useState(homeConfig);
+  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersLimit: 6, aboutSection: {} });
+  const [allServices, setAllServices] = useState([]);
+
+  useEffect(() => {
+    homeConfigAPI.get().then(d => setConfig(d)).catch(() => {});
+    serviceAPI.list().then(d => setAllServices(d)).catch(() => {});
+  }, []);
+
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
-  const exec = useCallback((action) => { setConfirm(p=>({...p,show:false})); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleToggle = (key) => {
     setConfig(prev => ({ ...prev, [key]: !prev[key] }));
@@ -31,6 +39,38 @@ export default function AdminHomeConfig() {
     setConfig(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
   };
 
+  const handleAboutChange = (e) => {
+    const { name, value } = e.target;
+    setConfig(prev => ({ ...prev, aboutSection: { ...(prev.aboutSection || {}), [name]: value } }));
+  };
+
+  const handleAboutImage = (url) => {
+    setConfig(prev => ({ ...prev, aboutSection: { ...(prev.aboutSection || {}), image: url } }));
+  };
+
+  const handleListChange = (index, value) => {
+    setConfig(prev => {
+      const newList = [...(prev.aboutSection?.listItems || [])];
+      newList[index] = value;
+      return { ...prev, aboutSection: { ...prev.aboutSection, listItems: newList } };
+    });
+  };
+
+  const handleAddListItem = () => {
+    setConfig(prev => {
+      const newList = [...(prev.aboutSection?.listItems || []), ''];
+      return { ...prev, aboutSection: { ...prev.aboutSection, listItems: newList } };
+    });
+  };
+
+  const handleRemoveListItem = (index) => {
+    setConfig(prev => {
+      const newList = [...(prev.aboutSection?.listItems || [])];
+      newList.splice(index, 1);
+      return { ...prev, aboutSection: { ...prev.aboutSection, listItems: newList } };
+    });
+  };
+
   return (
     <div className="anim d1">
       <ConfirmModal show={confirm.show} type={confirm.type} title={confirm.title} message={confirm.message} onConfirm={()=>exec(confirm.action)} onCancel={()=>setConfirm(p=>({...p,show:false}))} />
@@ -42,7 +82,7 @@ export default function AdminHomeConfig() {
           <h3 className="fw-bold m-0 text-dark">จัดการส่วนประกอบหน้าแรก (Home Layout)</h3>
           <p className="text-muted m-0">เปิด/ปิด และกำหนดข้อมูลที่จะแสดงในแต่ละส่วนของหน้า Home</p>
         </div>
-        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: () => {} })}>
+        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
           <i className="bi bi-save"></i>บันทึกการตั้งค่า
         </button>
       </div>
@@ -54,16 +94,107 @@ export default function AdminHomeConfig() {
         <div className="card-body p-0">
           <ul className="list-group list-group-flush">
             {/* About Us */}
-            <li className="list-group-item px-4 py-3 d-flex justify-content-between align-items-center">
-              <div>
-                <div className="fw-bold text-dark d-flex align-items-center gap-2">
-                  <i className="bi bi-info-circle text-primary"></i> เกี่ยวกับเรา (About Us)
+            <li className="list-group-item px-4 py-3 flex-column align-items-stretch">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div className="fw-bold text-dark d-flex align-items-center gap-2">
+                    <i className="bi bi-info-circle text-primary"></i> เกี่ยวกับเรา (About Us)
+                  </div>
+                  <small className="text-muted">ส่วนแนะนำบริษัทด้านล่าง Hero Banner</small>
                 </div>
-                <small className="text-muted">ส่วนแนะนำบริษัทด้านล่าง Hero Banner</small>
+                <div className="form-check form-switch fs-4 m-0">
+                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showAbout} onChange={() => handleToggle('showAbout')} style={{ cursor: 'pointer' }} />
+                </div>
               </div>
-              <div className="form-check form-switch fs-4 m-0">
-                <input className="form-check-input" type="checkbox" role="switch" checked={config.showAbout} onChange={() => handleToggle('showAbout')} style={{ cursor: 'pointer' }} />
-              </div>
+
+              {config.showAbout && (
+                <div className="bg-light p-4 rounded-3 border">
+                  <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">ตั้งค่าเนื้อหา (เฉพาะหน้าแรก)</h6>
+                  <div className="row g-3">
+                    <div className="col-md-5">
+                      <ImageUploader 
+                        value={config.aboutSection?.image || ''} 
+                        onChange={handleAboutImage} 
+                        label="รูปภาพประกอบ" 
+                        recommendedSize="600x750px (แนวตั้ง 4:5 แบบโพลารอยด์)"
+                        aspectRatio={4/5}
+                      />
+                      <div className="admin-form-group mt-3">
+                        <label>วิดีโอ YouTube/Vimeo (ถ้ามี)</label>
+                        <input type="text" name="videoUrl" value={config.aboutSection?.videoUrl || ''} onChange={handleAboutChange} placeholder="วางลิงก์วิดีโอเพื่อแสดงปุ่ม Play บนรูป" />
+                      </div>
+                      
+                      <div className="row g-2 mt-2">
+                        <div className="col-6">
+                          <div className="admin-form-group">
+                            <label>ป้ายข้อความบน (เช่น เลข)</label>
+                            <input type="text" name="badgeTopText" value={config.aboutSection?.badgeTopText || ''} onChange={handleAboutChange} placeholder="14" />
+                          </div>
+                        </div>
+                        <div className="col-6">
+                          <div className="admin-form-group">
+                            <label>ป้ายข้อความล่าง</label>
+                            <input type="text" name="badgeBottomText" value={config.aboutSection?.badgeBottomText || ''} onChange={handleAboutChange} placeholder="ปีแห่งความสำเร็จ" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-7">
+                      <div className="admin-form-group">
+                        <label>หัวข้อหลัก (Title)</label>
+                        <input type="text" name="title" value={config.aboutSection?.title || ''} onChange={handleAboutChange} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>คำอธิบาย (Description)</label>
+                        <textarea name="description" rows="3" value={config.aboutSection?.description || ''} onChange={handleAboutChange} placeholder="ข้อความแนะนำบริษัท..."></textarea>
+                      </div>
+                      
+                      <div className="admin-form-group">
+                        <label className="d-flex justify-content-between align-items-center mb-2">
+                          รายการจุดเด่น (List Items)
+                          <button type="button" className="btn btn-sm btn-outline-primary" onClick={handleAddListItem}>
+                            <i className="bi bi-plus"></i> เพิ่มรายการ
+                          </button>
+                        </label>
+                        <div className="d-flex flex-column gap-2">
+                          {(config.aboutSection?.listItems || []).map((item, idx) => (
+                            <div key={idx} className="d-flex gap-2 align-items-center">
+                              <input 
+                                type="text" 
+                                className="form-control form-control-sm" 
+                                value={item} 
+                                onChange={(e) => handleListChange(idx, e.target.value)} 
+                                placeholder={`รายการที่ ${idx + 1}`} 
+                              />
+                              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleRemoveListItem(idx)}>
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          ))}
+                          {(!config.aboutSection?.listItems || config.aboutSection?.listItems.length === 0) && (
+                            <div className="text-muted small text-center bg-white border p-2 rounded">ยังไม่มีรายการ กดเพิ่มรายการด้านบน</div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="row g-2 mt-2">
+                        <div className="col-6">
+                          <div className="admin-form-group">
+                            <label>ข้อความปุ่ม CTA</label>
+                            <input type="text" name="buttonText" value={config.aboutSection?.buttonText || ''} onChange={handleAboutChange} placeholder="ติดต่อร่วมงานกับเรา" />
+                          </div>
+                        </div>
+                        <div className="col-6">
+                          <div className="admin-form-group">
+                            <label>ลิงก์ปุ่ม CTA</label>
+                            <input type="text" name="buttonLink" value={config.aboutSection?.buttonLink || ''} onChange={handleAboutChange} placeholder="/contact" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </li>
 
             {/* Services */}
@@ -83,7 +214,7 @@ export default function AdminHomeConfig() {
               {config.showServices && (
                 <div className="bg-light p-3 rounded-3 border">
                   <div className="row g-2">
-                    {services.map(svc => (
+                    {allServices.map(svc => (
                       <div key={svc.id} className="col-md-4">
                         <div className="form-check">
                           <input 

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { services as mockServices } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { serviceAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
@@ -16,8 +16,12 @@ const iconOptions = [
 const emptyForm = { title: '', description: '', icon: 'bi-code-slash', image: '', isActive: true };
 
 export default function AdminServices() {
-  const [items, setItems] = useState(mockServices.map(s => ({ ...s, isActive: true })));
+  const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    serviceAPI.list().then(data => setItems(data)).catch(() => {});
+  }, []);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
@@ -39,14 +43,17 @@ export default function AdminServices() {
   };
   const closeModal = () => { setShowModal(false); setEditId(null); setForm(emptyForm); };
 
-  const executeAction = useCallback((action) => {
+  const executeAction = useCallback(async (action) => {
     setConfirm(prev => ({ ...prev, show: false }));
     setLoading(true);
-    setTimeout(() => {
-      action();
+    try {
+      await action();
       setLoading(false);
       setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' });
-    }, 1200);
+    } catch (err) {
+      setLoading(false);
+      setStatus({ show: true, status: 'error', message: err.message || 'เกิดข้อผิดพลาด' });
+    }
   }, []);
 
   const handleSave = () => {
@@ -58,14 +65,19 @@ export default function AdminServices() {
       show: true, type: 'info',
       title: editId ? 'ยืนยันการแก้ไข' : 'ยืนยันการเพิ่มบริการ',
       message: editId ? `แก้ไขข้อมูลบริการ "${form.title}" ?` : `เพิ่มบริการ "${form.title}" ?`,
-      action: () => {
-        if (editId) {
-          setItems(prev => prev.map(item => item.id === editId ? { ...item, ...form } : item));
-        } else {
-          const newId = Math.max(...items.map(i => i.id), 0) + 1;
-          setItems(prev => [...prev, { id: newId, ...form }]);
+      action: async () => {
+        try {
+          if (editId) {
+            const updated = await serviceAPI.update(editId, form);
+            setItems(prev => prev.map(item => item.id === editId ? updated : item));
+          } else {
+            const created = await serviceAPI.create(form);
+            setItems(prev => [...prev, created]);
+          }
+          closeModal();
+        } catch (err) {
+          setStatus({ show: true, status: 'error', message: err.message });
         }
-        closeModal();
       }
     });
   };
@@ -75,7 +87,14 @@ export default function AdminServices() {
       show: true, type: 'danger',
       title: 'ยืนยันการลบ',
       message: `ลบบริการ "${item.title}" ออกจากระบบ? การกระทำนี้ไม่สามารถย้อนกลับได้`,
-      action: () => setItems(prev => prev.filter(i => i.id !== item.id))
+      action: async () => {
+        try {
+          await serviceAPI.delete(item.id);
+          setItems(prev => prev.filter(i => i.id !== item.id));
+        } catch (err) {
+          setStatus({ show: true, status: 'error', message: err.message });
+        }
+      }
     });
   };
 
@@ -84,7 +103,14 @@ export default function AdminServices() {
       show: true, type: 'warning',
       title: item.isActive ? 'ปิดการแสดงผล' : 'เปิดการแสดงผล',
       message: `${item.isActive ? 'ซ่อน' : 'แสดง'}บริการ "${item.title}" บนหน้าเว็บไซต์?`,
-      action: () => setItems(prev => prev.map(i => i.id === item.id ? { ...i, isActive: !i.isActive } : i))
+      action: async () => {
+        try {
+          const updated = await serviceAPI.update(item.id, { isActive: !item.isActive });
+          setItems(prev => prev.map(i => i.id === item.id ? updated : i));
+        } catch (err) {
+          setStatus({ show: true, status: 'error', message: err.message });
+        }
+      }
     });
   };
 

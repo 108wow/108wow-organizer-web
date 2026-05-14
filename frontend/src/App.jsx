@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
+import { Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
@@ -26,11 +26,21 @@ import AdminContact from './pages/admin/AdminContact';
 import AdminHomeConfig from './pages/admin/AdminHomeConfig';
 import AdminPageHeroes from './pages/admin/AdminPageHeroes';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminLogin from './pages/admin/AdminLogin';
+
+import { getToken } from './api';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
+}
+
+// Auth guard — redirect to login if no token
+function RequireAuth() {
+  const token = getToken();
+  if (!token) return <Navigate to="/admin/login" replace />;
+  return <AdminLayout />;
 }
 
 // Layout for Public Pages
@@ -51,8 +61,11 @@ export default function App() {
     <>
       <ScrollToTop />
       <Routes>
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin Login (no auth required) */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* Admin Routes (auth required) */}
+        <Route path="/admin" element={<RequireAuth />}>
           <Route index element={<AdminDashboard />} />
           <Route path="home-settings" element={<AdminHomeConfig />} />
           <Route path="page-heroes" element={<AdminPageHeroes />} />

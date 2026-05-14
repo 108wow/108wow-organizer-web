@@ -1,11 +1,24 @@
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/common/HeroSection';
-import { services, pageHeroes, galleryItems } from '../data/mockData';
+import { serviceAPI, pageHeroAPI, galleryAPI } from '../api';
 
 export default function Services() {
-  const hero = pageHeroes.services;
+  const [services, setServices] = useState([]);
+  const [hero, setHero] = useState({ title: '', subtitle: '', image: '' });
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const sliderRef = useRef(null);
+
+  useEffect(() => {
+    Promise.all([serviceAPI.list(), pageHeroAPI.list(), galleryAPI.list()])
+      .then(([svc, heroes, gallery]) => {
+        setServices(svc);
+        setHero(heroes.services || {});
+        setGalleryItems(gallery);
+        setLoaded(true);
+      }).catch(() => setLoaded(true));
+  }, []);
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -32,6 +45,8 @@ export default function Services() {
     }
   };
 
+  if (!loaded) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner-border text-primary" /></div>;
+
   return (
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
@@ -43,7 +58,7 @@ export default function Services() {
             <span className="section-label">บริการของเรา</span>
             <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR SERVICES</h2>
             <p className="mt-3 text-muted mx-auto" style={{ maxWidth: '600px' }}>
-              ฉีกกฎเกณฑ์เดิมๆ ด้วยบริการเทรนนิ่งพนักงาน อบรมภายในองค์กร จาก Stone Activity ที่ครอบคลุมและตอบโจทย์ทุกธุรกิจในยุคดิจิทัล
+              โซลูชันครบวงจรที่ตอบโจทย์ทุกความต้องการทางธุรกิจของคุณ
             </p>
           </div>
           
@@ -53,6 +68,7 @@ export default function Services() {
               if (i === 1) theme = 'bento-dark';
               if (i === 2) theme = 'bento-lime';
               if (i === 4) theme = 'bento-white';
+              if (i > 4) theme = i % 2 === 0 ? 'bento-dark' : 'bento-img'; // Fallback for extra services
               
               return (
                 <div key={svc.id} className={`bento-item anim d${(i % 6) + 1} ${theme}`}>
@@ -80,8 +96,8 @@ export default function Services() {
           {/* Promo Banner */}
           <div className="promo-banner-wrap mt-5 anim d2">
             <div className="promo-content">
-              <h2>Stone's Promotion</h2>
-              <p>ติดต่อเราวันนี้ เพื่อรับดีลสุดพิเศษที่คัดสรรมาเพื่อคุณ</p>
+              <h2>Ready to Start?</h2>
+              <p>ติดต่อเราวันนี้ เพื่อรับข้อเสนอและดีลสุดพิเศษที่คัดสรรมาเพื่อคุณ</p>
             </div>
             <div className="promo-action">
               <Link to="/contact" className="btn rounded-pill shadow-lg">สอบถามเพิ่มเติม</Link>
@@ -91,34 +107,36 @@ export default function Services() {
       </section>
 
       {/* Featured Projects (ความสำเร็จของเรา) */}
-      <section className="section-padding" style={{ background: 'var(--bg-white)' }}>
-        <div className="container">
-          <div className="section-header text-center mb-5">
-            <span className="section-label" style={{ fontSize: '1.2rem', fontWeight: 700 }}>ความสำเร็จของเรา</span>
-            <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR FEATURED PROJECTS</h2>
-          </div>
-          
-          <div className="position-relative feat-slider-wrapper">
-            {/* Real Slider Arrows */}
-            <button className="feat-arrow left d-none d-md-flex" onClick={scrollLeft}><i className="bi bi-chevron-left"></i></button>
-            <button className="feat-arrow right d-none d-md-flex" onClick={scrollRight}><i className="bi bi-chevron-right"></i></button>
+      {galleryItems.length > 0 && (
+        <section className="section-padding" style={{ background: 'var(--bg-white)' }}>
+          <div className="container">
+            <div className="section-header text-center mb-5">
+              <span className="section-label" style={{ fontSize: '1.2rem', fontWeight: 700 }}>ความสำเร็จของเรา</span>
+              <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR FEATURED PROJECTS</h2>
+            </div>
             
-            <div className="feat-slider-container" ref={sliderRef}>
-              {galleryItems.map((project, i) => (
-                <div key={project.id} className="feat-slide-item">
-                  <div className="feat-project-card">
-                    <img src={project.image} alt={project.title} />
-                    <div className="feat-overlay">
-                      <span className="badge feat-badge mb-2">{project.category}</span>
-                      <h4>{project.title}</h4>
+            <div className="position-relative feat-slider-wrapper">
+              {/* Real Slider Arrows */}
+              <button className="feat-arrow left d-none d-md-flex" onClick={scrollLeft}><i className="bi bi-chevron-left"></i></button>
+              <button className="feat-arrow right d-none d-md-flex" onClick={scrollRight}><i className="bi bi-chevron-right"></i></button>
+              
+              <div className="feat-slider-container" ref={sliderRef}>
+                {galleryItems.map((project, i) => (
+                  <div key={project.id} className="feat-slide-item">
+                    <div className="feat-project-card">
+                      <img src={project.image} alt={project.title} />
+                      <div className="feat-overlay">
+                        <span className="badge feat-badge mb-2">{project.category}</span>
+                        <h4>{project.title}</h4>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   );
 }

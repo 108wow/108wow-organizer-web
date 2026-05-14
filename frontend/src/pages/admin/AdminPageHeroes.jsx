@@ -1,16 +1,21 @@
-import { useState, useCallback } from 'react';
-import { pageHeroes } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { pageHeroAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 
 export default function AdminPageHeroes() {
-  const [heroes, setHeroes] = useState(pageHeroes);
+  const [heroes, setHeroes] = useState({});
+
+  useEffect(() => {
+    pageHeroAPI.list().then(d => setHeroes(d)).catch(() => {});
+  }, []);
+
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
-  const exec = useCallback((action) => { setConfirm(p=>({...p,show:false})); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleChange = (page, field, value) => {
     setHeroes(prev => ({
@@ -32,6 +37,8 @@ export default function AdminPageHeroes() {
     { id: 'contact', name: 'ติดต่อเรา (Contact)' },
   ];
 
+  if (Object.keys(heroes).length === 0) return <LoadingOverlay show={true} />;
+
   return (
     <div className="anim d1">
       <ConfirmModal show={confirm.show} type={confirm.type} title={confirm.title} message={confirm.message} onConfirm={()=>exec(confirm.action)} onCancel={()=>setConfirm(p=>({...p,show:false}))} />
@@ -42,7 +49,7 @@ export default function AdminPageHeroes() {
           <h3 className="fw-bold m-0 text-dark">จัดการแบนเนอร์หน้าย่อย (Page Heroes)</h3>
           <p className="text-muted m-0">แก้ไขรูปภาพ หัวข้อ และคำอธิบายส่วนบนสุดของแต่ละหน้า</p>
         </div>
-        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึก', message: 'ยืนยันบันทึกข้อมูล Page Heroes?', action: () => {} })}>
+        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึก', message: 'ยืนยันบันทึกข้อมูล Page Heroes?', action: async () => { for (const [key, val] of Object.entries(heroes)) { await pageHeroAPI.update(key, val); } } })}>
           <i className="bi bi-save"></i>บันทึกข้อมูลทั้งหมด
         </button>
       </div>

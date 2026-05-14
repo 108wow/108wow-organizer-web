@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { blogPosts as mockBlogs } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { blogAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
@@ -9,7 +9,11 @@ import ModalBackdrop from '../../components/admin/ModalBackdrop';
 const emptyForm = { title: '', excerpt: '', content: '', image: '', author: '', date: '', tag: '', status: 'draft' };
 
 export default function AdminBlog() {
-  const [posts, setPosts] = useState(mockBlogs.map(p => ({ ...p, status: 'published', content: p.content || '' })));
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    blogAPI.listAll().catch(() => blogAPI.listPublished()).then(data => setPosts(data)).catch(() => {});
+  }, []);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -21,19 +25,19 @@ export default function AdminBlog() {
   const openAdd = () => { setEditId(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = (p) => { setEditId(p.id); setForm({ title: p.title, excerpt: p.excerpt, content: p.content || '', image: p.image, author: p.author, date: p.date, tag: p.tag || '', status: p.status || 'published' }); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditId(null); setForm(emptyForm); };
-  const executeAction = useCallback((action) => { setConfirm(p => ({ ...p, show: false })); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' }); }, 1200); }, []);
+  const executeAction = useCallback(async (action) => { setConfirm(p => ({ ...p, show: false })); setLoading(true); try { await action(); setLoading(false); setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' }); } catch(e) { setLoading(false); setStatus({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
     if (!form.title.trim() || !form.excerpt.trim()) { setStatus({ show: true, status: 'error', message: 'กรุณากรอกหัวข้อและเนื้อหาย่อ' }); return; }
     setConfirm({ show: true, type: 'info', title: editId ? 'ยืนยันการแก้ไข' : 'ยืนยันการเพิ่มบทความ', message: `${editId ? 'แก้ไข' : 'เพิ่ม'}บทความ "${form.title}" ?`,
-      action: () => {
-        if (editId) setPosts(prev => prev.map(i => i.id === editId ? { ...i, ...form } : i));
-        else setPosts(prev => [...prev, { id: Math.max(...prev.map(i => i.id), 0) + 1, ...form }]);
+      action: async () => {
+        if (editId) { const u = await blogAPI.update(editId, form); setPosts(prev => prev.map(i => i.id === editId ? u : i)); }
+        else { const c = await blogAPI.create(form); setPosts(prev => [...prev, c]); }
         closeModal();
       }
     });
   };
-  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบบทความ "${item.title}" ?`, action: () => setPosts(p => p.filter(i => i.id !== item.id)) }); };
+  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบบทความ "${item.title}" ?`, action: async () => { await blogAPI.delete(item.id); setPosts(p => p.filter(i => i.id !== item.id)); } }); };
 
   return (
     <div className="anim d1">

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import Cropper from 'react-easy-crop';
+import { uploadImage } from '../../api';
 
 /**
  * ImageUploader — Upload + URL + Crop
@@ -9,11 +10,12 @@ import Cropper from 'react-easy-crop';
  * @param {number} aspectRatio — crop aspect ratio (default 16/9)
  * @param {boolean} circle — if true, shows circular crop area
  */
-export default function ImageUploader({ value = '', onChange, label = 'รูปภาพ', aspectRatio = 16 / 9, circle = false }) {
+export default function ImageUploader({ value = '', onChange, label = 'รูปภาพ', aspectRatio = 16 / 9, circle = false, recommendedSize = '' }) {
   const [mode, setMode] = useState('url'); // 'url' or 'upload'
   const [cropSrc, setCropSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [currentAspect, setCurrentAspect] = useState(aspectRatio);
   const [croppedArea, setCroppedArea] = useState(null);
   const fileRef = useRef(null);
 
@@ -32,10 +34,15 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
   const applyCrop = useCallback(async () => {
     if (!cropSrc || !croppedArea) return;
     try {
-      const cropped = await getCroppedImg(cropSrc, croppedArea);
-      onChange(cropped);
+      // getCroppedImg now returns a Blob
+      const croppedBlob = await getCroppedImg(cropSrc, croppedArea);
+      // Upload blob to server to get real URL
+      const res = await uploadImage(croppedBlob);
+      onChange(res.url); // Use real uploaded URL
       setCropSrc(null);
-    } catch {
+    } catch (err) {
+      console.error('Upload failed:', err);
+      // Fallback
       onChange(cropSrc);
       setCropSrc(null);
     }
@@ -102,6 +109,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
           <i className="bi bi-cloud-arrow-up-fill" style={{ fontSize: '1.5rem', color: '#94a3b8' }}></i>
           <div className="text-muted mt-1" style={{ fontSize: '.78rem' }}>คลิกเพื่อเลือกรูปภาพ</div>
           <div className="text-muted" style={{ fontSize: '.65rem' }}>JPG, PNG, WebP (สูงสุด 5MB)</div>
+          {recommendedSize && <div className="text-primary mt-2" style={{ fontSize: '.75rem', fontWeight: 600 }}>{recommendedSize}</div>}
           <input
             ref={fileRef}
             type="file"
@@ -152,18 +160,23 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
             boxShadow: '0 25px 60px rgba(0,0,0,0.2)',
             animation: 'adminScaleIn .25s ease'
           }}>
+            <div className="bg-light border-bottom p-3 d-flex justify-content-between align-items-center">
+              <h6 className="m-0 fw-bold">ปรับแต่งรูปภาพ</h6>
+              {recommendedSize && <span className="badge bg-primary text-white">{recommendedSize}</span>}
+            </div>
             {/* Crop area */}
             <div style={{ position: 'relative', width: '100%', height: 350, background: '#1e293b' }}>
-              <Cropper
-                image={cropSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={aspectRatio}
-                cropShape={circle ? 'round' : 'rect'}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-              />
+                <Cropper
+                  image={cropSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={currentAspect}
+                  cropShape={circle ? 'round' : 'rect'}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                  minZoom={0.1}
+                />
             </div>
 
             {/* Controls */}
@@ -172,15 +185,41 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
                 <i className="bi bi-zoom-out text-muted"></i>
                 <input
                   type="range"
-                  min={1} max={3} step={0.1}
+                  min={0.1} max={3} step={0.05}
                   value={zoom}
                   onChange={e => setZoom(Number(e.target.value))}
                   style={{ flex: 1, accentColor: '#3b82f6' }}
                 />
                 <i className="bi bi-zoom-in text-muted"></i>
               </div>
+              
+              {!circle && (
+                <div className="d-flex flex-wrap gap-2 mb-3 justify-content-center">
+                  <span className="text-muted small align-self-center me-2">สัดส่วน:</span>
+                  {[
+                    { label: 'ค่าเริ่มต้น', value: aspectRatio },
+                    { label: '16:9', value: 16/9 },
+                    { label: '4:3', value: 4/3 },
+                    { label: '1:1', value: 1 },
+                    { label: '3:1', value: 3 },
+                    { label: '5:4', value: 5/4 }
+                  ].map(ratio => (
+                    <button
+                      key={ratio.label}
+                      type="button"
+                      onClick={() => setCurrentAspect(ratio.value)}
+                      className={`btn btn-sm ${currentAspect === ratio.value ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      style={{ fontSize: '0.75rem', borderRadius: '8px' }}
+                    >
+                      {ratio.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="d-flex gap-3 justify-content-end">
                 <button
+                  type="button"
                   onClick={cancelCrop}
                   style={{
                     padding: '8px 24px', borderRadius: '12px', border: '1.5px solid #e2e8f0',
@@ -190,6 +229,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
                   ยกเลิก
                 </button>
                 <button
+                  type="button"
                   onClick={applyCrop}
                   style={{
                     padding: '8px 24px', borderRadius: '12px', border: 'none',
@@ -222,11 +262,11 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     0, 0,
     pixelCrop.width, pixelCrop.height
   );
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
-      if (!blob) { resolve(imageSrc); return; }
-      resolve(URL.createObjectURL(blob));
-    }, 'image/jpeg', 0.9);
+      if (!blob) { reject(new Error('Canvas is empty')); return; }
+      resolve(blob);
+    }, 'image/png');
   });
 }
 

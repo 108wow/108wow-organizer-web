@@ -1,19 +1,23 @@
-import { useState, useCallback } from 'react';
-import { heroSlides } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { heroAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 
 export default function AdminHero() {
-  const [slides, setSlides] = useState(heroSlides.map(s => ({ ...s, isActive: true })));
+  const [slides, setSlides] = useState([]);
+
+  useEffect(() => {
+    heroAPI.list().then(data => setSlides(data)).catch(() => {});
+  }, []);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'warning' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
 
-  const exec = useCallback((action) => { setConfirm(p=>({...p,show:false})); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleEdit = (slide) => { setEditingId(slide.id); setEditForm({...slide}); };
   const handleCancel = () => { setEditingId(null); };
@@ -22,17 +26,17 @@ export default function AdminHero() {
   const handleSave = (e) => {
     e.preventDefault();
     setConfirm({ show: true, type: 'info', title: 'บันทึกการแก้ไข', message: `บันทึกสไลด์ "${editForm.title}" ?`,
-      action: () => { setSlides(p => p.map(s => s.id === editingId ? { ...editForm } : s)); setEditingId(null); }
+      action: async () => { const u = await heroAPI.update(editingId, editForm); setSlides(p => p.map(s => s.id === editingId ? u : s)); setEditingId(null); }
     });
   };
   const handleAdd = () => {
-    const newSlide = { id: Math.max(...slides.map(s=>s.id),0)+1, title: 'สไลด์ใหม่', subtitle: '', ghostText: 'NEW', image: '', isActive: true };
+    const newSlide = { title: 'สไลด์ใหม่', subtitle: '', ghostText: 'NEW', image: '', isActive: true };
     setConfirm({ show: true, type: 'info', title: 'เพิ่มสไลด์', message: 'เพิ่มสไลด์ใหม่?',
-      action: () => { setSlides(p => [...p, newSlide]); setEditingId(newSlide.id); setEditForm(newSlide); }
+      action: async () => { const c = await heroAPI.create(newSlide); setSlides(p => [...p, c]); setEditingId(c.id); setEditForm(c); }
     });
   };
-  const handleDelete = (slide) => { setConfirm({ show: true, type: 'danger', title: 'ลบสไลด์', message: `ลบ "${slide.title}" ?`, action: () => setSlides(p => p.filter(s => s.id !== slide.id)) }); };
-  const handleToggle = (slide) => { setConfirm({ show: true, type: 'warning', title: slide.isActive?'ซ่อนสไลด์':'แสดงสไลด์', message: `${slide.isActive?'ซ่อน':'แสดง'} "${slide.title}" ?`, action: () => setSlides(p => p.map(s => s.id === slide.id ? { ...s, isActive: !s.isActive } : s)) }); };
+  const handleDelete = (slide) => { setConfirm({ show: true, type: 'danger', title: 'ลบสไลด์', message: `ลบ "${slide.title}" ?`, action: async () => { await heroAPI.delete(slide.id); setSlides(p => p.filter(s => s.id !== slide.id)); } }); };
+  const handleToggle = (slide) => { setConfirm({ show: true, type: 'warning', title: slide.isActive?'ซ่อนสไลด์':'แสดงสไลด์', message: `${slide.isActive?'ซ่อน':'แสดง'} "${slide.title}" ?`, action: async () => { const u = await heroAPI.update(slide.id, { isActive: !slide.isActive }); setSlides(p => p.map(s => s.id === slide.id ? u : s)); } }); };
 
   return (
     <div className="anim d1">
@@ -59,7 +63,7 @@ export default function AdminHero() {
                         <div className="row g-3">
                           <div className="col-md-6"><div className="admin-form-group"><label>หัวข้อ</label><input type="text" name="title" value={editForm.title} onChange={handleChange} required/></div></div>
                           <div className="col-md-3"><div className="admin-form-group"><label>Ghost Text</label><input type="text" name="ghostText" value={editForm.ghostText||''} onChange={handleChange}/></div></div>
-                          <div className="col-md-12"><ImageUploader value={editForm.image} onChange={(url) => setEditForm(p => ({...p, image: url}))} label="รูปภาพสไลด์" aspectRatio={16/9} /></div>
+                          <div className="col-md-12"><ImageUploader value={editForm.image} onChange={(url) => setEditForm(p => ({...p, image: url}))} recommendedSize="1920x1080px (อัตราส่วน 16:9)" aspectRatio={16/9} /></div>
                           <div className="col-12"><div className="admin-form-group"><label>รายละเอียด</label><textarea name="subtitle" rows="2" value={editForm.subtitle} onChange={handleChange}></textarea></div></div>
                           <div className="col-12 d-flex justify-content-end gap-2"><button type="button" className="btn btn-outline-secondary px-4 rounded-3" onClick={handleCancel}>ยกเลิก</button><button type="submit" className="btn btn-primary px-4 rounded-3 shadow-sm">บันทึก</button></div>
                         </div>

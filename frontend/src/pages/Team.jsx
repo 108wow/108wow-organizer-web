@@ -1,8 +1,23 @@
+import { useState, useEffect } from 'react';
 import HeroSection from '../components/common/HeroSection';
-import { teamMembers, pageHeroes } from '../data/mockData';
+import { teamAPI, pageHeroAPI } from '../api';
 
 export default function Team() {
-  const hero = pageHeroes.team;
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [hero, setHero] = useState({ title: '', subtitle: '', image: '' });
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    Promise.all([teamAPI.list(), pageHeroAPI.list()])
+      .then(([team, heroes]) => {
+        setTeamMembers(team);
+        setHero(heroes.team || {});
+        setLoaded(true);
+      }).catch(() => setLoaded(true));
+  }, []);
+
+  if (!loaded) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner-border text-primary" /></div>;
+
   return (
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
@@ -27,9 +42,8 @@ export default function Team() {
                     <div className="tc-divider"></div>
                     <p className="tc-bio">{m.bio}</p>
                     <div className="tc-socials">
-                      <a href="#"><i className="bi bi-facebook"></i></a>
-                      <a href="#"><i className="bi bi-linkedin"></i></a>
-                      <a href="#"><i className="bi bi-twitter-x"></i></a>
+                      {m.facebook && <a href={m.facebook}><i className="bi bi-facebook"></i></a>}
+                      {m.linkedin && <a href={m.linkedin}><i className="bi bi-linkedin"></i></a>}
                     </div>
                   </div>
                 </div>

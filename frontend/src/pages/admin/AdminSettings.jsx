@@ -1,21 +1,25 @@
-import { useState, useCallback } from 'react';
-import { companyInfo } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { companyAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 
 export default function AdminSettings() {
-  const [form, setForm] = useState({ name: companyInfo.name, tagline: companyInfo.tagline, logoUrl: '', faviconUrl: '', primaryColor: '#a3d900' });
+  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900' });
+
+  useEffect(() => {
+    companyAPI.get().then(d => setForm(p => ({ ...p, name: d.name || '', tagline: d.tagline || '', logoUrl: d.logoUrl || '' }))).catch(() => {});
+  }, []);
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
 
   const handleChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); };
-  const exec = useCallback((action) => { setConfirm(p=>({...p,show:false})); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกการตั้งค่าเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกการตั้งค่าเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
-    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: () => { /* In future: API call */ } });
+    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: async () => { await companyAPI.update({ name: form.name, tagline: form.tagline, logoUrl: form.logoUrl }); } });
   };
 
   return (
@@ -49,6 +53,7 @@ export default function AdminSettings() {
                 onChange={(url) => setForm(p => ({ ...p, logoUrl: url }))}
                 label="Logo URL (รูปภาพ)"
                 aspectRatio={3}
+                recommendedSize="แนะนำขนาด: 300 x 100 px (สัดส่วน 3:1)"
               />
               {/* Preview */}
               <div className="mt-3 p-3 rounded-3" style={{ background: '#0a0f0d' }}>

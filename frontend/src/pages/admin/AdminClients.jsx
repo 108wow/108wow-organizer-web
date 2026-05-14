@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { clients as mockClients } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { clientAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
@@ -10,7 +10,11 @@ const cats = ['Technology','Social & Media','Enterprise & Cloud','Hardware & Aut
 const emptyForm = { name: '', logo: '', category: 'Technology' };
 
 export default function AdminClients() {
-  const [items, setItems] = useState(mockClients);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    clientAPI.list().then(data => setItems(data)).catch(() => {});
+  }, []);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -22,15 +26,15 @@ export default function AdminClients() {
   const openAdd = () => { setEditId(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = (c) => { setEditId(c.id); setForm({ name: c.name, logo: c.logo, category: c.category }); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditId(null); };
-  const exec = useCallback((action) => { setConfirm(p=>({...p,show:false})); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
     if (!form.name.trim()) { setStatusM({ show: true, status: 'error', message: 'กรุณากรอกชื่อลูกค้า' }); return; }
     setConfirm({ show: true, type: 'info', title: editId ? 'ยืนยันการแก้ไข' : 'เพิ่มลูกค้า', message: `${editId?'แก้ไข':'เพิ่ม'} "${form.name}" ?`,
-      action: () => { if (editId) setItems(p=>p.map(i=>i.id===editId?{...i,...form}:i)); else setItems(p=>[...p,{id:Math.max(...p.map(i=>i.id),0)+1,...form}]); closeModal(); }
+      action: async () => { if (editId) { const u = await clientAPI.update(editId, form); setItems(p=>p.map(i=>i.id===editId?u:i)); } else { const c = await clientAPI.create(form); setItems(p=>[...p,c]); } closeModal(); }
     });
   };
-  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบ "${item.name}" ?`, action: () => setItems(p=>p.filter(i=>i.id!==item.id)) }); };
+  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบ "${item.name}" ?`, action: async () => { await clientAPI.delete(item.id); setItems(p=>p.filter(i=>i.id!==item.id)); } }); };
 
   return (
     <div className="anim d1">

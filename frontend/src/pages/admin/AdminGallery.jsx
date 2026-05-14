@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { galleryItems as mockGallery } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { galleryAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
@@ -10,7 +10,11 @@ const categoryOptions = ['Web', 'Mobile', 'Design', 'Team Building', 'Seminar', 
 const emptyForm = { title: '', description: '', category: 'Web', image: '', albumUrl: '' };
 
 export default function AdminGallery() {
-  const [items, setItems] = useState(mockGallery.map(g => ({ ...g, albumUrl: g.albumUrl || '' })));
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    galleryAPI.list().then(data => setItems(data)).catch(() => {});
+  }, []);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -30,10 +34,11 @@ export default function AdminGallery() {
   };
   const closeModal = () => { setShowModal(false); setEditId(null); setForm(emptyForm); };
 
-  const executeAction = useCallback((action) => {
+  const executeAction = useCallback(async (action) => {
     setConfirm(prev => ({ ...prev, show: false }));
     setLoading(true);
-    setTimeout(() => { action(); setLoading(false); setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' }); }, 1200);
+    try { await action(); setLoading(false); setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' }); }
+    catch(e) { setLoading(false); setStatus({ show: true, status: 'error', message: e.message }); }
   }, []);
 
   const handleSave = () => {
@@ -44,16 +49,16 @@ export default function AdminGallery() {
       show: true, type: 'info',
       title: editId ? 'ยืนยันการแก้ไข' : 'ยืนยันการเพิ่มผลงาน',
       message: editId ? `แก้ไข "${form.title}" ?` : `เพิ่มผลงาน "${form.title}" ?`,
-      action: () => {
-        if (editId) setItems(prev => prev.map(i => i.id === editId ? { ...i, ...form } : i));
-        else setItems(prev => [...prev, { id: Math.max(...prev.map(i => i.id), 0) + 1, ...form }]);
+      action: async () => {
+        if (editId) { const u = await galleryAPI.update(editId, form); setItems(prev => prev.map(i => i.id === editId ? u : i)); }
+        else { const c = await galleryAPI.create(form); setItems(prev => [...prev, c]); }
         closeModal();
       }
     });
   };
 
   const handleDelete = (item) => {
-    setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบผลงาน "${item.title}" ?`, action: () => setItems(prev => prev.filter(i => i.id !== item.id)) });
+    setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบผลงาน "${item.title}" ?`, action: async () => { await galleryAPI.delete(item.id); setItems(prev => prev.filter(i => i.id !== item.id)); } });
   };
 
   return (

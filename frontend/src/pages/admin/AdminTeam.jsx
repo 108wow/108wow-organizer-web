@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { teamMembers as mockTeam } from '../../data/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { teamAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
@@ -9,7 +9,11 @@ import ModalBackdrop from '../../components/admin/ModalBackdrop';
 const emptyForm = { name: '', position: '', bio: '', photo: '', facebook: '', linkedin: '' };
 
 export default function AdminTeam() {
-  const [members, setMembers] = useState(mockTeam.map(m => ({ ...m, facebook: m.social?.facebook || '', linkedin: m.social?.linkedin || '' })));
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    teamAPI.list().then(data => setMembers(data)).catch(() => {});
+  }, []);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -21,15 +25,15 @@ export default function AdminTeam() {
   const openAdd = () => { setEditId(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = (m) => { setEditId(m.id); setForm({ name: m.name, position: m.position, bio: m.bio || '', photo: m.photo, facebook: m.facebook || '', linkedin: m.linkedin || '' }); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditId(null); };
-  const exec = useCallback((action) => { setConfirm(p => ({ ...p, show: false })); setLoading(true); setTimeout(() => { action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); }, 1200); }, []);
+  const exec = useCallback(async (action) => { setConfirm(p => ({ ...p, show: false })); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
     if (!form.name.trim() || !form.position.trim()) { setStatusM({ show: true, status: 'error', message: 'กรุณากรอกชื่อและตำแหน่ง' }); return; }
     setConfirm({ show: true, type: 'info', title: editId ? 'ยืนยันการแก้ไข' : 'เพิ่มทีมงาน', message: `${editId?'แก้ไข':'เพิ่ม'} "${form.name}" ?`,
-      action: () => { if (editId) setMembers(p => p.map(i => i.id === editId ? { ...i, ...form } : i)); else setMembers(p => [...p, { id: Math.max(...p.map(i=>i.id),0)+1, ...form }]); closeModal(); }
+      action: async () => { if (editId) { const u = await teamAPI.update(editId, form); setMembers(p => p.map(i => i.id === editId ? u : i)); } else { const c = await teamAPI.create(form); setMembers(p => [...p, c]); } closeModal(); }
     });
   };
-  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบ "${item.name}" ?`, action: () => setMembers(p => p.filter(i => i.id !== item.id)) }); };
+  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบ "${item.name}" ?`, action: async () => { await teamAPI.delete(item.id); setMembers(p => p.filter(i => i.id !== item.id)); } }); };
 
   return (
     <div className="anim d1">
