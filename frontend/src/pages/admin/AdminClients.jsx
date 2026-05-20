@@ -6,7 +6,7 @@ import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 import ModalBackdrop from '../../components/admin/ModalBackdrop';
 
-const cats = ['Technology','Social & Media','Enterprise & Cloud','Hardware & Automotive'];
+const defaultCats = ['Technology','Social & Media','Enterprise & Cloud','Hardware & Automotive'];
 const emptyForm = { name: '', logo: '', category: 'Technology' };
 
 export default function AdminClients() {
@@ -21,6 +21,58 @@ export default function AdminClients() {
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'warning' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
+  
+  const [showAddCatModal, setShowAddCatModal] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+
+  const [categories, setCategories] = useState(() => {
+    const saved = localStorage.getItem('clientCategories');
+    return saved ? JSON.parse(saved) : defaultCats;
+  });
+
+  // Automatically add any unique categories from the database that aren't in the list
+  useEffect(() => {
+    if (items.length > 0) {
+      const dbCats = [...new Set(items.map(i => i.category))];
+      setCategories(prev => {
+        const merged = [...new Set([...prev, ...dbCats])];
+        if (merged.length !== prev.length) return merged;
+        return prev;
+      });
+    }
+  }, [items]);
+
+  useEffect(() => {
+    localStorage.setItem('clientCategories', JSON.stringify(categories));
+  }, [categories]);
+
+  const openAddCategory = () => {
+    setNewCatName('');
+    setShowAddCatModal(true);
+  };
+
+  const handleAddCategorySubmit = () => {
+    if (newCatName && newCatName.trim()) {
+      const trimmed = newCatName.trim();
+      if (!categories.includes(trimmed)) {
+        setCategories(prev => [...prev, trimmed]);
+      }
+      setForm(prev => ({ ...prev, category: trimmed }));
+    }
+    setShowAddCatModal(false);
+  };
+
+  const removeCategory = () => {
+    if (categories.length <= 1) {
+      alert('ต้องมีอย่างน้อย 1 หมวดหมู่');
+      return;
+    }
+    if (window.confirm(`คุณแน่ใจหรือไม่ที่จะลบหมวดหมู่ "${form.category}"?`)) {
+      const newCats = categories.filter(c => c !== form.category);
+      setCategories(newCats);
+      setForm(prev => ({ ...prev, category: newCats[0] }));
+    }
+  };
 
   const handleChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); };
   const openAdd = () => { setEditId(null); setForm(emptyForm); setShowModal(true); };
@@ -51,7 +103,7 @@ export default function AdminClients() {
         <table className="table table-hover align-middle m-0">
           <thead className="table-light"><tr><th className="px-4 py-3 border-bottom-0" style={{width:100}}>โลโก้</th><th className="py-3 border-bottom-0">ชื่อลูกค้า</th><th className="py-3 border-bottom-0">หมวดหมู่</th><th className="px-4 py-3 border-bottom-0 text-end" style={{width:140}}>จัดการ</th></tr></thead>
           <tbody>{items.map(c=>(
-            <tr key={c.id}><td className="px-4 py-3"><div className="rounded-3 shadow-sm border bg-light d-flex align-items-center justify-content-center p-2" style={{width:70,height:45}}><img src={c.logo} alt={c.name} style={{maxWidth:'100%',maxHeight:'100%',opacity:0.7,filter:'grayscale(100%)'}} /></div></td><td className="py-3 fw-bold text-dark">{c.name}</td><td className="py-3"><span className="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1">{c.category}</span></td><td className="px-4 py-3 text-end"><button className="btn btn-sm btn-light text-primary border rounded-3 me-2" onClick={()=>openEdit(c)}><i className="bi bi-pencil-square"></i></button><button className="btn btn-sm btn-light text-danger border rounded-3" onClick={()=>handleDelete(c)}><i className="bi bi-trash"></i></button></td></tr>
+            <tr key={c.id}><td className="px-4 py-3"><div className="rounded-3 shadow-sm border bg-light d-flex align-items-center justify-content-center p-2" style={{width:70,height:45}}><img src={c.logo} alt={c.name} style={{maxWidth:'100%',maxHeight:'100%'}} /></div></td><td className="py-3 fw-bold text-dark">{c.name}</td><td className="py-3"><span className="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1">{c.category}</span></td><td className="px-4 py-3 text-end"><button className="btn btn-sm btn-light text-primary border rounded-3 me-2" onClick={()=>openEdit(c)}><i className="bi bi-pencil-square"></i></button><button className="btn btn-sm btn-light text-danger border rounded-3" onClick={()=>handleDelete(c)}><i className="bi bi-trash"></i></button></td></tr>
           ))}</tbody>
         </table>
       </div></div></div>
@@ -59,9 +111,45 @@ export default function AdminClients() {
       <ModalBackdrop show={showModal} onClose={closeModal}>
             <div className="d-flex justify-content-between align-items-center mb-4"><h5 className="fw-bold m-0">{editId?'แก้ไขลูกค้า':'เพิ่มลูกค้าใหม่'}</h5><button onClick={closeModal} style={{background:'none',border:'none',fontSize:'1.3rem',color:'#94a3b8',cursor:'pointer'}}><i className="bi bi-x-lg"></i></button></div>
             <div className="admin-form-group"><label>ชื่อลูกค้า *</label><input type="text" name="name" value={form.name} onChange={handleChange}/></div>
-            <ImageUploader value={form.logo} onChange={(url) => setForm(p => ({ ...p, logo: url }))} label="โลโก้ *" aspectRatio={3/2} />
-            <div className="admin-form-group"><label>หมวดหมู่ *</label><select name="category" value={form.category} onChange={handleChange}>{cats.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+            <ImageUploader value={form.logo} onChange={(url) => setForm(p => ({ ...p, logo: url }))} label="โลโก้ *" aspectRatio={1} lockAspect={true} recommendedSize="แนะนำ: 200×200px (สี่เหลี่ยมจัตุรัส, พื้นหลังโปร่งใส PNG)" />
+            <div className="admin-form-group">
+              <label>หมวดหมู่ *</label>
+              <div className="d-flex gap-2">
+                <select name="category" value={form.category} onChange={handleChange} className="form-select border-1" style={{borderColor: '#e2e8f0', borderRadius: '12px'}}>
+                  {categories.map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
+                <button type="button" onClick={openAddCategory} className="btn btn-light border text-primary" style={{borderRadius: '12px'}} title="เพิ่มหมวดหมู่">
+                  <i className="bi bi-plus-lg"></i>
+                </button>
+                <button type="button" onClick={removeCategory} className="btn btn-light border text-danger" style={{borderRadius: '12px'}} title="ลบหมวดหมู่นี้">
+                  <i className="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
             <div className="d-flex gap-3 justify-content-end mt-4"><button onClick={closeModal} style={{padding:'10px 24px',borderRadius:'12px',border:'1.5px solid #e2e8f0',background:'#fff',color:'#64748b',fontWeight:700,cursor:'pointer'}}>ยกเลิก</button><button onClick={handleSave} style={{padding:'10px 28px',borderRadius:'12px',border:'none',background:'#3b82f6',color:'#fff',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(59,130,246,0.3)'}}><i className="bi bi-save me-2"></i>{editId?'บันทึก':'เพิ่ม'}</button></div>
+      </ModalBackdrop>
+
+      <ModalBackdrop show={showAddCatModal} onClose={() => setShowAddCatModal(false)}>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h5 className="fw-bold m-0">เพิ่มหมวดหมู่ใหม่</h5>
+          <button onClick={() => setShowAddCatModal(false)} style={{background:'none',border:'none',fontSize:'1.3rem',color:'#94a3b8',cursor:'pointer'}}>
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div className="admin-form-group">
+          <label>ชื่อหมวดหมู่ *</label>
+          <input 
+            type="text" 
+            value={newCatName} 
+            onChange={e => setNewCatName(e.target.value)} 
+            placeholder="เช่น e-Commerce, Healthcare..."
+            autoFocus
+          />
+        </div>
+        <div className="d-flex gap-3 justify-content-end mt-4">
+          <button onClick={() => setShowAddCatModal(false)} style={{padding:'10px 24px',borderRadius:'12px',border:'1.5px solid #e2e8f0',background:'#fff',color:'#64748b',fontWeight:700,cursor:'pointer'}}>ยกเลิก</button>
+          <button onClick={handleAddCategorySubmit} style={{padding:'10px 28px',borderRadius:'12px',border:'none',background:'#3b82f6',color:'#fff',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(59,130,246,0.3)'}}><i className="bi bi-check-lg me-2"></i>ตกลง</button>
+        </div>
       </ModalBackdrop>
     </div>
   );

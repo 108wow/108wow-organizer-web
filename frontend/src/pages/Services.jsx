@@ -63,16 +63,19 @@ export default function Services() {
           </div>
           
           <div className="bento-services-grid mb-5">
-            {services.map((svc, i) => {
+            {services.filter(s => s.isActive !== false).map((svc, i) => {
               let theme = 'bento-img';
-              if (i === 1) theme = 'bento-dark';
-              if (i === 2) theme = 'bento-lime';
-              if (i === 4) theme = 'bento-white';
-              if (i > 4) theme = i % 2 === 0 ? 'bento-dark' : 'bento-img'; // Fallback for extra services
+              
+              // If no image is uploaded, use colorful solid themes based on index
+              if (!svc.image) {
+                if (i % 3 === 0) theme = 'bento-dark';
+                else if (i % 3 === 1) theme = 'bento-lime';
+                else theme = 'bento-white';
+              }
               
               return (
                 <div key={svc.id} className={`bento-item anim d${(i % 6) + 1} ${theme}`}>
-                  {theme === 'bento-img' && (
+                  {svc.image && (
                     <img src={svc.image} alt={svc.title} className="bento-bg-img" />
                   )}
                   <div className="bento-overlay">

@@ -7,13 +7,13 @@ import ImageUploader from '../../components/admin/ImageUploader';
 import ModalBackdrop from '../../components/admin/ModalBackdrop';
 
 const iconOptions = [
-  'bi-code-slash', 'bi-phone', 'bi-palette', 'bi-cloud-check',
-  'bi-graph-up-arrow', 'bi-lightbulb', 'bi-search', 'bi-shield-lock',
-  'bi-gear', 'bi-camera', 'bi-megaphone', 'bi-bar-chart', 'bi-globe',
-  'bi-cpu', 'bi-hdd-network', 'bi-robot', 'bi-diagram-3'
+  'bi-calendar-event', 'bi-music-note-beamed', 'bi-camera-reels', 'bi-people',
+  'bi-cup-hot', 'bi-mic', 'bi-gift', 'bi-stars',
+  'bi-trophy', 'bi-balloon', 'bi-shop', 'bi-megaphone',
+  'bi-display', 'bi-geo-alt', 'bi-ticket-perforated', 'bi-chat-quote', 'bi-magic', 'bi-palette'
 ];
 
-const emptyForm = { title: '', description: '', icon: 'bi-code-slash', image: '', isActive: true };
+const emptyForm = { title: '', description: '', icon: 'bi-calendar-event', image: '', isActive: true };
 
 export default function AdminServices() {
   const [items, setItems] = useState([]);
@@ -210,9 +210,34 @@ export default function AdminServices() {
               <div className="col-6">
                 <div className="admin-form-group">
                   <label>ไอคอน</label>
-                  <select name="icon" value={form.icon} onChange={handleChange}>
-                    {iconOptions.map(ico => <option key={ico} value={ico}>{ico.replace('bi-', '')}</option>)}
-                  </select>
+                  <div className="dropdown">
+                    <button 
+                      className="d-flex justify-content-between align-items-center bg-white" 
+                      type="button" 
+                      data-bs-toggle="dropdown" 
+                      style={{ width: '90px', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '0 14px', height: '44px', cursor: 'pointer' }}
+                    >
+                      <div className="d-flex align-items-center text-primary">
+                        <i className={`bi ${form.icon} fs-5`}></i>
+                      </div>
+                      <i className="bi bi-chevron-down text-muted small"></i>
+                    </button>
+                    <ul className="dropdown-menu shadow w-100 border-0 p-3" style={{ borderRadius: '16px', zIndex: 1050 }}>
+                      <div className="d-flex flex-wrap gap-2">
+                        {iconOptions.map(ico => (
+                          <button 
+                            type="button"
+                            key={ico}
+                            className={`btn ${form.icon === ico ? 'btn-primary' : 'btn-light border'} p-0 d-flex align-items-center justify-content-center`}
+                            style={{ width: 42, height: 42, borderRadius: '10px' }}
+                            onClick={() => setForm(p => ({...p, icon: ico}))}
+                          >
+                            <i className={`bi ${ico} fs-5`}></i>
+                          </button>
+                        ))}
+                      </div>
+                    </ul>
+                  </div>
                 </div>
               </div>
               <div className="col-6">

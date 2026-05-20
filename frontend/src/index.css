@@ -1196,17 +1196,14 @@ body {
 }
 
 .marquee-item img {
-  width: 44px;
-  height: 44px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
-  filter: grayscale(1) brightness(0.4);
-  opacity: 0.55;
   transition: all 0.3s ease;
 }
 
 .marquee-item:hover img {
-  filter: none;
-  opacity: 1;
+  transform: scale(1.1);
 }
 
 .marquee-item span {
@@ -2487,8 +2484,7 @@ body {
 
 /* Admin Form Modal */
 .admin-modal-form {
-  max-height: 80vh;
-  overflow-y: auto;
+  /* scrolling is handled by the backdrop overlay */
 }
 
 .admin-modal-form::-webkit-scrollbar {
@@ -2512,7 +2508,7 @@ body {
   display: block;
 }
 
-.admin-form-group input,
+.admin-form-group input:not([type="checkbox"]):not([type="radio"]),
 .admin-form-group textarea,
 .admin-form-group select {
   width: 100%;
@@ -2526,12 +2522,23 @@ body {
   font-family: inherit;
 }
 
-.admin-form-group input:focus,
+.admin-form-group input:not([type="checkbox"]):not([type="radio"]):focus,
 .admin-form-group textarea:focus,
 .admin-form-group select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Custom form-switch styling for admin */
+.form-check-input:checked {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+.form-switch .form-check-input {
+  height: 1.5rem;
+  width: 3rem;
+  margin-top: 0;
 }
 
 .admin-form-group .img-preview {
@@ -2846,19 +2853,20 @@ body {
 .about-home-badge {
   position: absolute;
   bottom: 40px;
-  left: -20px;
-  background: linear-gradient(135deg, var(--primary), #82ad00);
-  color: white;
-  padding: 12px 28px;
+  left: -25px;
+  background: var(--primary);
+  color: #0a0f0d;
+  padding: 12px 32px;
   z-index: 10;
-  box-shadow: 4px 8px 25px rgba(130, 173, 0, 0.4);
-  border-radius: 4px 20px 20px 4px;
+  box-shadow: 8px 12px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 2px 40px 40px 2px;
   display: flex;
   align-items: baseline;
   gap: 10px;
+  transform: rotate(-1deg);
 }
 
-/* 3D Ribbon Fold */
+/* 3D Behind-the-Image Fold */
 .about-home-badge::before {
   content: '';
   position: absolute;
@@ -2866,25 +2874,27 @@ body {
   left: 0;
   width: 0;
   height: 0;
-  border-top: 15px solid #5a7a00;
-  border-left: 20px solid transparent;
+  border-top: 15px solid #4a6300;
+  /* Darker theme shade for shadow */
+  border-left: 25px solid transparent;
 }
 
 .about-home-badge h2 {
-  font-size: 2rem;
-  font-weight: 900;
+  font-size: 2.8rem;
+  font-weight: 950;
   margin: 0;
-  line-height: 1;
-  text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.15);
+  line-height: 0.9;
+  letter-spacing: -2px;
+  color: #0a0f0d;
 }
 
 .about-home-badge p {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+  color: rgba(10, 15, 13, 0.7);
 }
 
 .about-play-btn {
@@ -2923,4 +2933,140 @@ body {
   justify-content: center;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+/* ─── Marquee / Logo Slider ─── */
+.marquee-wrap {
+  overflow: hidden;
+  padding: 10px 0;
+  position: relative;
+}
+
+.marquee-wrap::before,
+.marquee-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.marquee-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-white) 0%, transparent 100%);
+}
+
+.marquee-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-white) 0%, transparent 100%);
+}
+
+.marquee-track {
+  display: flex;
+  gap: 30px;
+  width: max-content;
+  align-items: center;
+}
+
+.marquee-item {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.marquee-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 8px 30px rgba(163, 217, 0, 0.15);
+  transform: translateY(-4px) scale(1.05);
+}
+
+.marquee-item img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+.marquee-item:hover img {
+  transform: scale(1.1);
+}
+
+.marquee-item span {
+  display: none;
+}
+
+/* Labeled variant — shows name under the circle (for Clients page) */
+.marquee-item.marquee-item--labeled {
+  width: auto;
+  height: auto;
+  border-radius: 16px;
+  padding: 18px 16px 12px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.marquee-item.marquee-item--labeled img {
+  width: 60px;
+  height: 60px;
+}
+
+.marquee-item.marquee-item--labeled span {
+  display: block;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--text-dark);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Scroll Left */
+.scroll-left {
+  animation: marqueeLeft 30s linear infinite;
+}
+
+/* Scroll Right */
+.scroll-right {
+  animation: marqueeRight 35s linear infinite;
+}
+
+/* Scroll Left Slow */
+.scroll-left-slow {
+  animation: marqueeLeft 40s linear infinite;
+}
+
+/* Pause on hover */
+.marquee-wrap:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeLeft {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marqueeRight {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }

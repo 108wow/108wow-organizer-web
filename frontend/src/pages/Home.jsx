@@ -88,7 +88,10 @@ export default function Home() {
                       <p>{homeConfig.aboutSection?.badgeBottomText}</p>
                     </div>
                   ) : (
-                    <div className="exp-badge" dangerouslySetInnerHTML={{ __html: homeConfig.aboutSection?.badgeText || "25<small>Years Exp</small>" }}></div>
+                    <div className="about-home-badge">
+                      <h2>25</h2>
+                      <p>Years Exp</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -174,7 +177,7 @@ export default function Home() {
             <div className="container-fluid px-0 mt-4">
               <div className="row g-0">
                 {(() => {
-                  const activeServices = services.filter(svc => (homeConfig.selectedServices || []).includes(svc.id));
+                  const activeServices = services.filter(svc => svc.isActive !== false && (homeConfig.selectedServices || []).includes(svc.id));
                   const total = activeServices.length;
                   
                   return activeServices.map((svc, index) => {
@@ -274,7 +277,7 @@ export default function Home() {
             {/* Row 1 — scroll left */}
             <div className="marquee-wrap">
               <div className="marquee-track scroll-left">
-                {[...clients.slice(0, 12), ...clients.slice(0, 12)].map((c, i) => (
+                {[...clients, ...clients, ...clients, ...clients].slice(0, 24).map((c, i) => (
                   <div key={`r1-${i}`} className="marquee-item">
                     <img src={c.logo} alt={c.name} />
                     <span>{c.name}</span>
@@ -286,7 +289,7 @@ export default function Home() {
             {/* Row 2 — scroll right */}
             <div className="marquee-wrap">
               <div className="marquee-track scroll-right">
-                {[...clients.slice(12, 24), ...clients.slice(12, 24)].map((c, i) => (
+                {[...clients].reverse().concat([...clients].reverse()).concat([...clients].reverse()).concat([...clients].reverse()).slice(0, 24).map((c, i) => (
                   <div key={`r2-${i}`} className="marquee-item">
                     <img src={c.logo} alt={c.name} />
                     <span>{c.name}</span>
@@ -298,7 +301,7 @@ export default function Home() {
             {/* Row 3 — scroll left (slower) */}
             <div className="marquee-wrap">
               <div className="marquee-track scroll-left-slow">
-                {[...clients.slice(24, 36), ...clients.slice(24, 36)].map((c, i) => (
+                {[...clients, ...clients, ...clients, ...clients].slice(clients.length > 2 ? 1 : 0, 25).map((c, i) => (
                   <div key={`r3-${i}`} className="marquee-item">
                     <img src={c.logo} alt={c.name} />
                     <span>{c.name}</span>

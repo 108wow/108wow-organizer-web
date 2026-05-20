@@ -129,10 +129,10 @@ export default function About() {
                   <h3 className="about-banner-title">{banner.title}</h3>
                   {idx === 0 ? (
                     <div className="about-socials">
-                      <a href="#"><i className="bi bi-facebook"></i></a>
-                      <a href="#"><i className="bi bi-line"></i></a>
-                      <a href="#"><i className="bi bi-telephone-fill"></i></a>
-                      <a href="#"><i className="bi bi-envelope-fill"></i></a>
+                      <Link to="/contact"><i className="bi bi-facebook"></i></Link>
+                      <Link to="/contact"><i className="bi bi-line"></i></Link>
+                      <Link to="/contact"><i className="bi bi-telephone-fill"></i></Link>
+                      <Link to="/contact"><i className="bi bi-envelope-fill"></i></Link>
                     </div>
                   ) : (
                     <Link to="/contact" className="btn-main shadow-lg" style={{ border: '2px solid #fff' }}>ติดต่อร่วมงานกับเรา</Link>

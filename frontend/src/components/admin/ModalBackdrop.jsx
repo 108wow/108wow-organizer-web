@@ -13,7 +13,9 @@ export default function ModalBackdrop({ show, onClose, children }) {
       style={{
         position: 'fixed', inset: 0, zIndex: 99998,
         background: 'rgba(15,23,42,0.25)', backdropFilter: 'blur(3px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflowY: 'auto',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        padding: '3vh 0',
         animation: 'adminFadeIn .2s ease'
       }}
     >
@@ -22,6 +24,7 @@ export default function ModalBackdrop({ show, onClose, children }) {
         style={{
           background: '#fff', borderRadius: '20px', padding: '2rem',
           maxWidth: '600px', width: '95%',
+          margin: 'auto',
           boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
           animation: 'adminScaleIn .25s ease'
         }}
