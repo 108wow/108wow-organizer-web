@@ -19,7 +19,7 @@ export default function ConfirmModal({ show, onConfirm, onCancel, title = 'à¸¢à¸
   const icons = {
     danger: { icon: 'bi-exclamation-triangle-fill', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
     warning: { icon: 'bi-question-circle-fill', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    info: { icon: 'bi-info-circle-fill', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+    info: { icon: 'bi-info-circle-fill', color: 'var(--primary-dark)', bg: 'rgba(163,217,0,0.1)' },
   };
   const cfg = icons[type] || icons.warning;
 
@@ -66,10 +66,10 @@ export default function ConfirmModal({ show, onConfirm, onCancel, title = 'à¸¢à¸
             onClick={onConfirm}
             style={{
               padding: '10px 28px', borderRadius: '12px', border: 'none',
-              background: type === 'danger' ? '#ef4444' : '#3b82f6',
-              color: '#fff', fontWeight: 700, fontSize: '.88rem',
+              background: type === 'danger' ? '#ef4444' : 'var(--primary)',
+              color: type === 'danger' ? '#fff' : 'var(--navy)', fontWeight: 700, fontSize: '.88rem',
               cursor: 'pointer', transition: 'all 0.2s',
-              boxShadow: `0 4px 15px ${type === 'danger' ? 'rgba(239,68,68,0.3)' : 'rgba(59,130,246,0.3)'}`
+              boxShadow: `0 4px 15px ${type === 'danger' ? 'rgba(239,68,68,0.3)' : 'rgba(163,217,0,0.3)'}`
             }}
             onMouseOver={e => { e.target.style.transform = 'translateY(-1px)'; }}
             onMouseOut={e => { e.target.style.transform = 'translateY(0)'; }}

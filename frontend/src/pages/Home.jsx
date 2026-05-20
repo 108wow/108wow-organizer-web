@@ -274,41 +274,37 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Row 1 — scroll left */}
-            <div className="marquee-wrap">
-              <div className="marquee-track scroll-left">
-                {[...clients, ...clients, ...clients, ...clients].slice(0, 24).map((c, i) => (
-                  <div key={`r1-${i}`} className="marquee-item">
-                    <img src={c.logo} alt={c.name} />
-                    <span>{c.name}</span>
+            {/* Dynamic Marquee Rows */}
+            {(() => {
+              const selectedIds = homeConfig.selectedClients || [];
+              const filteredClients = selectedIds.length > 0 
+                ? clients.filter(c => selectedIds.includes(c.id))
+                : clients;
+              const rows = homeConfig.customersRows || 3;
+              const directions = ['scroll-left', 'scroll-right', 'scroll-left-slow'];
+              
+              return Array.from({ length: rows }, (_, rowIdx) => {
+                // Distribute clients across rows with offset
+                const offset = rowIdx * Math.floor(filteredClients.length / rows);
+                const rowClients = [...filteredClients.slice(offset), ...filteredClients.slice(0, offset)];
+                // Repeat 4x for seamless marquee loop
+                const displayClients = [...rowClients, ...rowClients, ...rowClients, ...rowClients];
+                const dir = directions[rowIdx % directions.length];
+                
+                return (
+                  <div className="marquee-wrap" key={`row-${rowIdx}`}>
+                    <div className={`marquee-track ${dir}`}>
+                      {displayClients.map((c, i) => (
+                        <div key={`r${rowIdx}-${i}`} className="marquee-item">
+                          <img src={c.logo} alt={c.name} />
+                          <span>{c.name}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Row 2 — scroll right */}
-            <div className="marquee-wrap">
-              <div className="marquee-track scroll-right">
-                {[...clients].reverse().concat([...clients].reverse()).concat([...clients].reverse()).concat([...clients].reverse()).slice(0, 24).map((c, i) => (
-                  <div key={`r2-${i}`} className="marquee-item">
-                    <img src={c.logo} alt={c.name} />
-                    <span>{c.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Row 3 — scroll left (slower) */}
-            <div className="marquee-wrap">
-              <div className="marquee-track scroll-left-slow">
-                {[...clients, ...clients, ...clients, ...clients].slice(clients.length > 2 ? 1 : 0, 25).map((c, i) => (
-                  <div key={`r3-${i}`} className="marquee-item">
-                    <img src={c.logo} alt={c.name} />
-                    <span>{c.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+                );
+              });
+            })()}
 
             <div className="container mt-5">
               <div className="d-flex justify-content-center gap-3">

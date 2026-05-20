@@ -25,7 +25,11 @@ def update_company(current_user):
     data = request.get_json()
     for key, attr in [('name', 'name'), ('tagline', 'tagline'), ('about', 'about'),
                       ('mission', 'mission'), ('vision', 'vision'), ('address', 'address'),
-                      ('phone', 'phone'), ('email', 'email'), ('logoUrl', 'logo_url')]:
+                      ('phone', 'phone'), ('email', 'email'), ('logoUrl', 'logo_url'),
+                      ('googleMapEmbed', 'google_map_embed'),
+                      ('facebook', 'facebook'), ('showFacebook', 'show_facebook'),
+                      ('lineId', 'line_id'), ('showLine', 'show_line'),
+                      ('instagram', 'instagram'), ('showInstagram', 'show_instagram')]:
         if key in data:
             setattr(info, attr, data[key])
     db.session.commit()

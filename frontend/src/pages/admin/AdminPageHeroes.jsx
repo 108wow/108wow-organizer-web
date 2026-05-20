@@ -37,6 +37,12 @@ export default function AdminPageHeroes() {
     { id: 'contact', name: 'ติดต่อเรา (Contact)' },
   ];
 
+  const [expandedSection, setExpandedSection] = useState(pagesList.length > 0 ? pagesList[0].id : null);
+
+  const toggleSection = (id) => {
+    setExpandedSection(prev => prev === id ? null : id);
+  };
+
   if (Object.keys(heroes).length === 0) return <LoadingOverlay show={true} />;
 
   return (
@@ -44,6 +50,7 @@ export default function AdminPageHeroes() {
       <ConfirmModal show={confirm.show} type={confirm.type} title={confirm.title} message={confirm.message} onConfirm={()=>exec(confirm.action)} onCancel={()=>setConfirm(p=>({...p,show:false}))} />
       <LoadingOverlay show={loading} />
       <StatusModal show={statusM.show} status={statusM.status} message={statusM.message} onClose={()=>setStatusM(p=>({...p,show:false}))} />
+      
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3 className="fw-bold m-0 text-dark">จัดการแบนเนอร์หน้าย่อย (Page Heroes)</h3>
@@ -61,45 +68,65 @@ export default function AdminPageHeroes() {
         </div>
       </div>
 
-      <div className="row g-4">
-        {pagesList.map((page) => (
-          <div key={page.id} className="col-lg-6">
-            <div className="card border-0 shadow-sm rounded-4 h-100">
-              <div className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
-                <h5 className="fw-bold m-0">{page.name}</h5>
-                <span className="badge bg-light text-muted border">/{page.id}</span>
+      <div className="d-flex flex-column gap-3">
+        {pagesList.map((page) => {
+          const isExpanded = expandedSection === page.id;
+          const pageTitleThai = page.name.split(' (')[0];
+          return (
+            <div key={page.id} className="card border-0 shadow-sm rounded-4 overflow-hidden">
+              <div 
+                className="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center"
+                style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+                onClick={() => toggleSection(page.id)}
+                onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                onMouseOut={e => e.currentTarget.style.background = '#fff'}
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <i className={`bi ${isExpanded ? 'bi-chevron-down' : 'bi-chevron-right'} text-primary fs-5`} style={{ transition: 'transform 0.2s' }}></i>
+                  <h5 className="fw-bold m-0 text-dark">{page.name}</h5>
+                </div>
+                <span className="badge bg-light text-muted border px-3 py-2 rounded-pill">หน้า{pageTitleThai}</span>
               </div>
-              <div className="card-body p-4">
-                <div className="mb-3 position-relative rounded-3 overflow-hidden border" style={{ height: '140px', background: '#f8fafc' }}>
-                  <img src={heroes[page.id].image} alt={page.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div className="position-absolute inset-0 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)', inset: 0 }}>
-                    <div className="text-center text-white p-3">
-                      <h5 className="fw-bold mb-1">{heroes[page.id].title}</h5>
-                      <small style={{ opacity: 0.8 }}>{heroes[page.id].subtitle}</small>
+              
+              {isExpanded && (
+                <div className="card-body p-4 border-top" style={{ background: '#f8fafc' }}>
+                  <div className="row g-4">
+                    <div className="col-lg-6">
+                      <div className="mb-3 position-relative rounded-3 overflow-hidden border shadow-sm" style={{ height: '180px', background: '#fff' }}>
+                        <img src={heroes[page.id].image} alt={page.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div className="position-absolute inset-0 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)', inset: 0 }}>
+                          <div className="text-center text-white p-3">
+                            <h4 className="fw-bold mb-1" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{heroes[page.id].title}</h4>
+                            <p className="m-0" style={{ opacity: 0.9, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{heroes[page.id].subtitle}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <ImageUploader
+                        value={heroes[page.id].image}
+                        onChange={(url) => handleChange(page.id, 'image', url)}
+                        label="รูปภาพแบนเนอร์"
+                        aspectRatio={16 / 5}
+                      />
+                    </div>
+                    
+                    <div className="col-lg-6">
+                      <div className="mb-4">
+                        <label className="form-label fw-bold text-dark mb-2">หัวข้อ (Title)</label>
+                        <input type="text" className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={heroes[page.id].title} onChange={(e) => handleChange(page.id, 'title', e.target.value)} />
+                      </div>
+                      
+                      <div>
+                        <label className="form-label fw-bold text-dark mb-2">คำบรรยายสั้นๆ (Subtitle)</label>
+                        <textarea className="form-control" rows="3" style={{ borderRadius: '10px', padding: '12px' }} value={heroes[page.id].subtitle} onChange={(e) => handleChange(page.id, 'subtitle', e.target.value)}></textarea>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                <ImageUploader
-                  value={heroes[page.id].image}
-                  onChange={(url) => handleChange(page.id, 'image', url)}
-                  label="รูปภาพแบนเนอร์"
-                  aspectRatio={16 / 5}
-                />
-                
-                <div className="mb-3">
-                  <label className="form-label fw-bold text-muted small">หัวข้อ (Title)</label>
-                  <input type="text" className="form-control" value={heroes[page.id].title} onChange={(e) => handleChange(page.id, 'title', e.target.value)} />
-                </div>
-                
-                <div>
-                  <label className="form-label fw-bold text-muted small">คำบรรยายสั้นๆ (Subtitle)</label>
-                  <textarea className="form-control" rows="2" value={heroes[page.id].subtitle} onChange={(e) => handleChange(page.id, 'subtitle', e.target.value)}></textarea>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

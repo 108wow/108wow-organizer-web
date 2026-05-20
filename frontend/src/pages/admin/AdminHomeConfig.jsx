@@ -1,17 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
-import { homeConfigAPI, serviceAPI } from '../../api';
+import { homeConfigAPI, serviceAPI, clientAPI } from '../../api';
 import ImageUploader from '../../components/admin/ImageUploader';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 
 export default function AdminHomeConfig() {
-  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersLimit: 6, aboutSection: {} });
+  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersRows: 3, selectedClients: [], aboutSection: {} });
   const [allServices, setAllServices] = useState([]);
+  const [allClients, setAllClients] = useState([]);
 
   useEffect(() => {
-    homeConfigAPI.get().then(d => setConfig(d)).catch(() => {});
+    homeConfigAPI.get().then(d => setConfig(prev => ({ ...prev, ...d }))).catch(() => {});
     serviceAPI.list().then(d => setAllServices(d)).catch(() => {});
+    clientAPI.list().then(d => setAllClients(d)).catch(() => {});
   }, []);
 
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
@@ -43,6 +45,23 @@ export default function AdminHomeConfig() {
         return { ...prev, selectedServices: [...selected, id] };
       }
     });
+  };
+
+  const handleClientSelect = (id) => {
+    setConfig(prev => {
+      const selected = prev.selectedClients || [];
+      if (selected.includes(id)) {
+        return { ...prev, selectedClients: selected.filter(sid => sid !== id) };
+      } else {
+        return { ...prev, selectedClients: [...selected, id] };
+      }
+    });
+  };
+
+  const handleSelectAllClients = () => {
+    const allIds = allClients.map(c => c.id);
+    const allSelected = allIds.every(id => (config.selectedClients || []).includes(id));
+    setConfig(prev => ({ ...prev, selectedClients: allSelected ? [] : allIds }));
   };
 
   const handleChange = (e) => {
@@ -275,10 +294,10 @@ export default function AdminHomeConfig() {
                           style={{
                             cursor: 'pointer',
                             transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                            borderColor: isSelected ? '#3b82f6' : '#e2e8f0',
+                            borderColor: isSelected ? 'var(--primary)' : '#e2e8f0',
                             borderWidth: isSelected ? '2px' : '1px',
-                            background: isSelected ? 'rgba(59,130,246,0.03)' : '#fff',
-                            boxShadow: isSelected ? '0 8px 24px rgba(59,130,246,0.06)' : 'none',
+                            background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff',
+                            boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none',
                           }}
                           onMouseEnter={(e) => {
                             if (!isSelected) e.currentTarget.style.borderColor = '#cbd5e1';
@@ -441,25 +460,83 @@ export default function AdminHomeConfig() {
                     <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
                   </div>
                 )}
-                <div className="admin-form-group mb-0" style={{ maxWidth: '360px' }}>
-                  <label className="fw-bold mb-2">จำนวนโลโก้แบรนด์ลูกค้าที่จะดึงมาแสดงผล</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light text-muted border-end-0" style={{ borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>แสดงโลโก้แบรนด์ลูกค้าสูงสุด</span>
-                    <input 
-                      type="number" 
-                      className="form-control text-center fw-bold text-primary" 
-                      name="customersLimit" 
-                      value={config.customersLimit} 
-                      onChange={handleChange} 
-                      min="1" 
-                      max="24" 
-                      disabled={!config.showCustomers} 
-                      style={{ maxWidth: '80px' }}
-                    />
-                    <span className="input-group-text bg-light text-muted border-start-0" style={{ borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>โลโก้</span>
+
+                {/* Layout Settings */}
+                <div className="bg-light rounded-4 p-4 mb-4 border">
+                  <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                    <i className="bi bi-grid-3x3-gap text-primary"></i> ตั้งค่าเลย์เอาท์ (Layout Settings)
+                  </h6>
+                  <div style={{ maxWidth: '280px' }}>
+                    <label className="fw-bold mb-1" style={{ fontSize: '0.85rem' }}>จำนวนแถว (Rows)</label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-white text-muted" style={{ borderRadius: '12px 0 0 12px' }}>แสดง</span>
+                      <input type="number" className="form-control text-center fw-bold text-primary" name="customersRows" value={config.customersRows || 3} onChange={handleChange} min="1" max="5" style={{ maxWidth: '70px' }} />
+                      <span className="input-group-text bg-white text-muted" style={{ borderRadius: '0 12px 12px 0' }}>แถว</span>
+                    </div>
+                    <small className="text-muted">แต่ละแถวจะวิ่งโลโก้ทั้งหมดที่เลือกไว้ สลับทิศซ้าย-ขวาอัตโนมัติ</small>
                   </div>
-                  <small className="text-muted d-block mt-2">โลโก้ลูกค้าจะวิ่งแบบ Marquee Scroll สไลด์ซ้าย-ขวาอย่างสวยงาม</small>
                 </div>
+
+                {/* Brand Selection */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                    <i className="bi bi-check2-square text-success"></i> เลือกแบรนด์ลูกค้าที่จะแสดง
+                    <span className="badge bg-primary bg-opacity-10 text-primary ms-2" style={{ fontSize: '0.7rem' }}>
+                      {(config.selectedClients || []).length} / {allClients.length} แบรนด์
+                    </span>
+                  </h6>
+                  <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3" style={{ fontSize: '0.78rem' }} onClick={handleSelectAllClients}>
+                    {allClients.length > 0 && allClients.every(c => (config.selectedClients || []).includes(c.id)) ? (
+                      <><i className="bi bi-x-circle me-1"></i>ยกเลิกทั้งหมด</>
+                    ) : (
+                      <><i className="bi bi-check-all me-1"></i>เลือกทั้งหมด</>
+                    )}
+                  </button>
+                </div>
+
+                {allClients.length === 0 ? (
+                  <div className="text-center text-muted bg-light p-4 rounded-4 border">
+                    <i className="bi bi-building fs-1 d-block mb-2 opacity-25"></i>
+                    <p className="m-0">ยังไม่มีข้อมูลลูกค้า กรุณาเพิ่มข้อมูลลูกค้าที่เมนู <strong>"ลูกค้าของเรา"</strong> ก่อน</p>
+                  </div>
+                ) : (
+                  <div className="row g-3">
+                    {allClients.map(cli => {
+                      const isSelected = (config.selectedClients || []).includes(cli.id);
+                      return (
+                        <div key={cli.id} className="col-6 col-md-4 col-lg-3">
+                          <div
+                            onClick={() => handleClientSelect(cli.id)}
+                            className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative"
+                            style={{
+                              cursor: 'pointer',
+                              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                              borderColor: isSelected ? 'var(--primary)' : '#e2e8f0',
+                              borderWidth: isSelected ? '2px' : '1px',
+                              background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff',
+                              boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none',
+                              minHeight: '100px',
+                            }}
+                          >
+                            {isSelected && (
+                              <span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}>
+                                <i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i>
+                              </span>
+                            )}
+                            {cli.logo ? (
+                              <img src={cli.logo} alt={cli.name} className="mb-2" style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px', background: '#f8fafc', padding: '4px' }} />
+                            ) : (
+                              <div className="bg-light text-secondary rounded-3 mb-2 d-flex align-items-center justify-content-center" style={{ width: '56px', height: '56px' }}>
+                                <i className="bi bi-building fs-4"></i>
+                              </div>
+                            )}
+                            <div className="fw-bold text-dark text-truncate w-100" style={{ fontSize: '0.78rem' }}>{cli.name}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

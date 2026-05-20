@@ -15,6 +15,13 @@ class CompanyInfo(db.Model):
     phone = db.Column(db.String(50), default='')
     email = db.Column(db.String(100), default='')
     logo_url = db.Column(db.String(500), default='')
+    google_map_embed = db.Column(db.Text, default='')
+    facebook = db.Column(db.String(500), default='')
+    show_facebook = db.Column(db.Boolean, default=True)
+    line_id = db.Column(db.String(255), default='')
+    show_line = db.Column(db.Boolean, default=True)
+    instagram = db.Column(db.String(500), default='')
+    show_instagram = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         return {
@@ -28,6 +35,13 @@ class CompanyInfo(db.Model):
             'phone': self.phone,
             'email': self.email,
             'logoUrl': self.logo_url,
+            'googleMapEmbed': self.google_map_embed or '',
+            'facebook': self.facebook or '',
+            'showFacebook': self.show_facebook if self.show_facebook is not None else True,
+            'lineId': self.line_id or '',
+            'showLine': self.show_line if self.show_line is not None else True,
+            'instagram': self.instagram or '',
+            'showInstagram': self.show_instagram if self.show_instagram is not None else True,
         }
 
 

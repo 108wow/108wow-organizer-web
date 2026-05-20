@@ -126,7 +126,7 @@ export default function AdminClients() {
                 </button>
               </div>
             </div>
-            <div className="d-flex gap-3 justify-content-end mt-4"><button onClick={closeModal} style={{padding:'10px 24px',borderRadius:'12px',border:'1.5px solid #e2e8f0',background:'#fff',color:'#64748b',fontWeight:700,cursor:'pointer'}}>ยกเลิก</button><button onClick={handleSave} style={{padding:'10px 28px',borderRadius:'12px',border:'none',background:'#3b82f6',color:'#fff',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(59,130,246,0.3)'}}><i className="bi bi-save me-2"></i>{editId?'บันทึก':'เพิ่ม'}</button></div>
+            <div className="d-flex gap-3 justify-content-end mt-4"><button onClick={closeModal} style={{padding:'10px 24px',borderRadius:'12px',border:'1.5px solid #e2e8f0',background:'#fff',color:'#64748b',fontWeight:700,cursor:'pointer'}}>ยกเลิก</button><button onClick={handleSave} style={{padding:'10px 28px',borderRadius:'12px',border:'none',background:'var(--primary)',color:'var(--navy)',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(163,217,0,0.3)'}}><i className="bi bi-save me-2"></i>{editId?'บันทึก':'เพิ่ม'}</button></div>
       </ModalBackdrop>
 
       <ModalBackdrop show={showAddCatModal} onClose={() => setShowAddCatModal(false)}>
@@ -148,7 +148,7 @@ export default function AdminClients() {
         </div>
         <div className="d-flex gap-3 justify-content-end mt-4">
           <button onClick={() => setShowAddCatModal(false)} style={{padding:'10px 24px',borderRadius:'12px',border:'1.5px solid #e2e8f0',background:'#fff',color:'#64748b',fontWeight:700,cursor:'pointer'}}>ยกเลิก</button>
-          <button onClick={handleAddCategorySubmit} style={{padding:'10px 28px',borderRadius:'12px',border:'none',background:'#3b82f6',color:'#fff',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(59,130,246,0.3)'}}><i className="bi bi-check-lg me-2"></i>ตกลง</button>
+          <button onClick={handleAddCategorySubmit} style={{padding:'10px 28px',borderRadius:'12px',border:'none',background:'var(--primary)',color:'var(--navy)',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(163,217,0,0.3)'}}><i className="bi bi-check-lg me-2"></i>ตกลง</button>
         </div>
       </ModalBackdrop>
     </div>

@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../api';
+import { login, companyAPI } from '../../api';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState({});
+
+  useEffect(() => {
+    companyAPI.get().then(setCompanyInfo).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +38,7 @@ export default function AdminLogin() {
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
         <div style={{
           position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(163,217,0,0.15), transparent 70%)',
           top: '-10%', left: '-5%', animation: 'float 8s ease-in-out infinite',
         }} />
         <div style={{
@@ -48,13 +53,13 @@ export default function AdminLogin() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 16,
-            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+            background: 'linear-gradient(135deg, var(--primary), var(--primary-hover))',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 16, boxShadow: '0 8px 32px rgba(59,130,246,0.3)',
+            marginBottom: 16, boxShadow: '0 8px 32px rgba(163,217,0,0.3)',
           }}>
-            <span style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>S</span>
+            <span style={{ fontSize: 28, fontWeight: 900, color: 'var(--navy)' }}>{companyInfo.name ? companyInfo.name.charAt(0).toUpperCase() : 'A'}</span>
           </div>
-          <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>SUSPENDED TECH</h1>
+          <h1 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{companyInfo.name || 'Admin Panel'}</h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginTop: 4 }}>Admin Panel — เข้าสู่ระบบ</p>
         </div>
 
@@ -98,7 +103,7 @@ export default function AdminLogin() {
                     outline: 'none', transition: 'border 0.2s',
                     boxSizing: 'border-box',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(59,130,246,0.5)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(163,217,0,0.5)'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
                 />
               </div>
@@ -123,7 +128,7 @@ export default function AdminLogin() {
                     outline: 'none', transition: 'border 0.2s',
                     boxSizing: 'border-box',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(59,130,246,0.5)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(163,217,0,0.5)'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
                 />
               </div>
@@ -134,10 +139,10 @@ export default function AdminLogin() {
               disabled={loading}
               style={{
                 width: '100%', padding: '13px',
-                background: loading ? 'rgba(59,130,246,0.5)' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                border: 'none', borderRadius: 12, color: '#fff',
+                background: loading ? 'rgba(163,217,0,0.5)' : 'linear-gradient(135deg, var(--primary), var(--primary-hover))',
+                border: 'none', borderRadius: 12, color: 'var(--navy)',
                 fontSize: '0.95rem', fontWeight: 600, cursor: loading ? 'wait' : 'pointer',
-                transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+                transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(163,217,0,0.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
@@ -157,7 +162,7 @@ export default function AdminLogin() {
         </div>
 
         <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', marginTop: 24 }}>
-          © 2026 SUSPENDED TECH — Admin Panel
+          © 2026 {companyInfo.name || 'Admin'} — Admin Panel
         </p>
       </div>
 

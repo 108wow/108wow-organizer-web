@@ -27,7 +27,8 @@ def update_config(current_user):
     bool_fields = [('showAbout', 'show_about'), ('showServices', 'show_services'),
                    ('showWhyUs', 'show_why_us'), ('showStats', 'show_stats'),
                    ('showCustomers', 'show_customers'), ('showCTA', 'show_cta')]
-    int_fields = [('servicesLimit', 'services_limit'), ('customersLimit', 'customers_limit')]
+    int_fields = [('servicesLimit', 'services_limit'), ('customersLimit', 'customers_limit'),
+                  ('customersRows', 'customers_rows')]
 
     for key, attr in bool_fields + int_fields:
         if key in data:
@@ -35,6 +36,9 @@ def update_config(current_user):
 
     if 'selectedServices' in data:
         config.selected_services = json.dumps(data['selectedServices'])
+
+    if 'selectedClients' in data:
+        config.selected_clients = json.dumps(data['selectedClients'])
 
     if 'aboutSection' in data:
         config.about_section = json.dumps(data['aboutSection'])

@@ -15,6 +15,8 @@ class HomeConfig(db.Model):
     show_stats = db.Column(db.Boolean, default=True)
     show_customers = db.Column(db.Boolean, default=True)
     customers_limit = db.Column(db.Integer, default=6)
+    customers_rows = db.Column(db.Integer, default=3)
+    selected_clients = db.Column(db.Text, default='[]')  # JSON array of client IDs
     show_cta = db.Column(db.Boolean, default=True)
     about_section = db.Column(db.Text, default='{}')
 
@@ -23,6 +25,10 @@ class HomeConfig(db.Model):
             selected = json.loads(self.selected_services)
         except (json.JSONDecodeError, TypeError):
             selected = []
+        try:
+            sel_clients = json.loads(self.selected_clients) if self.selected_clients else []
+        except (json.JSONDecodeError, TypeError):
+            sel_clients = []
         return {
             'showAbout': self.show_about,
             'showServices': self.show_services,
@@ -32,6 +38,8 @@ class HomeConfig(db.Model):
             'showStats': self.show_stats,
             'showCustomers': self.show_customers,
             'customersLimit': self.customers_limit,
+            'customersRows': self.customers_rows or 3,
+            'selectedClients': sel_clients,
             'showCTA': self.show_cta,
             'aboutSection': json.loads(self.about_section) if self.about_section else {},
         }

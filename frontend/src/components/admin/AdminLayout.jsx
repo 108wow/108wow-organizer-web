@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { createContext, useContext, useState, useCallback } from 'react';
-import { getUser, logout as apiLogout } from '../../api';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { getUser, logout as apiLogout, companyAPI } from '../../api';
 import ConfirmModal from './ConfirmModal';
 import LoadingOverlay from './LoadingOverlay';
 import StatusModal from './StatusModal';
@@ -18,6 +18,12 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const path = location.pathname;
   const user = getUser();
+  
+  const [companyInfo, setCompanyInfo] = useState({});
+
+  useEffect(() => {
+    companyAPI.get().then(setCompanyInfo).catch(console.error);
+  }, []);
 
   const handleLogout = () => {
     apiLogout();
@@ -73,12 +79,11 @@ export default function AdminLayout() {
             <div className="d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
               <img src="/logo-white.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%' }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
               <div className="bg-primary rounded-3 align-items-center justify-content-center" style={{ width: 36, height: 36, display: 'none' }}>
-                <span className="text-white fw-bold" style={{ fontSize: '.85rem' }}>S</span>
+                <i className="bi bi-emoji-smile text-white" style={{ fontSize: '1.2rem' }}></i>
               </div>
             </div>
             <div>
-              <h6 className="m-0 fw-bold text-white" style={{ fontSize: '.85rem', lineHeight: 1.2 }}>SUSPENDED TECH</h6>
-              <small style={{ fontSize: '.65rem', color: 'rgba(255,255,255,0.4)' }}>Admin Panel</small>
+              <h6 className="m-0 fw-bold text-white text-truncate" style={{ fontSize: '.85rem', lineHeight: 1.2, maxWidth: '170px' }}>{companyInfo.name || 'ระบบจัดการ'}</h6>
             </div>
           </div>
           
@@ -96,7 +101,7 @@ export default function AdminLayout() {
                         fontWeight: isActive ? 700 : 500, 
                         fontSize: '.78rem',
                         color: isActive ? '#fff' : 'rgba(255,255,255,0.6)',
-                        background: isActive ? 'linear-gradient(90deg, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0) 100%)' : 'transparent',
+                        background: isActive ? 'linear-gradient(90deg, rgba(163,217,0,0.15) 0%, rgba(163,217,0,0) 100%)' : 'transparent',
                         borderLeft: isActive ? '3px solid var(--primary)' : '3px solid transparent',
                         transition: 'all 0.2s ease'
                       }}

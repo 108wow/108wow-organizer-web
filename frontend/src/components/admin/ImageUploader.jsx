@@ -29,6 +29,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
     const reader = new FileReader();
     reader.onload = () => setCropSrc(reader.result);
     reader.readAsDataURL(file);
+    e.target.value = ''; // Reset so the same file can be selected again
   };
 
   const onCropComplete = useCallback((_, croppedAreaPixels) => {
@@ -193,9 +194,9 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
                 onClick={() => setMode('url')}
                 style={{
                   padding: '4px 14px', borderRadius: '8px', border: '1.5px solid',
-                  borderColor: mode === 'url' ? '#3b82f6' : '#e2e8f0',
-                  background: mode === 'url' ? 'rgba(59,130,246,0.08)' : '#fff',
-                  color: mode === 'url' ? '#3b82f6' : '#94a3b8',
+                  borderColor: mode === 'url' ? 'var(--primary)' : '#e2e8f0',
+                  background: mode === 'url' ? 'rgba(163,217,0,0.08)' : '#fff',
+                  color: mode === 'url' ? 'var(--primary-dark)' : '#94a3b8',
                   fontSize: '.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all .2s'
                 }}
               >
@@ -206,9 +207,9 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
                 onClick={() => setMode('upload')}
                 style={{
                   padding: '4px 14px', borderRadius: '8px', border: '1.5px solid',
-                  borderColor: mode === 'upload' ? '#3b82f6' : '#e2e8f0',
-                  background: mode === 'upload' ? 'rgba(59,130,246,0.08)' : '#fff',
-                  color: mode === 'upload' ? '#3b82f6' : '#94a3b8',
+                  borderColor: mode === 'upload' ? 'var(--primary)' : '#e2e8f0',
+                  background: mode === 'upload' ? 'rgba(163,217,0,0.08)' : '#fff',
+                  color: mode === 'upload' ? 'var(--primary-dark)' : '#94a3b8',
                   fontSize: '.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all .2s'
                 }}
               >
@@ -352,8 +353,8 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
                   onClick={applyCrop}
                   style={{
                     padding: '8px 24px', borderRadius: '12px', border: 'none',
-                    background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '.85rem',
-                    cursor: 'pointer', boxShadow: '0 4px 15px rgba(59,130,246,0.3)'
+                    background: 'var(--primary)', color: 'var(--navy)', fontWeight: 700, fontSize: '.85rem',
+                    cursor: 'pointer', boxShadow: '0 4px 15px rgba(163,217,0,0.3)'
                   }}
                 >
                   <i className="bi bi-check-lg me-1"></i>ตัดภาพ & ใช้งาน
