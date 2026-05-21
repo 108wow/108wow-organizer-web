@@ -3,7 +3,14 @@
  * ใช้แทน mockData.js ในทุกหน้า
  */
 
-const API_BASE = '/api';
+const API_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE = `${API_URL}/api`;
+
+export function getMediaUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${API_URL}${path}`;
+}
 
 // ─── Token Management ───
 export function getToken() {
