@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
-import { uploadImage } from '../../api';
+import { uploadImage, getMediaUrl } from '../../api';
 
 /**
  * ImageUploader — Upload + URL + Crop
@@ -43,7 +43,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
       const croppedBlob = await getCroppedImg(cropSrc, croppedArea);
       // Upload blob to server to get real URL
       const res = await uploadImage(croppedBlob);
-      onChange(res.url); // Use real uploaded URL
+      onChange(getMediaUrl(res.url)); // Use real uploaded URL WITH FULL DOMAIN
       setCropSrc(null);
     } catch (err) {
       console.error('Upload failed:', err);
