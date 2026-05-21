@@ -30,6 +30,7 @@ def upload_image(current_user):
     filename = f"{uuid.uuid4().hex}.{ext}"
 
     upload_folder = current_app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_folder, exist_ok=True)
     filepath = os.path.join(upload_folder, filename)
     file.save(filepath)
 
