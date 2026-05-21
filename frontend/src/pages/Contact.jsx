@@ -110,7 +110,7 @@ export default function Contact() {
             </div>
 
             {/* ─── Right Column: Form ─── */}
-            <div className="col-lg-7 anim d2">
+            <div className="col-lg-7 anim d2 mt-5 mt-lg-0">
               <div className="contact-form-card shadow-sm" style={{ border: '1px solid var(--border)', background: '#fff' }}>
                 <div className="contact-form-header mb-4">
                   <div>

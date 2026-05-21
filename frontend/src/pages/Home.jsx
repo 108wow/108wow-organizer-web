@@ -95,43 +95,43 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <div className="col-lg-6">
-                <span className="section-label">About Us</span>
-                <h2 className="section-title mb-4" style={{ fontSize: '2rem', fontWeight: 800 }}>{homeConfig.aboutSection?.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
-                <p className="lead text-muted mb-4" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.description || companyInfo.about}</p>
-                
-                {homeConfig.aboutSection?.listItems && homeConfig.aboutSection.listItems.length > 0 ? (
-                  <div className="d-flex flex-column gap-3 mb-5 mt-4">
-                    {homeConfig.aboutSection.listItems.map((item, idx) => (
-                      <div key={idx} className="d-flex align-items-center gap-3">
-                        <span className="about-list-icon"><i className="bi bi-check-lg"></i></span>
-                        <span className="text-dark fw-bold" style={{ fontSize: '1.05rem' }}>{item}</span>
+                <div className="col-lg-6 mt-4 mt-lg-0">
+                  <span className="section-label">About Us</span>
+                  <h2 className="section-title mb-4" style={{ fontSize: '2rem', fontWeight: 800 }}>{homeConfig.aboutSection?.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
+                  <p className="lead text-muted mb-4" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.description || companyInfo.about}</p>
+                  
+                  {homeConfig.aboutSection?.listItems && homeConfig.aboutSection.listItems.length > 0 ? (
+                    <div className="d-flex flex-column gap-3 mb-5 mt-4">
+                      {homeConfig.aboutSection.listItems.map((item, idx) => (
+                        <div key={idx} className="d-flex align-items-center gap-3">
+                          <span className="about-list-icon"><i className="bi bi-check-lg"></i></span>
+                          <span className="text-dark fw-bold" style={{ fontSize: '1.05rem' }}>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="row g-3 mb-4">
+                      <div className="col-12 col-md-6 d-flex align-items-start gap-3">
+                        <i className="bi bi-bullseye fs-3 text-primary"></i>
+                        <div>
+                          <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet1Title || 'Mission'}</h6>
+                          <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet1Desc || `${companyInfo.mission?.substring(0, 60)}...`}</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="row g-3 mb-4">
-                    <div className="col-6 d-flex align-items-start gap-3">
-                      <i className="bi bi-bullseye fs-3 text-primary"></i>
-                      <div>
-                        <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet1Title || 'Mission'}</h6>
-                        <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet1Desc || `${companyInfo.mission?.substring(0, 60)}...`}</p>
+                      <div className="col-12 col-md-6 d-flex align-items-start gap-3 mt-3 mt-md-0">
+                        <i className="bi bi-eye fs-3 text-primary"></i>
+                        <div>
+                          <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet2Title || 'Vision'}</h6>
+                          <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet2Desc || `${companyInfo.vision?.substring(0, 60)}...`}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="col-6 d-flex align-items-start gap-3">
-                      <i className="bi bi-eye fs-3 text-primary"></i>
-                      <div>
-                        <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet2Title || 'Vision'}</h6>
-                        <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet2Desc || `${companyInfo.vision?.substring(0, 60)}...`}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <Link to={homeConfig.aboutSection?.buttonLink || "/about"} className="btn btn-primary rounded-pill px-4 py-2 fw-bold" style={{ fontSize: '1rem', boxShadow: '0 4px 15px rgba(163,217,0,0.3)' }}>
-                  {homeConfig.aboutSection?.buttonText || "ติดต่อร่วมงานกับเรา"}
-                </Link>
-              </div>
+                  )}
+                  
+                  <Link to={homeConfig.aboutSection?.buttonLink || "/about"} className="btn btn-primary rounded-pill px-4 py-2 fw-bold" style={{ fontSize: '1rem', boxShadow: '0 4px 15px rgba(163,217,0,0.3)' }}>
+                    {homeConfig.aboutSection?.buttonText || "ติดต่อร่วมงานกับเรา"}
+                  </Link>
+                </div>
             </div>
           </div>
 
@@ -238,7 +238,7 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <div className="col-lg-6">
+              <div className="col-lg-6 mt-4 mt-lg-0">
                 <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80" alt="Team" className="img-fluid" style={{ borderRadius: 'var(--radius-lg)' }} />
               </div>
             </div>
@@ -326,8 +326,8 @@ export default function Home() {
               <div style={{ position: 'absolute', bottom: -40, left: 20, width: 80, height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
               <div style={{ position: 'absolute', top: 40, left: -20, width: 60, height: 60, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
               
-              <div className="position-relative z-1 py-3 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
-                <div className="text-center text-lg-start">
+              <div className="position-relative z-1 py-3 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4 text-center text-lg-start">
+                <div>
                   <h2 className="fw-bold mb-2" style={{ fontSize: '2.4rem', color: 'var(--navy)' }}>พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?</h2>
                   <p className="mb-0 mx-auto mx-lg-0" style={{ maxWidth: 650, fontSize: '1.1rem', color: 'var(--navy)', opacity: 0.85 }}>ไม่ว่าจะเป็นงานกีฬาสี ปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!</p>
                 </div>

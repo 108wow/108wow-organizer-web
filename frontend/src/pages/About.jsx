@@ -49,7 +49,7 @@ export default function About() {
                 </div>
               </div>
             </div>
-            <div className="col-lg-6 ps-lg-5">
+            <div className="col-lg-6 ps-lg-5 mt-4 mt-lg-0">
               <h2 className="fw-bold text-primary mb-3" style={{ fontSize: '2.2rem', lineHeight: '1.3' }}>
                 {companyInfo.tagline || 'รับจัดกิจกรรม Team Building สร้างสัมพันธ์ในองค์กร'}
               </h2>
@@ -109,10 +109,10 @@ export default function About() {
               </div>
             </div>
           </div>
-          <div className="col-lg-4">
+          <div className="col-lg-4 mt-3 mt-lg-0">
             <img src={aboutConfig?.teamImages?.[0] || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80"} alt="Team 1" className="img-fluid w-100 h-100" style={{ objectFit: 'cover', minHeight: '400px' }} />
           </div>
-          <div className="col-lg-4">
+          <div className="col-lg-4 mt-3 mt-lg-0">
             <img src={aboutConfig?.teamImages?.[1] || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&q=80"} alt="Team 2" className="img-fluid w-100 h-100" style={{ objectFit: 'cover', minHeight: '400px' }} />
           </div>
         </div>

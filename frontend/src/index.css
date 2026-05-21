@@ -3418,3 +3418,61 @@ body {
   background-color: var(--primary) !important;
   color: var(--navy) !important;
 }
+
+/* ─── Global Mobile Responsive Overrides ─── */
+@media (max-width: 768px) {
+  /* Navbar */
+  .navbar-collapse {
+    background: var(--navy);
+    padding: 1rem;
+    border-radius: var(--radius);
+    margin-top: 0.5rem;
+  }
+  .navbar-custom .nav-link {
+    padding: 0.5rem 1rem !important;
+  }
+  
+  /* Sections */
+  .section-padding {
+    padding: 40px 0 !important;
+  }
+  .section-title {
+    font-size: 1.6rem !important;
+  }
+  .section-desc {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Hero Carousel */
+  .home-carousel .carousel-caption h1 {
+    font-size: 2rem !important;
+    line-height: 1.2;
+  }
+  .home-carousel .carousel-caption p {
+    font-size: 0.85rem !important;
+    margin-bottom: 1rem;
+  }
+  .home-carousel .carousel-caption .container {
+    margin-left: 0;
+    padding: 0 1.5rem;
+  }
+  .ghost-text {
+    font-size: 2rem !important;
+    top: -5px;
+    left: 0;
+  }
+  .home-carousel .carousel-indicators {
+    margin-left: 0;
+    justify-content: center;
+  }
+  
+  /* Stats */
+  .stats-bar .s-num {
+    font-size: 1.4rem !important;
+  }
+  
+  /* Typography Overrides for specific sections */
+  h2, h3 {
+    font-size: 1.5rem !important;
+  }
+}
