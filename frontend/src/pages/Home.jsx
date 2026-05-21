@@ -318,11 +318,29 @@ export default function Home() {
 
       {/* ──── CTA ──── */}
       {homeConfig.showCTA && (
-        <section className="py-5 text-center text-white" style={{ background: 'linear-gradient(135deg, var(--primary), #1e40af)', minHeight: 300 }}>
-          <div className="container d-flex flex-column align-items-center justify-content-center" style={{ minHeight: 300 }}>
-            <h2 className="fw-bold mb-3" style={{ fontSize: '2rem' }}>พร้อมเริ่มโปรเจกต์ใหม่?</h2>
-            <p className="mb-4" style={{ maxWidth: 500, opacity: 0.85 }}>ติดต่อเราวันนี้เพื่อปรึกษาและเริ่มต้นสร้างสรรค์โปรเจกต์ดิจิทัลของคุณ</p>
-            <Link to="/contact" className="btn btn-light rounded-pill px-5 py-2 fw-bold shadow">ติดต่อเรา <i className="bi bi-arrow-right ms-2"></i></Link>
+        <section className="py-5">
+          <div className="container">
+            <div className="rounded-4 p-5 shadow-sm" style={{ backgroundColor: 'var(--primary)', position: 'relative', overflow: 'hidden' }}>
+              {/* Decorative shapes */}
+              <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+              <div style={{ position: 'absolute', bottom: -40, left: 20, width: 80, height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+              <div style={{ position: 'absolute', top: 40, left: -20, width: 60, height: 60, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+              
+              <div className="position-relative z-1 py-3 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
+                <div className="text-center text-lg-start">
+                  <h2 className="fw-bold mb-2" style={{ fontSize: '2.4rem', color: 'var(--navy)' }}>พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?</h2>
+                  <p className="mb-0 mx-auto mx-lg-0" style={{ maxWidth: 650, fontSize: '1.1rem', color: 'var(--navy)', opacity: 0.85 }}>ไม่ว่าจะเป็นงานกีฬาสี ปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!</p>
+                </div>
+                <div className="flex-shrink-0 mt-3 mt-lg-0">
+                  <Link to="/contact" className="btn fw-bold px-5 py-3 rounded-pill shadow-sm" style={{ backgroundColor: 'var(--navy)', color: '#fff', transition: 'transform 0.2s', border: 'none', whiteSpace: 'nowrap' }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    ทักมาคุยกับเรา <i className="bi bi-chat-dots ms-2"></i>
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       )}

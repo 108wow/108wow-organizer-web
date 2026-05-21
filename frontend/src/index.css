@@ -73,8 +73,17 @@ body {
   font-size: 1.35rem;
   color: #fff !important;
   text-decoration: none;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   letter-spacing: -.3px
+}
+
+.navbar-custom .nav-logo {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-custom .nav-logo:hover {
+  filter: drop-shadow(0 0 8px var(--primary));
+  transform: scale(1.02);
 }
 
 .navbar-custom .nav-link {
@@ -378,11 +387,12 @@ body {
 /* ─── Hero Static (sub-pages) ─── */
 .hero-section {
   position: relative;
-  min-height: 36vh;
+  min-height: 50vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden
+  overflow: hidden;
+  padding-top: 80px;
 }
 
 .hero-section .hero-bg {

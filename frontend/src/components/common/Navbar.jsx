@@ -29,7 +29,7 @@ export default function Navbar() {
       <div className="container">
         <Link className="navbar-brand" to="/">
           {companyInfo.logoUrl ? (
-            <img src={companyInfo.logoUrl} alt={companyInfo.name} style={{ maxHeight: '40px', maxWidth: '200px' }} onError={e => e.target.style.display = 'none'} />
+            <img src={companyInfo.logoUrl} alt={companyInfo.name} className="nav-logo" style={{ maxHeight: '70px', maxWidth: '250px' }} onError={e => e.target.style.display = 'none'} />
           ) : (
             companyInfo.name
           )}

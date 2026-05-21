@@ -379,9 +379,8 @@ async function getCroppedImg(imageSrc, pixelCrop) {
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
 
-  // Fill canvas with white background (for areas outside the image when zoomed out)
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Clear canvas to ensure transparency is preserved for PNGs
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // When zoomed out (zoom < 1), crop coordinates can be negative
   // or extend beyond the image. We need to calculate the overlap.
