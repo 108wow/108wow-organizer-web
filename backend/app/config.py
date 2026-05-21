@@ -5,12 +5,12 @@ class Config:
     JWT_SECRET = os.environ.get('JWT_SECRET', 'jwt-suspended-tech-2026')
     JWT_EXPIRATION_HOURS = 24
 
-    # MySQL — default local dev
-    MYSQL_USER = os.environ.get('MYSQL_USER', 'root')
-    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '1234')
-    MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')
-    MYSQL_PORT = os.environ.get('MYSQL_PORT', '3306')
-    MYSQL_DB = os.environ.get('MYSQL_DB', 'suspended_tech')
+    # MySQL — support both custom env vars and Railway's default env vars
+    MYSQL_USER = os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER', 'root')
+    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD') or os.environ.get('MYSQLPASSWORD', '1234')
+    MYSQL_HOST = os.environ.get('MYSQL_HOST') or os.environ.get('MYSQLHOST', 'localhost')
+    MYSQL_PORT = os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT', '3306')
+    MYSQL_DB = os.environ.get('MYSQL_DB') or os.environ.get('MYSQLDATABASE', 'suspended_tech')
 
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+mysqldb://{MYSQL_USER}:{MYSQL_PASSWORD}"
