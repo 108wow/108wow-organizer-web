@@ -24,6 +24,7 @@ def create_app():
     from app.routes.heroes import heroes_bp
     from app.routes.services import services_bp
     from app.routes.gallery import gallery_bp
+    from app.routes.gallery_categories import gallery_category_bp
     from app.routes.blog import blog_bp
     from app.routes.team import team_bp
     from app.routes.clients import clients_bp
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(heroes_bp, url_prefix='/api/heroes')
     app.register_blueprint(services_bp, url_prefix='/api/services')
     app.register_blueprint(gallery_bp, url_prefix='/api/gallery')
+    app.register_blueprint(gallery_category_bp, url_prefix='/api/gallery-categories')
     app.register_blueprint(blog_bp, url_prefix='/api/blog')
     app.register_blueprint(team_bp, url_prefix='/api/team')
     app.register_blueprint(clients_bp, url_prefix='/api/clients')

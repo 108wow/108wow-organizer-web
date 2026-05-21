@@ -37,6 +37,17 @@ def create_gallery(current_user):
     return jsonify(item.to_dict()), 201
 
 
+@gallery_bp.route('/reorder', methods=['PUT'])
+@token_required
+def reorder_gallery(current_user):
+    data = request.get_json()
+    for item in data:
+        g = db.session.get(GalleryItem, item.get('id'))
+        if g:
+            g.sort_order = item.get('sortOrder')
+    db.session.commit()
+    return jsonify({'message': 'Reordered successfully'})
+
 @gallery_bp.route('/<int:id>', methods=['PUT'])
 @token_required
 def update_gallery(current_user, id):

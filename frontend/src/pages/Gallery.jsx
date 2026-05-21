@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import HeroSection from '../components/common/HeroSection';
-import { galleryAPI, pageHeroAPI } from '../api';
-
-const getCategoryIcon = (cat) => {
-  const map = { 'All': 'bi-grid-fill', 'Corporate': 'bi-building', 'Event': 'bi-calendar-event-fill', 'Web': 'bi-laptop', 'App': 'bi-phone', 'Mobile': 'bi-phone', 'Design': 'bi-palette' };
-  return map[cat] || 'bi-images';
-};
+import { galleryAPI, pageHeroAPI, galleryCategoryAPI } from '../api';
 
 export default function Gallery() {
   const [galleryItems, setGalleryItems] = useState([]);
@@ -14,16 +9,20 @@ export default function Gallery() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
+  const [categories, setCategories] = useState([]);
+
   useEffect(() => {
-    Promise.all([galleryAPI.list(), pageHeroAPI.list()])
-      .then(([items, heroes]) => {
+    Promise.all([galleryAPI.list(), pageHeroAPI.list(), galleryCategoryAPI.list()])
+      .then(([items, heroes, cats]) => {
         setGalleryItems(items);
         setHero(heroes.gallery || {});
+        
+        // Add 'All' as the first category option
+        setCategories([{ name: 'All', icon: 'bi-grid-fill' }, ...cats]);
+        
         setLoaded(true);
       }).catch(() => setLoaded(true));
   }, []);
-
-  const categories = ['All', ...new Set(galleryItems.map((g) => g.category))];
 
   const handleFilter = (c) => {
     if (c === active) return;
@@ -46,9 +45,9 @@ export default function Gallery() {
           </div>
           <div className="d-flex flex-wrap justify-content-center gap-3 gap-md-4 mb-5">
             {categories.map((c) => (
-              <button key={c} className={`gallery-ref-filter ${active === c ? 'active' : ''}`} onClick={() => handleFilter(c)}>
-                <div className="filter-icon-box"><i className={`bi ${getCategoryIcon(c)}`}></i></div>
-                <span className="filter-text">{c === 'All' ? 'ทั้งหมด' : c}</span>
+              <button key={c.name} className={`gallery-ref-filter ${active === c.name ? 'active' : ''}`} onClick={() => handleFilter(c.name)}>
+                <div className="filter-icon-box"><i className={`bi ${c.icon}`}></i></div>
+                <span className="filter-text">{c.name === 'All' ? 'ทั้งหมด' : c.name}</span>
               </button>
             ))}
           </div>

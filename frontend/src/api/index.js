@@ -120,6 +120,15 @@ export const galleryAPI = {
   create: (data) => post('/gallery', data),
   update: (id, data) => put(`/gallery/${id}`, data),
   delete: (id) => del(`/gallery/${id}`),
+  reorder: (data) => put('/gallery/reorder', data),
+};
+
+export const galleryCategoryAPI = {
+  list: () => get('/gallery-categories'),
+  create: (data) => post('/gallery-categories', data),
+  update: (id, data) => put(`/gallery-categories/${id}`, data),
+  delete: (id) => del(`/gallery-categories/${id}`),
+  reorder: (data) => put('/gallery-categories/reorder', data),
 };
 
 // ─── Blog ───

@@ -20,7 +20,7 @@ export default function AdminServices() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    serviceAPI.list().then(data => setItems(data)).catch(() => {});
+    serviceAPI.list().then(data => setItems(data)).catch(() => { });
   }, []);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -193,82 +193,82 @@ export default function AdminServices() {
 
       {/* Add/Edit Modal */}
       <ModalBackdrop show={showModal} onClose={closeModal}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="fw-bold m-0">{editId ? 'แก้ไขบริการ' : 'เพิ่มบริการใหม่'}</h5>
-              <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '1.3rem', color: '#94a3b8', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
-            </div>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h5 className="fw-bold m-0">{editId ? 'แก้ไขบริการ' : 'เพิ่มบริการใหม่'}</h5>
+          <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '1.3rem', color: '#94a3b8', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
+        </div>
 
+        <div className="admin-form-group">
+          <label>ชื่อบริการ *</label>
+          <input type="text" name="title" value={form.title} onChange={handleChange} placeholder="ใส่ชื่อบริการตรงนี้" />
+        </div>
+        <div className="admin-form-group">
+          <label>คำอธิบาย *</label>
+          <textarea name="description" rows="3" value={form.description} onChange={handleChange} placeholder="อธิบายบริการโดยย่อ..."></textarea>
+        </div>
+        <div className="row g-3">
+          <div className="col-6">
             <div className="admin-form-group">
-              <label>ชื่อบริการ *</label>
-              <input type="text" name="title" value={form.title} onChange={handleChange} placeholder="เช่น Web Development" />
-            </div>
-            <div className="admin-form-group">
-              <label>คำอธิบาย *</label>
-              <textarea name="description" rows="3" value={form.description} onChange={handleChange} placeholder="อธิบายบริการโดยย่อ..."></textarea>
-            </div>
-            <div className="row g-3">
-              <div className="col-6">
-                <div className="admin-form-group">
-                  <label>ไอคอน</label>
-                  <div className="dropdown">
-                    <button 
-                      className="d-flex justify-content-between align-items-center bg-white" 
-                      type="button" 
-                      data-bs-toggle="dropdown" 
-                      style={{ width: '90px', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '0 14px', height: '44px', cursor: 'pointer' }}
-                    >
-                      <div className="d-flex align-items-center text-primary">
-                        <i className={`bi ${form.icon} fs-5`}></i>
-                      </div>
-                      <i className="bi bi-chevron-down text-muted small"></i>
-                    </button>
-                    <ul className="dropdown-menu shadow w-100 border-0 p-3" style={{ borderRadius: '16px', zIndex: 1050 }}>
-                      <div className="d-flex flex-wrap gap-2">
-                        {iconOptions.map(ico => (
-                          <button 
-                            type="button"
-                            key={ico}
-                            className={`btn ${form.icon === ico ? 'btn-primary' : 'btn-light border'} p-0 d-flex align-items-center justify-content-center`}
-                            style={{ width: 42, height: 42, borderRadius: '10px' }}
-                            onClick={() => setForm(p => ({...p, icon: ico}))}
-                          >
-                            <i className={`bi ${ico} fs-5`}></i>
-                          </button>
-                        ))}
-                      </div>
-                    </ul>
+              <label>ไอคอน</label>
+              <div className="dropdown">
+                <button
+                  className="d-flex justify-content-between align-items-center bg-white"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  style={{ width: '90px', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '0 14px', height: '44px', cursor: 'pointer' }}
+                >
+                  <div className="d-flex align-items-center text-primary">
+                    <i className={`bi ${form.icon} fs-5`}></i>
                   </div>
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="admin-form-group">
-                  <label>สถานะ</label>
-                  <div className="d-flex align-items-center gap-2 mt-1">
-                    <div className="form-check form-switch m-0">
-                      <input className="form-check-input" type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} style={{ cursor: 'pointer' }} />
-                    </div>
-                    <span className="small text-muted">{form.isActive ? 'แสดงผล' : 'ซ่อน'}</span>
+                  <i className="bi bi-chevron-down text-muted small"></i>
+                </button>
+                <ul className="dropdown-menu shadow w-100 border-0 p-3" style={{ borderRadius: '16px', zIndex: 1050 }}>
+                  <div className="d-flex flex-wrap gap-2">
+                    {iconOptions.map(ico => (
+                      <button
+                        type="button"
+                        key={ico}
+                        className={`btn ${form.icon === ico ? 'btn-primary' : 'btn-light border'} p-0 d-flex align-items-center justify-content-center`}
+                        style={{ width: 42, height: 42, borderRadius: '10px' }}
+                        onClick={() => setForm(p => ({ ...p, icon: ico }))}
+                      >
+                        <i className={`bi ${ico} fs-5`}></i>
+                      </button>
+                    ))}
                   </div>
-                </div>
+                </ul>
               </div>
             </div>
-
-            {/* Image uploader with crop */}
-            <ImageUploader
-              value={form.image}
-              onChange={(url) => setForm(p => ({ ...p, image: url }))}
-              label="รูปภาพบริการ"
-              aspectRatio={16 / 9}
-            />
-
-            <div className="d-flex gap-3 justify-content-end mt-4">
-              <button onClick={closeModal} style={{ padding: '10px 24px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer' }}>
-                ยกเลิก
-              </button>
-              <button onClick={handleSave} style={{ padding: '10px 28px', borderRadius: '12px', border: 'none', background: 'var(--primary)', color: 'var(--navy)', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(163,217,0,0.3)' }}>
-                <i className="bi bi-save me-2"></i>{editId ? 'บันทึกการแก้ไข' : 'เพิ่มบริการ'}
-              </button>
+          </div>
+          <div className="col-6">
+            <div className="admin-form-group">
+              <label>สถานะ</label>
+              <div className="d-flex align-items-center gap-2 mt-1">
+                <div className="form-check form-switch m-0">
+                  <input className="form-check-input" type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} style={{ cursor: 'pointer' }} />
+                </div>
+                <span className="small text-muted">{form.isActive ? 'แสดงผล' : 'ซ่อน'}</span>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Image uploader with crop */}
+        <ImageUploader
+          value={form.image}
+          onChange={(url) => setForm(p => ({ ...p, image: url }))}
+          label="รูปภาพบริการ"
+          aspectRatio={16 / 9}
+        />
+
+        <div className="d-flex gap-3 justify-content-end mt-4">
+          <button onClick={closeModal} style={{ padding: '10px 24px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer' }}>
+            ยกเลิก
+          </button>
+          <button onClick={handleSave} style={{ padding: '10px 28px', borderRadius: '12px', border: 'none', background: 'var(--primary)', color: 'var(--navy)', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(163,217,0,0.3)' }}>
+            <i className="bi bi-save me-2"></i>{editId ? 'บันทึกการแก้ไข' : 'เพิ่มบริการ'}
+          </button>
+        </div>
       </ModalBackdrop>
     </div>
   );
