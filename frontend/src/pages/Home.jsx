@@ -53,7 +53,7 @@ export default function Home() {
                     <p style={{ fontSize: '.72rem', fontWeight: 700, letterSpacing: '2px', color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', marginBottom: 8 }}>{companyInfo.name}</p>
                     <h1>{s.title}</h1>
                     <p>{s.subtitle}</p>
-                    <div className="d-flex gap-3">
+                    <div className="d-flex gap-3 hero-btn-wrap">
                       <Link to="/services" className="btn btn-main">ดูบริการ</Link>
                       <Link to="/contact" className="btn btn-ghost">ติดต่อเรา</Link>
                     </div>
@@ -95,7 +95,7 @@ export default function Home() {
                   )}
                 </div>
               </div>
-                <div className="col-lg-6 mt-4 mt-lg-0">
+              <div className="col-lg-6">
                   <span className="section-label">About Us</span>
                   <h2 className="section-title mb-4" style={{ fontSize: '2rem', fontWeight: 800 }}>{homeConfig.aboutSection?.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
                   <p className="lead text-muted mb-4" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.description || companyInfo.about}</p>
@@ -111,14 +111,14 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="row g-3 mb-4">
-                      <div className="col-12 col-md-6 d-flex align-items-start gap-3">
+                      <div className="col-6 d-flex align-items-start gap-3">
                         <i className="bi bi-bullseye fs-3 text-primary"></i>
                         <div>
                           <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet1Title || 'Mission'}</h6>
                           <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet1Desc || `${companyInfo.mission?.substring(0, 60)}...`}</p>
                         </div>
                       </div>
-                      <div className="col-12 col-md-6 d-flex align-items-start gap-3 mt-3 mt-md-0">
+                      <div className="col-6 d-flex align-items-start gap-3">
                         <i className="bi bi-eye fs-3 text-primary"></i>
                         <div>
                           <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet2Title || 'Vision'}</h6>
@@ -326,8 +326,8 @@ export default function Home() {
               <div style={{ position: 'absolute', bottom: -40, left: 20, width: 80, height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
               <div style={{ position: 'absolute', top: 40, left: -20, width: 60, height: 60, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
               
-              <div className="position-relative z-1 py-3 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4 text-center text-lg-start">
-                <div>
+              <div className="position-relative z-1 py-3 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
+                <div className="text-center text-lg-start">
                   <h2 className="fw-bold mb-2" style={{ fontSize: '2.4rem', color: 'var(--navy)' }}>พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?</h2>
                   <p className="mb-0 mx-auto mx-lg-0" style={{ maxWidth: 650, fontSize: '1.1rem', color: 'var(--navy)', opacity: 0.85 }}>ไม่ว่าจะเป็นงานกีฬาสี ปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!</p>
                 </div>
