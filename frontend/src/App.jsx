@@ -19,6 +19,7 @@ import AdminHero from './pages/admin/AdminHero';
 import AdminServices from './pages/admin/AdminServices';
 import AdminGallery from './pages/admin/AdminGallery';
 import AdminBlog from './pages/admin/AdminBlog';
+import AdminBlogEditor from './pages/admin/AdminBlogEditor';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminClients from './pages/admin/AdminClients';
 import AdminAbout from './pages/admin/AdminAbout';
@@ -73,6 +74,8 @@ export default function App() {
           <Route path="services" element={<AdminServices />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="blog" element={<AdminBlog />} />
+          <Route path="blog/new" element={<AdminBlogEditor />} />
+          <Route path="blog/edit/:id" element={<AdminBlogEditor />} />
           <Route path="team" element={<AdminTeam />} />
           <Route path="clients" element={<AdminClients />} />
           <Route path="about" element={<AdminAbout />} />

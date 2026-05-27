@@ -146,6 +146,7 @@ export const blogAPI = {
   create: (data) => post('/blog', data),
   update: (id, data) => put(`/blog/${id}`, data),
   delete: (id) => del(`/blog/${id}`),
+  getHistory: (id) => get(`/blog/${id}/history`),
 };
 
 // ─── Team ───

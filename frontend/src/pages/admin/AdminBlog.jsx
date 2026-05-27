@@ -1,113 +1,183 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { blogAPI } from '../../api';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
-import ImageUploader from '../../components/admin/ImageUploader';
-import ModalBackdrop from '../../components/admin/ModalBackdrop';
 
-const emptyForm = { title: '', excerpt: '', content: '', image: '', author: '', date: '', tag: '', status: 'draft' };
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+}
 
 export default function AdminBlog() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Derived state for pagination
+  const totalPages = Math.max(1, Math.ceil(posts.length / itemsPerPage));
+  const paginatedPosts = posts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset to page 1 if posts array changes significantly or if itemsPerPage changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
 
   useEffect(() => {
-    blogAPI.listAll().catch(() => blogAPI.listPublished()).then(data => setPosts(data)).catch(() => {});
+    blogAPI.listAll().catch(() => blogAPI.listPublished()).then(data => { setPosts(data); setLoaded(true); }).catch(() => setLoaded(true));
   }, []);
-  const [showModal, setShowModal] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState(emptyForm);
+
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'warning' });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ show: false, status: 'success', message: '' });
 
-  const handleChange = (e) => { const { name, value } = e.target; setForm(prev => ({ ...prev, [name]: value })); };
-  const openAdd = () => { setEditId(null); setForm(emptyForm); setShowModal(true); };
-  const openEdit = (p) => { setEditId(p.id); setForm({ title: p.title, excerpt: p.excerpt, content: p.content || '', image: p.image, author: p.author, date: p.date, tag: p.tag || '', status: p.status || 'published' }); setShowModal(true); };
-  const closeModal = () => { setShowModal(false); setEditId(null); setForm(emptyForm); };
-  const executeAction = useCallback(async (action) => { setConfirm(p => ({ ...p, show: false })); setLoading(true); try { await action(); setLoading(false); setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' }); } catch(e) { setLoading(false); setStatus({ show: true, status: 'error', message: e.message }); } }, []);
+  const executeAction = useCallback(async (action) => { setConfirm(p => ({ ...p, show: false })); setLoading(true); try { await action(); setLoading(false); setStatus({ show: true, status: 'success', message: 'ดำเนินการเรียบร้อยแล้ว' }); } catch (e) { setLoading(false); setStatus({ show: true, status: 'error', message: e.message }); } }, []);
 
-  const handleSave = () => {
-    if (!form.title.trim() || !form.excerpt.trim()) { setStatus({ show: true, status: 'error', message: 'กรุณากรอกหัวข้อและเนื้อหาย่อ' }); return; }
-    setConfirm({ show: true, type: 'info', title: editId ? 'ยืนยันการแก้ไข' : 'ยืนยันการเพิ่มบทความ', message: `${editId ? 'แก้ไข' : 'เพิ่ม'}บทความ "${form.title}" ?`,
-      action: async () => {
-        if (editId) { const u = await blogAPI.update(editId, form); setPosts(prev => prev.map(i => i.id === editId ? u : i)); }
-        else { const c = await blogAPI.create(form); setPosts(prev => [...prev, c]); }
-        closeModal();
-      }
+  const handleDelete = (item) => {
+    setConfirm({
+      show: true, type: 'danger', title: 'ยืนยันการลบ',
+      message: `ลบบทความ "${item.title}" ?`,
+      action: async () => { await blogAPI.delete(item.id); setPosts(p => p.filter(i => i.id !== item.id)); }
     });
   };
-  const handleDelete = (item) => { setConfirm({ show: true, type: 'danger', title: 'ยืนยันการลบ', message: `ลบบทความ "${item.title}" ?`, action: async () => { await blogAPI.delete(item.id); setPosts(p => p.filter(i => i.id !== item.id)); } }); };
 
   return (
     <div className="anim d1">
       <ConfirmModal show={confirm.show} type={confirm.type} title={confirm.title} message={confirm.message} onConfirm={() => executeAction(confirm.action)} onCancel={() => setConfirm(p => ({ ...p, show: false }))} confirmText={confirm.type === 'danger' ? 'ลบเลย' : 'ยืนยัน'} />
-      <LoadingOverlay show={loading} message="กำลังบันทึกข้อมูล..." />
+      <LoadingOverlay show={loading} message="กำลังดำเนินการ..." />
       <StatusModal show={status.show} status={status.status} message={status.message} onClose={() => setStatus(p => ({ ...p, show: false }))} />
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div><h3 className="fw-bold m-0 text-dark">จัดการบทความ (Blog)</h3><p className="text-muted m-0">จัดการข่าวสารและบทความต่างๆ บนเว็บไซต์</p></div>
-        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={openAdd}><i className="bi bi-pencil-square"></i>เขียนบทความใหม่</button>
+        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2"
+          onClick={() => navigate('/admin/blog/new')}>
+          <i className="bi bi-pencil-square"></i>เขียนบทความใหม่
+        </button>
       </div>
 
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle m-0">
-              <thead className="table-light">
-                <tr>
-                  <th className="px-4 py-3 border-bottom-0">ภาพปก</th>
-                  <th className="py-3 border-bottom-0">หัวข้อบทความ</th>
-                  <th className="py-3 border-bottom-0">สถานะ</th>
-                  <th className="py-3 border-bottom-0">วันที่</th>
-                  <th className="px-4 py-3 border-bottom-0 text-end" style={{ width: 140 }}>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {posts.map(post => (
-                  <tr key={post.id}>
-                    <td className="px-4 py-3"><div className="rounded-3 shadow-sm border" style={{ width: 100, height: 60, backgroundImage: `url(${post.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div></td>
-                    <td className="py-3"><div className="fw-bold text-dark mb-1">{post.title}</div><div className="text-muted small text-truncate" style={{ maxWidth: 280 }}>{post.excerpt}</div></td>
-                    <td className="py-3">
-                      <span className={`badge rounded-pill px-3 py-1 ${post.status === 'published' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-secondary bg-opacity-10 text-secondary border'}`}>
-                        {post.status === 'published' ? 'เผยแพร่' : 'แบบร่าง'}
-                      </span>
-                    </td>
-                    <td className="py-3"><span className="text-muted small"><i className="bi bi-calendar3 me-1"></i>{post.date}</span></td>
-                    <td className="px-4 py-3 text-end">
-                      <button className="btn btn-sm btn-light text-primary border rounded-3 me-2" onClick={() => openEdit(post)}><i className="bi bi-pencil-square"></i></button>
-                      <button className="btn btn-sm btn-light text-danger border rounded-3" onClick={() => handleDelete(post)}><i className="bi bi-trash"></i></button>
-                    </td>
+          {!loaded ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" style={{ width: 32, height: 32 }}></div>
+              <div className="text-muted mt-2 small">กำลังโหลด...</div>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-5">
+              <i className="bi bi-journal-text text-muted" style={{ fontSize: '3rem', opacity: 0.3 }}></i>
+              <div className="text-muted mt-2">ยังไม่มีบทความ</div>
+              <button className="btn btn-primary btn-sm mt-3 rounded-pill px-4"
+                onClick={() => navigate('/admin/blog/new')}>
+                <i className="bi bi-plus-lg me-1"></i>เขียนบทความแรก
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="table-responsive">
+              <table className="table table-hover align-middle m-0">
+                <thead className="table-light">
+                  <tr>
+                    <th className="px-4 py-3 border-bottom-0">ภาพปก</th>
+                    <th className="py-3 border-bottom-0">หัวข้อบทความ</th>
+                    <th className="py-3 border-bottom-0">สถานะ</th>
+                    <th className="py-3 border-bottom-0">สร้างเมื่อ</th>
+                    <th className="py-3 border-bottom-0">แก้ไขล่าสุด</th>
+                    <th className="px-4 py-3 border-bottom-0 text-end" style={{ width: 140 }}>จัดการ</th>
                   </tr>
+                </thead>
+                <tbody>
+                  {paginatedPosts.map(post => (
+                    <tr key={post.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/admin/blog/edit/${post.id}`)}>
+                      <td className="px-4 py-3">
+                        <div className="rounded-3 shadow-sm border" style={{ width: 100, height: 60, backgroundImage: `url(${post.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                      </td>
+                      <td className="py-3">
+                        <div className="fw-bold text-dark mb-1">{post.title}</div>
+                        <div className="text-muted small text-truncate" style={{ maxWidth: 280 }}>{post.excerpt}</div>
+                      </td>
+                      <td className="py-3">
+                        <span className={`badge rounded-pill px-3 py-1 ${post.status === 'published' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-secondary bg-opacity-10 text-secondary border'}`}>
+                          {post.status === 'published' ? 'เผยแพร่' : 'แบบร่าง'}
+                        </span>
+                      </td>
+                      <td className="py-3"><span className="text-muted small"><i className="bi bi-calendar3 me-1"></i>{formatDate(post.created_at)}</span></td>
+                      <td className="py-3"><span className="text-muted small"><i className="bi bi-pencil me-1"></i>{formatDate(post.updated_at)}</span></td>
+                      <td className="px-4 py-3 text-end" onClick={(e) => e.stopPropagation()}>
+                        <button className="btn btn-sm btn-light text-primary border rounded-3 me-2"
+                          onClick={() => navigate(`/admin/blog/edit/${post.id}`)}>
+                          <i className="bi bi-pencil-square"></i>
+                        </button>
+                        <button className="btn btn-sm btn-light text-danger border rounded-3"
+                          onClick={() => handleDelete(post)}>
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* ── Pagination Controls ── */}
+          <div className="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div className="d-flex align-items-center gap-2 text-muted small">
+              <span>แสดง</span>
+              <select
+                className="form-select form-select-sm shadow-none border-0 bg-light fw-bold text-dark"
+                style={{ width: 'auto', cursor: 'pointer', borderRadius: '8px' }}
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+              <span>รายการ</span>
+              <span className="ms-3 border-start ps-3">
+                รวมทั้งหมด <strong className="text-dark">{posts.length}</strong> รายการ
+              </span>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="d-flex align-items-center gap-1">
+                <button
+                  className="btn btn-sm btn-light border rounded-2"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    className={`btn btn-sm rounded-2 ${currentPage === page ? 'btn-primary fw-bold' : 'btn-light border text-muted'}`}
+                    style={{ width: 32 }}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
+
+                <button
+                  className="btn btn-sm btn-light border rounded-2"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+              </div>
+            )}
+            </div>
+            </>
+          )}
         </div>
       </div>
-
-      <ModalBackdrop show={showModal} onClose={closeModal}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="fw-bold m-0">{editId ? 'แก้ไขบทความ' : 'เขียนบทความใหม่'}</h5>
-              <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '1.3rem', color: '#94a3b8', cursor: 'pointer' }}><i className="bi bi-x-lg"></i></button>
-            </div>
-            <div className="admin-form-group"><label>หัวข้อ *</label><input type="text" name="title" value={form.title} onChange={handleChange} placeholder="หัวข้อบทความ" /></div>
-            <div className="admin-form-group"><label>เนื้อหาย่อ *</label><textarea name="excerpt" rows="2" value={form.excerpt} onChange={handleChange} placeholder="สรุปเนื้อหาสั้นๆ..."></textarea></div>
-            <div className="admin-form-group"><label>เนื้อหาเต็ม</label><textarea name="content" rows="5" value={form.content} onChange={handleChange} placeholder="เนื้อหาบทความทั้งหมด..."></textarea></div>
-            <div className="row g-3">
-              <div className="col-6"><div className="admin-form-group"><label>ผู้เขียน *</label><input type="text" name="author" value={form.author} onChange={handleChange} placeholder="ชื่อผู้เขียน" /></div></div>
-              <div className="col-6"><div className="admin-form-group"><label>วันที่</label><input type="text" name="date" value={form.date} onChange={handleChange} placeholder="เช่น 20 เม.ย. 2026" /></div></div>
-            </div>
-            <div className="row g-3">
-              <div className="col-6"><div className="admin-form-group"><label>Tags</label><input type="text" name="tag" value={form.tag} onChange={handleChange} placeholder="Technology, Design" /></div></div>
-              <div className="col-6"><div className="admin-form-group"><label>สถานะ</label><select name="status" value={form.status} onChange={handleChange}><option value="draft">แบบร่าง (Draft)</option><option value="published">เผยแพร่ (Published)</option></select></div></div>
-            </div>
-            <ImageUploader value={form.image} onChange={(url) => setForm(p => ({ ...p, image: url }))} label="รูปปก (Cover Image)" aspectRatio={16/9} />
-            <div className="d-flex gap-3 justify-content-end mt-4">
-              <button onClick={closeModal} style={{ padding: '10px 24px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer' }}>ยกเลิก</button>
-              <button onClick={handleSave} style={{ padding: '10px 28px', borderRadius: '12px', border: 'none', background: 'var(--primary)', color: 'var(--navy)', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(163,217,0,0.3)' }}><i className="bi bi-save me-2"></i>{editId ? 'บันทึก' : 'เพิ่มบทความ'}</button>
-            </div>
-      </ModalBackdrop>
     </div>
   );
 }

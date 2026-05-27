@@ -14,7 +14,6 @@ import { uploadImage, getMediaUrl } from '../../api';
  * @param {string} recommendedSize — hint text for recommended image dimensions
  */
 export default function ImageUploader({ value = '', onChange, label = 'รูปภาพ', aspectRatio = 16 / 9, circle = false, lockAspect = false, recommendedSize = '' }) {
-  const [mode, setMode] = useState('url'); // 'url' or 'upload'
   const [cropSrc, setCropSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -47,9 +46,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
       setCropSrc(null);
     } catch (err) {
       console.error('Upload failed:', err);
-      // Fallback
-      onChange(cropSrc);
-      setCropSrc(null);
+      alert('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ กรุณาลองใหม่อีกครั้ง');
     }
   }, [cropSrc, croppedArea, onChange]);
 
@@ -150,11 +147,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
             <button
               type="button"
               onClick={() => {
-                if (mode === 'upload') {
-                  fileRef.current?.click();
-                } else {
-                  setIsEditing(true);
-                }
+                fileRef.current?.click();
               }}
               className="btn btn-light btn-sm rounded-pill px-3 py-2 fw-bold shadow-sm d-flex align-items-center gap-2"
               style={{ fontSize: '0.78rem', transition: 'all 0.2s' }}
@@ -165,7 +158,6 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
               type="button"
               onClick={() => {
                 onChange('');
-                setIsEditing(false);
               }}
               className="btn btn-danger btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center"
               style={{ width: 36, height: 36, transition: 'all 0.2s' }}
@@ -186,89 +178,27 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
       ) : (
         /* Mode selector & Inputs when empty or editing */
         <div className="d-flex flex-column gap-2">
-          {/* Mode toggle */}
-          <div className="d-flex gap-1 align-items-center justify-content-between">
-            <div className="d-flex gap-1">
-              <button
-                type="button"
-                onClick={() => setMode('url')}
-                style={{
-                  padding: '4px 14px', borderRadius: '8px', border: '1.5px solid',
-                  borderColor: mode === 'url' ? 'var(--primary)' : '#e2e8f0',
-                  background: mode === 'url' ? 'rgba(163,217,0,0.08)' : '#fff',
-                  color: mode === 'url' ? 'var(--primary-dark)' : '#94a3b8',
-                  fontSize: '.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all .2s'
-                }}
-              >
-                <i className="bi bi-link-45deg me-1"></i>URL
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('upload')}
-                style={{
-                  padding: '4px 14px', borderRadius: '8px', border: '1.5px solid',
-                  borderColor: mode === 'upload' ? 'var(--primary)' : '#e2e8f0',
-                  background: mode === 'upload' ? 'rgba(163,217,0,0.08)' : '#fff',
-                  color: mode === 'upload' ? 'var(--primary-dark)' : '#94a3b8',
-                  fontSize: '.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all .2s'
-                }}
-              >
-                <i className="bi bi-cloud-arrow-up me-1"></i>อัปโหลด
-              </button>
-            </div>
-            
-            {value && isEditing && (
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="btn btn-link btn-sm text-secondary p-0 fw-bold text-decoration-none"
-                style={{ fontSize: '0.75rem' }}
-              >
-                ยกเลิก
-              </button>
-            )}
-          </div>
-
-          {/* URL mode */}
-          {mode === 'url' && (
-            <input
-              type="text"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="https://..."
-              className="form-control"
-              style={{
-                borderRadius: '12px',
-                padding: '10px 14px',
-                border: '1.5px solid #e2e8f0',
-                fontSize: '.88rem'
-              }}
-            />
-          )}
-
           {/* Upload mode */}
-          {mode === 'upload' && (
-            <div className="upload-dropzone" onClick={() => fileRef.current?.click()}>
-              <i className="bi bi-cloud-arrow-up-fill"></i>
-              <div className="text-dark fw-bold" style={{ fontSize: '.8rem' }}>คลิกเพื่อเลือกรูปภาพ</div>
-              <div className="text-muted" style={{ fontSize: '.68rem' }}>JPG, PNG, WebP (สูงสุด 5MB)</div>
-              {recommendedSize && <div className="text-primary mt-1" style={{ fontSize: '.75rem', fontWeight: 600 }}>{recommendedSize}</div>}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                onChange={onFileSelect}
-                style={{ display: 'none' }}
-              />
-            </div>
-          )}
+          <div className="upload-dropzone" onClick={() => fileRef.current?.click()}>
+            <i className="bi bi-cloud-arrow-up-fill"></i>
+            <div className="text-dark fw-bold" style={{ fontSize: '.8rem' }}>คลิกเพื่อเลือกรูปภาพ</div>
+            <div className="text-muted" style={{ fontSize: '.68rem' }}>JPG, PNG, WebP (สูงสุด 5MB)</div>
+            {recommendedSize && <div className="text-primary mt-1" style={{ fontSize: '.75rem', fontWeight: 600 }}>{recommendedSize}</div>}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={onFileSelect}
+              style={{ display: 'none' }}
+            />
+          </div>
         </div>
       )}
 
       {/* Crop Modal */}
       {cropSrc && createPortal(
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 10002,
+          position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           animation: 'adminFadeIn .2s ease'
@@ -294,8 +224,6 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
                   onCropComplete={onCropComplete}
-                  minZoom={0.1}
-                  restrictPosition={false}
                 />
             </div>
 

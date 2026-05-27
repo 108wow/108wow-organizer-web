@@ -25,15 +25,19 @@ def upload_image(current_user):
     if not allowed_file(file.filename):
         return jsonify({'error': 'File type not allowed'}), 400
 
-    # Generate unique filename
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    filename = f"{uuid.uuid4().hex}.{ext}"
-
-    upload_folder = current_app.config['UPLOAD_FOLDER']
-    os.makedirs(upload_folder, exist_ok=True)
-    filepath = os.path.join(upload_folder, filename)
-    file.save(filepath)
-
-    # Return the URL path
-    url = f"/uploads/{filename}"
-    return jsonify({'url': url, 'filename': filename}), 201
+    try:
+        import cloudinary.uploader
+        
+        # Upload the file to Cloudinary
+        # Cloudinary will automatically use the CLOUDINARY_URL env var
+        upload_result = cloudinary.uploader.upload(file)
+        
+        # Get the secure HTTPS URL from Cloudinary
+        url = upload_result.get('secure_url')
+        filename = upload_result.get('public_id')
+        
+        return jsonify({'url': url, 'filename': filename}), 201
+        
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return jsonify({'error': 'Failed to upload image to Cloudinary. Please check configuration.'}), 500

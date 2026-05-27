@@ -1,9 +1,22 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.blog import BlogPost
+from app.models.blog_edit_history import BlogEditHistory
 from app.routes.auth import token_required
+import json
 
 blog_bp = Blueprint('blog', __name__)
+
+TRACKED_FIELDS = ['title', 'excerpt', 'content', 'image', 'author', 'tag', 'status']
+FIELD_LABELS = {
+    'title': 'หัวข้อ',
+    'excerpt': 'เนื้อหาย่อ',
+    'content': 'เนื้อหาเต็ม',
+    'image': 'ภาพปก',
+    'author': 'ผู้เขียน',
+    'tag': 'แท็ก',
+    'status': 'สถานะ',
+}
 
 
 @blog_bp.route('', methods=['GET'])
@@ -26,7 +39,7 @@ def get_post(id):
     post = db.session.get(BlogPost, id)
     if not post:
         return jsonify({'error': 'Not found'}), 404
-    return jsonify(post.to_dict())
+    return jsonify(post.to_dict(include_history=True))
 
 
 @blog_bp.route('', methods=['POST'])
@@ -39,7 +52,6 @@ def create_post(current_user):
         content=data.get('content', ''),
         image=data.get('image', ''),
         author=data.get('author', ''),
-        date=data.get('date', ''),
         tag=data.get('tag', ''),
         status=data.get('status', 'draft'),
     )
@@ -55,13 +67,49 @@ def update_post(current_user, id):
     if not post:
         return jsonify({'error': 'Not found'}), 404
     data = request.get_json()
-    for key, attr in [('title', 'title'), ('excerpt', 'excerpt'), ('content', 'content'),
-                      ('image', 'image'), ('author', 'author'), ('date', 'date'),
-                      ('tag', 'tag'), ('status', 'status')]:
+
+    # Track what changed
+    changed_fields = []
+    for key in TRACKED_FIELDS:
         if key in data:
-            setattr(post, attr, data[key])
+            old_val = getattr(post, key, '') or ''
+            new_val = data[key] or ''
+            if old_val != new_val:
+                changed_fields.append(key)
+
+    # Apply updates
+    for key in TRACKED_FIELDS:
+        if key in data:
+            setattr(post, key, data[key])
+
+    # Record edit history if something changed
+    if changed_fields:
+        # Build human-readable summary
+        change_summary = data.get('change_summary', '')
+        if not change_summary:
+            labels = [FIELD_LABELS.get(f, f) for f in changed_fields]
+            change_summary = 'แก้ไข: ' + ', '.join(labels)
+
+        history = BlogEditHistory(
+            blog_post_id=post.id,
+            edited_by=getattr(current_user, 'username', 'admin'),
+            change_summary=change_summary,
+            fields_changed=json.dumps(changed_fields, ensure_ascii=False),
+        )
+        db.session.add(history)
+
     db.session.commit()
-    return jsonify(post.to_dict())
+    return jsonify(post.to_dict(include_history=True))
+
+
+@blog_bp.route('/<int:id>/history', methods=['GET'])
+def get_post_history(id):
+    """Get edit history for a blog post"""
+    post = db.session.get(BlogPost, id)
+    if not post:
+        return jsonify({'error': 'Not found'}), 404
+    history = BlogEditHistory.query.filter_by(blog_post_id=id).order_by(BlogEditHistory.edited_at.desc()).all()
+    return jsonify([h.to_dict() for h in history])
 
 
 @blog_bp.route('/<int:id>', methods=['DELETE'])
