@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+﻿import { useState, useCallback, useEffect } from 'react';
 import { homeConfigAPI, serviceAPI, clientAPI } from '../../api';
 import ImageUploader from '../../components/admin/ImageUploader';
 import ConfirmModal from '../../components/admin/ConfirmModal';
@@ -6,7 +6,7 @@ import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 
 export default function AdminHomeConfig() {
-  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersRows: 3, selectedClients: [], aboutSection: {} });
+  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersRows: 3, selectedClients: [], aboutSection: {}, navbarConfig: { home: true, about: true, team: true, services: true, gallery: true, clients: true, blog: true, contact: true } });
   const [allServices, setAllServices] = useState([]);
   const [allClients, setAllClients] = useState([]);
 
@@ -20,6 +20,7 @@ export default function AdminHomeConfig() {
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
   const [collapsed, setCollapsed] = useState({
+    navbar: false,
     about: false,
     services: false,
     whyUs: true,
@@ -101,56 +102,170 @@ export default function AdminHomeConfig() {
     });
   };
 
+  const [activeSection, setActiveSection] = useState('navbar');
+
+  // Section definitions for the left sidebar
+  const sections = [
+    { key: 'navbar', label: 'เมนูนำทาง', sublabel: 'Navbar', icon: 'bi-signpost-split', color: '#0a0f0d' },
+    { key: 'about', label: 'เกี่ยวกับเรา', sublabel: 'About Us', icon: 'bi-info-circle', color: '#a3d900', toggle: 'showAbout' },
+    { key: 'services', label: 'บริการของเรา', sublabel: 'Services', icon: 'bi-briefcase', color: '#198754', toggle: 'showServices' },
+    { key: 'whyUs', label: 'ทำไมต้องเลือกเรา', sublabel: 'Why Choose Us', icon: 'bi-star', color: '#ffc107', toggle: 'showWhyUs' },
+    { key: 'stats', label: 'แถบสถิติ', sublabel: 'Stats Bar', icon: 'bi-bar-chart-steps', color: '#0dcaf0', toggle: 'showStats' },
+    { key: 'customers', label: 'ลูกค้าของเรา', sublabel: 'Customers', icon: 'bi-building', color: '#6c757d', toggle: 'showCustomers' },
+    { key: 'cta', label: 'ป้ายประกาศ', sublabel: 'Call to Action', icon: 'bi-megaphone', color: '#dc3545', toggle: 'showCTA' },
+  ];
+
   return (
     <div className="anim d1">
       <ConfirmModal show={confirm.show} type={confirm.type} title={confirm.title} message={confirm.message} onConfirm={()=>exec(confirm.action)} onCancel={()=>setConfirm(p=>({...p,show:false}))} />
       <LoadingOverlay show={loading} />
       <StatusModal show={statusM.show} status={statusM.status} message={statusM.message} onClose={()=>setStatusM(p=>({...p,show:false}))} />
 
-      <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm sticky-top" style={{ top: '80px', zIndex: 10 }}>
+      {/* Header Bar */}
+      <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 px-4 rounded-4 shadow-sm sticky-top" style={{ top: '80px', zIndex: 10 }}>
         <div>
-          <h3 className="fw-bold m-0 text-dark">จัดการส่วนประกอบหน้าแรก (Home Layout)</h3>
-          <p className="text-muted m-0" style={{ fontSize: '0.85rem' }}>เปิด/ปิด และกำหนดข้อมูลที่จะแสดงในแต่ละส่วนของหน้า Home</p>
+          <h4 className="fw-bold m-0 text-dark d-flex align-items-center gap-2">
+            <i className="bi bi-sliders2 text-primary"></i>
+            จัดการหน้าแรก
+          </h4>
+          <p className="text-muted m-0" style={{ fontSize: '0.8rem' }}>เปิด/ปิด และกำหนดข้อมูลที่จะแสดงในแต่ละส่วนของหน้า Home</p>
         </div>
-        <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
-          <i className="bi bi-save"></i>บันทึกการตั้งค่า
+        <button className="btn btn-primary fw-bold px-4 py-2 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
+          <i className="bi bi-save"></i>บันทึก
         </button>
       </div>
 
-      <div className="row">
-        <div className="col-12">
-          {/* 1. About Us Card */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ transition: 'all 0.3s ease' }}>
-            <div 
-              className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onClick={() => toggleSection('about')}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-            >
-              <div className="d-flex align-items-center gap-3">
-                <div className="p-2 rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                  <i className="bi bi-info-circle fs-5"></i>
-                </div>
-                <div>
-                  <h5 className="fw-bold m-0 text-dark">เกี่ยวกับเรา (About Us)</h5>
-                  <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแนะนำบริษัทด้านล่าง Hero Banner</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-center gap-3" onClick={e => e.stopPropagation()}>
-                <span className={`badge rounded-pill px-2.5 py-1 ${config.showAbout ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                  {config.showAbout ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                </span>
-                <div className="form-check form-switch fs-4 m-0 d-flex align-items-center">
-                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showAbout} onChange={() => handleToggle('showAbout')} style={{ cursor: 'pointer' }} />
-                </div>
-                <button type="button" className="btn btn-link text-secondary p-0 ms-2" onClick={() => toggleSection('about')}>
-                  <i className={`bi bi-chevron-${collapsed.about ? 'down' : 'up'} fs-5`}></i>
-                </button>
-              </div>
+      <div className="row g-4">
+        {/* ===== LEFT: Section Navigator ===== */}
+        <div className="col-lg-4 col-xl-3">
+          <div className="bg-white rounded-4 shadow-sm p-3 position-sticky" style={{ top: '150px' }}>
+            <div className="small fw-bold text-uppercase text-muted mb-3 px-2" style={{ letterSpacing: '1px', fontSize: '.65rem' }}>ส่วนประกอบหน้าแรก</div>
+            <div className="d-flex flex-column gap-1">
+              {sections.map(s => {
+                const isActive = activeSection === s.key;
+                const isEnabled = s.toggle ? config[s.toggle] : true;
+                return (
+                  <button
+                    key={s.key}
+                    onClick={() => setActiveSection(s.key)}
+                    className="btn text-start rounded-3 px-3 py-2 d-flex align-items-center gap-3 border-0 position-relative"
+                    style={{
+                      background: isActive ? 'linear-gradient(90deg, rgba(163,217,0,0.12) 0%, rgba(163,217,0,0) 100%)' : 'transparent',
+                      borderLeft: isActive ? '3px solid var(--primary)' : '3px solid transparent',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: 36, height: 36, background: `${s.color}15` }}>
+                      <i className={`bi ${s.icon}`} style={{ color: s.color, fontSize: '1rem' }}></i>
+                    </div>
+                    <div className="flex-grow-1 text-truncate">
+                      <div className="fw-semibold text-dark" style={{ fontSize: '.82rem', lineHeight: 1.2 }}>{s.label}</div>
+                      <div className="text-muted" style={{ fontSize: '.65rem' }}>{s.sublabel}</div>
+                    </div>
+                    {s.toggle && (
+                      <span className={`badge rounded-pill ${isEnabled ? 'bg-success' : 'bg-secondary'} bg-opacity-10 ${isEnabled ? 'text-success' : 'text-secondary'}`} style={{ fontSize: '.6rem', fontWeight: 700 }}>
+                        {isEnabled ? 'ON' : 'OFF'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            {!collapsed.about && (
-              <div className="card-body p-4">
+          </div>
+        </div>
+
+        {/* ===== RIGHT: Section Detail Panel ===== */}
+        <div className="col-lg-8 col-xl-9">
+          <div className="bg-white rounded-4 shadow-sm p-4" style={{ minHeight: '400px' }}>
+
+            {/* ---- Navbar Section ---- */}
+            {activeSection === 'navbar' && (
+              <div>
+                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: '#0a0f0d15' }}>
+                    <i className="bi bi-signpost-split fs-4" style={{ color: '#0a0f0d' }}></i>
+                  </div>
+                  <div>
+                    <h5 className="fw-bold m-0 text-dark">เมนูนำทาง (Navbar)</h5>
+                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เปิด/ปิด เมนูที่แสดงบน Navbar ฝั่งหน้าบ้าน</p>
+                  </div>
+                  <span className="badge rounded-pill px-2 py-1 bg-primary bg-opacity-10 text-primary ms-auto" style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                    {Object.values(config.navbarConfig || {}).filter(Boolean).length} / {Object.keys(config.navbarConfig || {}).length} เมนู
+                  </span>
+                </div>
+                <div className="alert alert-light border rounded-3 mb-4 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
+                  <i className="bi bi-info-circle-fill text-primary"></i>
+                  <span>เมนูที่ปิดจะไม่แสดงใน Navbar ฝั่งหน้าบ้าน แต่ผู้ใช้ยังสามารถเข้าถึงผ่าน URL โดยตรงได้</span>
+                </div>
+                <div className="row g-3">
+                  {[
+                    { key: 'home', label: 'HOME', icon: 'bi-house-door', path: '/', locked: true },
+                    { key: 'about', label: 'ABOUT US', icon: 'bi-info-circle', path: '/about' },
+                    { key: 'team', label: 'TEAM', icon: 'bi-people', path: '/team' },
+                    { key: 'services', label: 'SERVICES', icon: 'bi-briefcase', path: '/services' },
+                    { key: 'gallery', label: 'GALLERY', icon: 'bi-images', path: '/gallery' },
+                    { key: 'clients', label: 'CLIENTS', icon: 'bi-building', path: '/clients' },
+                    { key: 'blog', label: 'BLOG', icon: 'bi-journal-text', path: '/blog' },
+                    { key: 'contact', label: 'CONTACT US', icon: 'bi-envelope', path: '/contact' },
+                  ].map(item => {
+                    const navCfg = config.navbarConfig || {};
+                    const isEnabled = navCfg[item.key] !== false;
+                    return (
+                      <div key={item.key} className="col-6 col-md-4 col-lg-3">
+                        <div
+                          className="p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center"
+                          style={{
+                            transition: 'all 0.25s ease',
+                            borderColor: isEnabled ? 'var(--primary)' : '#e2e8f0',
+                            borderWidth: isEnabled ? '2px' : '1px',
+                            background: isEnabled ? 'rgba(163,217,0,0.05)' : '#f8fafc',
+                            opacity: isEnabled ? 1 : 0.55,
+                            minHeight: '110px',
+                          }}
+                        >
+                          <i className={`bi ${item.icon} fs-4 mb-2 ${isEnabled ? 'text-primary' : 'text-secondary'}`}></i>
+                          <div className="fw-bold text-dark mb-1" style={{ fontSize: '0.82rem' }}>{item.label}</div>
+                          <div className="text-muted mb-2" style={{ fontSize: '0.65rem' }}>{item.path}</div>
+                          {item.locked ? (
+                            <span className="badge bg-secondary bg-opacity-10 text-secondary" style={{ fontSize: '0.65rem' }}>
+                              <i className="bi bi-lock-fill me-1"></i>ล็อกเปิดเสมอ
+                            </span>
+                          ) : (
+                            <div className="form-check form-switch m-0">
+                              <input className="form-check-input" type="checkbox" role="switch" checked={isEnabled}
+                                onChange={() => setConfig(prev => ({ ...prev, navbarConfig: { ...(prev.navbarConfig || {}), [item.key]: !isEnabled } }))}
+                                style={{ cursor: 'pointer' }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ---- About Us Section ---- */}
+            {activeSection === 'about' && (
+              <div>
+                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: 'rgba(163,217,0,0.12)' }}>
+                    <i className="bi bi-info-circle fs-4 text-primary"></i>
+                  </div>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold m-0 text-dark">เกี่ยวกับเรา (About Us)</h5>
+                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแนะนำบริษัทด้านล่าง Hero Banner</p>
+                  </div>
+                  <div className="d-flex align-items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <span className={`badge rounded-pill px-2 py-1 ${config.showAbout ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                      {config.showAbout ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                    </span>
+                    <div className="form-check form-switch fs-4 m-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={config.showAbout} onChange={() => handleToggle('showAbout')} style={{ cursor: 'pointer' }} />
+                    </div>
+                  </div>
+                </div>
                 {!config.showAbout && (
                   <div className="alert alert-secondary border-0 rounded-3 mb-4 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
                     <i className="bi bi-eye-slash-fill"></i>
@@ -159,165 +274,81 @@ export default function AdminHomeConfig() {
                 )}
                 <div className="row g-4">
                   <div className="col-md-5">
-                    <ImageUploader 
-                      value={config.aboutSection?.image || ''} 
-                      onChange={handleAboutImage} 
-                      label="รูปภาพประกอบ" 
-                      recommendedSize="600x750px (แนวตั้ง 4:5 แบบโพลารอยด์)"
-                      aspectRatio={4/5}
-                    />
+                    <ImageUploader value={config.aboutSection?.image || ''} onChange={handleAboutImage} label="รูปภาพประกอบ" recommendedSize="600x750px (แนวตั้ง 4:5 แบบโพลารอยด์)" aspectRatio={4/5} />
                     <div className="admin-form-group mt-3">
                       <label>วิดีโอ YouTube/Vimeo (ถ้ามี)</label>
                       <input type="text" name="videoUrl" value={config.aboutSection?.videoUrl || ''} onChange={handleAboutChange} placeholder="วางลิงก์วิดีโอเพื่อแสดงปุ่ม Play บนรูป" />
                     </div>
-                    
                     <div className="row g-2 mt-2">
-                      <div className="col-6">
-                        <div className="admin-form-group">
-                          <label>ป้ายข้อความบน (เช่น เลข)</label>
-                          <input type="text" name="badgeTopText" value={config.aboutSection?.badgeTopText || ''} onChange={handleAboutChange} placeholder="14" />
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="admin-form-group">
-                          <label>ป้ายข้อความล่าง</label>
-                          <input type="text" name="badgeBottomText" value={config.aboutSection?.badgeBottomText || ''} onChange={handleAboutChange} placeholder="ปีแห่งความสำเร็จ" />
-                        </div>
-                      </div>
+                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความบน (เช่น เลข)</label><input type="text" name="badgeTopText" value={config.aboutSection?.badgeTopText || ''} onChange={handleAboutChange} placeholder="14" /></div></div>
+                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความล่าง</label><input type="text" name="badgeBottomText" value={config.aboutSection?.badgeBottomText || ''} onChange={handleAboutChange} placeholder="ปีแห่งความสำเร็จ" /></div></div>
                     </div>
                   </div>
                   <div className="col-md-7">
-                    <div className="admin-form-group">
-                      <label>หัวข้อหลัก (Title)</label>
-                      <input type="text" name="title" value={config.aboutSection?.title || ''} onChange={handleAboutChange} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" />
-                    </div>
-                    <div className="admin-form-group">
-                      <label>คำอธิบาย (Description)</label>
-                      <textarea name="description" rows="3" value={config.aboutSection?.description || ''} onChange={handleAboutChange} placeholder="ข้อความแนะนำบริษัท..."></textarea>
-                    </div>
-                    
+                    <div className="admin-form-group"><label>หัวข้อหลัก (Title)</label><input type="text" name="title" value={config.aboutSection?.title || ''} onChange={handleAboutChange} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" /></div>
+                    <div className="admin-form-group"><label>คำอธิบาย (Description)</label><textarea name="description" rows="3" value={config.aboutSection?.description || ''} onChange={handleAboutChange} placeholder="ข้อความแนะนำบริษัท..."></textarea></div>
                     <div className="admin-form-group">
                       <label className="d-flex justify-content-between align-items-center mb-2">
                         รายการจุดเด่น (List Items)
-                        <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold" style={{ fontSize: '0.75rem' }} onClick={handleAddListItem}>
-                          <i className="bi bi-plus-lg"></i> เพิ่มรายการ
-                        </button>
+                        <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold" style={{ fontSize: '0.75rem' }} onClick={handleAddListItem}><i className="bi bi-plus-lg"></i> เพิ่มรายการ</button>
                       </label>
                       <div className="d-flex flex-column gap-2">
                         {(config.aboutSection?.listItems || []).map((item, idx) => (
                           <div key={idx} className="d-flex gap-2 align-items-center">
-                            <input 
-                              type="text" 
-                              className="form-control form-control-sm rounded-3" 
-                              value={item} 
-                              onChange={(e) => handleListChange(idx, e.target.value)} 
-                              placeholder={`รายการที่ ${idx + 1}`} 
-                            />
-                            <button type="button" className="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center" style={{ width: 28, height: 28 }} onClick={() => handleRemoveListItem(idx)}>
-                              <i className="bi bi-trash"></i>
-                            </button>
+                            <input type="text" className="form-control form-control-sm rounded-3" value={item} onChange={(e) => handleListChange(idx, e.target.value)} placeholder={`รายการที่ ${idx + 1}`} />
+                            <button type="button" className="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center" style={{ width: 28, height: 28 }} onClick={() => handleRemoveListItem(idx)}><i className="bi bi-trash"></i></button>
                           </div>
                         ))}
                         {(!config.aboutSection?.listItems || config.aboutSection?.listItems.length === 0) && (
-                          <div className="text-muted small text-center bg-white border p-3 rounded-4">ยังไม่มีรายการ จุดเด่นนี้จะถูกซ่อนอยู่ คุณสามารถกดปุ่มเพิ่มรายการด้านบนได้</div>
+                          <div className="text-muted small text-center bg-light border p-3 rounded-4">ยังไม่มีรายการ คุณสามารถกดปุ่มเพิ่มรายการด้านบนได้</div>
                         )}
                       </div>
                     </div>
-
                     <div className="row g-2 mt-2">
-                      <div className="col-6">
-                        <div className="admin-form-group">
-                          <label>ข้อความปุ่ม CTA</label>
-                          <input type="text" name="buttonText" value={config.aboutSection?.buttonText || ''} onChange={handleAboutChange} placeholder="ติดต่อร่วมงานกับเรา" />
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="admin-form-group">
-                          <label>ลิงก์ปุ่ม CTA</label>
-                          <input type="text" name="buttonLink" value={config.aboutSection?.buttonLink || ''} onChange={handleAboutChange} placeholder="/contact" />
-                        </div>
-                      </div>
+                      <div className="col-6"><div className="admin-form-group"><label>ข้อความปุ่ม CTA</label><input type="text" name="buttonText" value={config.aboutSection?.buttonText || ''} onChange={handleAboutChange} placeholder="ติดต่อร่วมงานกับเรา" /></div></div>
+                      <div className="col-6"><div className="admin-form-group"><label>ลิงก์ปุ่ม CTA</label><input type="text" name="buttonLink" value={config.aboutSection?.buttonLink || ''} onChange={handleAboutChange} placeholder="/contact" /></div></div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-          </div>
 
-          {/* 2. Services Card */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ transition: 'all 0.3s ease' }}>
-            <div 
-              className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onClick={() => toggleSection('services')}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-            >
-              <div className="d-flex align-items-center gap-3">
-                <div className="p-2 rounded-3 bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                  <i className="bi bi-briefcase fs-5"></i>
+            {/* ---- Services Section ---- */}
+            {activeSection === 'services' && (
+              <div>
+                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: 'rgba(25,135,84,0.1)' }}>
+                    <i className="bi bi-briefcase fs-4 text-success"></i>
+                  </div>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold m-0 text-dark">บริการของเรา (Services)</h5>
+                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เลือกบริการที่จะแสดงในหน้าแรก</p>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className={`badge rounded-pill px-2 py-1 ${config.showServices ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                      {config.showServices ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                    </span>
+                    <div className="form-check form-switch fs-4 m-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={config.showServices} onChange={() => handleToggle('showServices')} style={{ cursor: 'pointer' }} />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="fw-bold m-0 text-dark">บริการของเรา (Services)</h5>
-                  <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เลือกบริการที่จะแสดงในหน้าแรก</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-center gap-3" onClick={e => e.stopPropagation()}>
-                <span className={`badge rounded-pill px-2.5 py-1 ${config.showServices ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                  {config.showServices ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                </span>
-                <div className="form-check form-switch fs-4 m-0 d-flex align-items-center">
-                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showServices} onChange={() => handleToggle('showServices')} style={{ cursor: 'pointer' }} />
-                </div>
-                <button type="button" className="btn btn-link text-secondary p-0 ms-2" onClick={() => toggleSection('services')}>
-                  <i className={`bi bi-chevron-${collapsed.services ? 'down' : 'up'} fs-5`}></i>
-                </button>
-              </div>
-            </div>
-            {!collapsed.services && (
-              <div className="card-body p-4">
                 {!config.showServices && (
                   <div className="alert alert-secondary border-0 rounded-3 mb-4 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
-                    <i className="bi bi-eye-slash-fill"></i>
-                    <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
+                    <i className="bi bi-eye-slash-fill"></i><span>ส่วนนี้ถูกปิดใช้งานอยู่</span>
                   </div>
                 )}
-                <div className="mb-3 text-muted small">* คลิกเลือกบริการที่ต้องการนำไปแสดงผลบนหน้าแรก (สัดส่วนหน้าจะปรับจัด Layout สมดุลให้โดยอัตโนมัติ)</div>
+                <div className="mb-3 text-muted small">* คลิกเลือกบริการที่ต้องการนำไปแสดงผลบนหน้าแรก</div>
                 <div className="row g-3">
                   {allServices.map(svc => {
                     const isSelected = (config.selectedServices || []).includes(svc.id);
                     return (
                       <div key={svc.id} className="col-6 col-md-4 col-lg-3">
-                        <div 
-                          onClick={() => handleServiceSelect(svc.id)}
-                          className={`p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative`}
-                          style={{
-                            cursor: 'pointer',
-                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                            borderColor: isSelected ? 'var(--primary)' : '#e2e8f0',
-                            borderWidth: isSelected ? '2px' : '1px',
-                            background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff',
-                            boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none',
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isSelected) e.currentTarget.style.borderColor = '#cbd5e1';
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isSelected) e.currentTarget.style.borderColor = '#e2e8f0';
-                          }}
+                        <div onClick={() => handleServiceSelect(svc.id)} className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative"
+                          style={{ cursor: 'pointer', transition: 'all 0.25s ease', borderColor: isSelected ? 'var(--primary)' : '#e2e8f0', borderWidth: isSelected ? '2px' : '1px', background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff', boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none' }}
                         >
-                          {isSelected && (
-                            <span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}>
-                              <i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i>
-                            </span>
-                          )}
-                          {svc.image ? (
-                            <img src={svc.image} alt={svc.title} className="rounded-3 mb-2 shadow-sm" style={{ width: '48px', height: '48px', objectFit: 'cover' }} />
-                          ) : (
-                            <div className="bg-light text-secondary rounded-3 mb-2 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
-                              <i className="bi bi-image fs-5"></i>
-                            </div>
-                          )}
+                          {isSelected && (<span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}><i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i></span>)}
+                          {svc.image ? (<img src={svc.image} alt={svc.title} className="rounded-3 mb-2 shadow-sm" style={{ width: '48px', height: '48px', objectFit: 'cover' }} />) : (<div className="bg-light text-secondary rounded-3 mb-2 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}><i className="bi bi-image fs-5"></i></div>)}
                           <div className="fw-bold text-dark text-truncate w-100 mt-1" style={{ fontSize: '0.82rem' }}>{svc.title}</div>
                         </div>
                       </div>
@@ -326,146 +357,76 @@ export default function AdminHomeConfig() {
                 </div>
               </div>
             )}
-          </div>
 
-          {/* 3. Why Us Card */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ transition: 'all 0.3s ease' }}>
-            <div 
-              className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onClick={() => toggleSection('whyUs')}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-            >
-              <div className="d-flex align-items-center gap-3">
-                <div className="p-2 rounded-3 bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                  <i className="bi bi-star fs-5"></i>
-                </div>
+            {/* ---- Simple Toggle Sections (Why Us, Stats, CTA) ---- */}
+            {['whyUs', 'stats', 'cta'].includes(activeSection) && (() => {
+              const meta = {
+                whyUs: { label: 'ทำไมต้องเลือกเรา (Why Choose Us)', desc: 'ส่วนเหตุผลที่ควรใช้บริการและภาพประกอบ', icon: 'bi-star', color: '#ffc107', toggle: 'showWhyUs', info: 'ส่วนนี้จะแสดงผลอัตโนมัติโดยดึงจุดเด่นของบริษัท 3 ข้อ ไปโชว์คู่กับรูปภาพแบนเนอร์ทีมงานในหน้าแรก' },
+                stats: { label: 'แถบตัวเลขสถิติ (Stats Bar)', desc: 'แถบสีเข้มแสดงตัวเลขผลงานและประสบการณ์', icon: 'bi-bar-chart-steps', color: '#0dcaf0', toggle: 'showStats', info: 'ส่วนนี้จะแสดงสถิติทั้งหมดที่สร้างขึ้น คุณสามารถจัดการได้ที่เมนู "เกี่ยวกับเรา > ตัวเลขสถิติ"' },
+                cta: { label: 'ป้ายประกาศด้านล่าง (Call to Action)', desc: 'ส่วน "พร้อมเริ่มโปรเจกต์ใหม่?" ก่อนถึง Footer', icon: 'bi-megaphone', color: '#dc3545', toggle: 'showCTA', info: 'ส่วนแบนเนอร์พื้นสีไล่ระดับท้ายเพจที่จะกระตุ้นการตัดสินใจของผู้เข้าชมเพื่อกดปุ่มติดต่อ' },
+              }[activeSection];
+              const isEnabled = config[meta.toggle];
+              return (
                 <div>
-                  <h5 className="fw-bold m-0 text-dark">ทำไมต้องเลือกเรา (Why Choose Us)</h5>
-                  <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนเหตุผลที่ควรใช้บริการและภาพประกอบ</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-center gap-3" onClick={e => e.stopPropagation()}>
-                <span className={`badge rounded-pill px-2.5 py-1 ${config.showWhyUs ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                  {config.showWhyUs ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                </span>
-                <div className="form-check form-switch fs-4 m-0 d-flex align-items-center">
-                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showWhyUs} onChange={() => handleToggle('showWhyUs')} style={{ cursor: 'pointer' }} />
-                </div>
-                <button type="button" className="btn btn-link text-secondary p-0 ms-2" onClick={() => toggleSection('whyUs')}>
-                  <i className={`bi bi-chevron-${collapsed.whyUs ? 'down' : 'up'} fs-5`}></i>
-                </button>
-              </div>
-            </div>
-            {!collapsed.whyUs && (
-              <div className="card-body p-4">
-                {!config.showWhyUs && (
-                  <div className="alert alert-secondary border-0 rounded-3 mb-0 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
-                    <i className="bi bi-eye-slash-fill"></i>
-                    <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
+                  <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                    <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: `${meta.color}18` }}>
+                      <i className={`bi ${meta.icon} fs-4`} style={{ color: meta.color }}></i>
+                    </div>
+                    <div className="flex-grow-1">
+                      <h5 className="fw-bold m-0 text-dark">{meta.label}</h5>
+                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>{meta.desc}</p>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className={`badge rounded-pill px-2 py-1 ${isEnabled ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                        {isEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                      </span>
+                      <div className="form-check form-switch fs-4 m-0">
+                        <input className="form-check-input" type="checkbox" role="switch" checked={isEnabled} onChange={() => handleToggle(meta.toggle)} style={{ cursor: 'pointer' }} />
+                      </div>
+                    </div>
                   </div>
-                )}
-                {config.showWhyUs && (
-                  <p className="text-muted m-0" style={{ fontSize: '0.85rem' }}>
-                    <i className="bi bi-info-circle-fill text-primary me-2"></i> ส่วนนี้จะแสดงผลอัตโนมัติโดยดึงจุดเด่นของบริษัท 3 ข้อ (ทีมผู้เชี่ยวชาญ, คุณภาพมาตรฐานสากล, ซัพพอร์ตตลอด 24/7) ไปโชว์คู่กับรูปภาพแบนเนอร์ทีมงานในหน้าแรกของเว็บไซต์
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+                  {!isEnabled ? (
+                    <div className="alert alert-secondary border-0 rounded-3 mb-0 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
+                      <i className="bi bi-eye-slash-fill"></i><span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
+                    </div>
+                  ) : (
+                    <div className="bg-light rounded-4 p-4 border d-flex align-items-start gap-3">
+                      <i className="bi bi-info-circle-fill text-primary mt-1"></i>
+                      <p className="text-muted m-0" style={{ fontSize: '0.85rem' }}>{meta.info}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
-          {/* 4. Stats Card */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ transition: 'all 0.3s ease' }}>
-            <div 
-              className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onClick={() => toggleSection('stats')}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-            >
-              <div className="d-flex align-items-center gap-3">
-                <div className="p-2 rounded-3 bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                  <i className="bi bi-bar-chart-steps fs-5"></i>
-                </div>
-                <div>
-                  <h5 className="fw-bold m-0 text-dark">แถบตัวเลขสถิติ (Stats Bar)</h5>
-                  <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>แถบสีเข้มแสดงตัวเลขผลงานและประสบการณ์</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-center gap-3" onClick={e => e.stopPropagation()}>
-                <span className={`badge rounded-pill px-2.5 py-1 ${config.showStats ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                  {config.showStats ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                </span>
-                <div className="form-check form-switch fs-4 m-0 d-flex align-items-center">
-                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showStats} onChange={() => handleToggle('showStats')} style={{ cursor: 'pointer' }} />
-                </div>
-                <button type="button" className="btn btn-link text-secondary p-0 ms-2" onClick={() => toggleSection('stats')}>
-                  <i className={`bi bi-chevron-${collapsed.stats ? 'down' : 'up'} fs-5`}></i>
-                </button>
-              </div>
-            </div>
-            {!collapsed.stats && (
-              <div className="card-body p-4">
-                {!config.showStats && (
-                  <div className="alert alert-secondary border-0 rounded-3 mb-0 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
-                    <i className="bi bi-eye-slash-fill"></i>
-                    <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
+            {/* ---- Customers Section ---- */}
+            {activeSection === 'customers' && (
+              <div>
+                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: 'rgba(108,117,125,0.1)' }}>
+                    <i className="bi bi-building fs-4 text-secondary"></i>
                   </div>
-                )}
-                {config.showStats && (
-                  <p className="text-muted m-0" style={{ fontSize: '0.85rem' }}>
-                    <i className="bi bi-info-circle-fill text-primary me-2"></i> ส่วนนี้จะแสดงสถิติทั้งหมดที่สร้างขึ้นเรียงต่อกันในแถบแบนเนอร์สีเข้ม คุณสามารถไปจัดเรียงหรือแก้ไขข้อความสถิติได้ที่เมนู <strong>"เกี่ยวกับเรา &gt; ตัวเลขสถิติ"</strong>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* 5. Customers Card */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ transition: 'all 0.3s ease' }}>
-            <div 
-              className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onClick={() => toggleSection('customers')}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-            >
-              <div className="d-flex align-items-center gap-3">
-                <div className="p-2 rounded-3 bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                  <i className="bi bi-building fs-5"></i>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold m-0 text-dark">ลูกค้าของเรา (Customers / Clients)</h5>
+                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแสดงโลโก้แบรนด์ลูกค้าวิ่งสไลด์</p>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className={`badge rounded-pill px-2 py-1 ${config.showCustomers ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                      {config.showCustomers ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                    </span>
+                    <div className="form-check form-switch fs-4 m-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={config.showCustomers} onChange={() => handleToggle('showCustomers')} style={{ cursor: 'pointer' }} />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="fw-bold m-0 text-dark">ลูกค้าของเรา (Customers / Clients)</h5>
-                  <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแสดงโลโก้แบรนด์ลูกค้าวิ่งสไลด์</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-center gap-3" onClick={e => e.stopPropagation()}>
-                <span className={`badge rounded-pill px-2.5 py-1 ${config.showCustomers ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                  {config.showCustomers ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                </span>
-                <div className="form-check form-switch fs-4 m-0 d-flex align-items-center">
-                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showCustomers} onChange={() => handleToggle('showCustomers')} style={{ cursor: 'pointer' }} />
-                </div>
-                <button type="button" className="btn btn-link text-secondary p-0 ms-2" onClick={() => toggleSection('customers')}>
-                  <i className={`bi bi-chevron-${collapsed.customers ? 'down' : 'up'} fs-5`}></i>
-                </button>
-              </div>
-            </div>
-            {!collapsed.customers && (
-              <div className="card-body p-4">
                 {!config.showCustomers && (
                   <div className="alert alert-secondary border-0 rounded-3 mb-4 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
-                    <i className="bi bi-eye-slash-fill"></i>
-                    <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
+                    <i className="bi bi-eye-slash-fill"></i><span>ส่วนนี้ถูกปิดใช้งานอยู่</span>
                   </div>
                 )}
-
                 {/* Layout Settings */}
                 <div className="bg-light rounded-4 p-4 mb-4 border">
-                  <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                    <i className="bi bi-grid-3x3-gap text-primary"></i> ตั้งค่าเลย์เอาท์ (Layout Settings)
-                  </h6>
+                  <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2"><i className="bi bi-grid-3x3-gap text-primary"></i> ตั้งค่าเลย์เอาท์</h6>
                   <div style={{ maxWidth: '280px' }}>
                     <label className="fw-bold mb-1" style={{ fontSize: '0.85rem' }}>จำนวนแถว (Rows)</label>
                     <div className="input-group">
@@ -476,60 +437,29 @@ export default function AdminHomeConfig() {
                     <small className="text-muted">แต่ละแถวจะวิ่งโลโก้ทั้งหมดที่เลือกไว้ สลับทิศซ้าย-ขวาอัตโนมัติ</small>
                   </div>
                 </div>
-
                 {/* Brand Selection */}
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h6 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
-                    <i className="bi bi-check2-square text-success"></i> เลือกแบรนด์ลูกค้าที่จะแสดง
-                    <span className="badge bg-primary bg-opacity-10 text-primary ms-2" style={{ fontSize: '0.7rem' }}>
-                      {(config.selectedClients || []).length} / {allClients.length} แบรนด์
-                    </span>
+                    <i className="bi bi-check2-square text-success"></i> เลือกแบรนด์ลูกค้า
+                    <span className="badge bg-primary bg-opacity-10 text-primary ms-2" style={{ fontSize: '0.7rem' }}>{(config.selectedClients || []).length} / {allClients.length}</span>
                   </h6>
                   <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3" style={{ fontSize: '0.78rem' }} onClick={handleSelectAllClients}>
-                    {allClients.length > 0 && allClients.every(c => (config.selectedClients || []).includes(c.id)) ? (
-                      <><i className="bi bi-x-circle me-1"></i>ยกเลิกทั้งหมด</>
-                    ) : (
-                      <><i className="bi bi-check-all me-1"></i>เลือกทั้งหมด</>
-                    )}
+                    {allClients.length > 0 && allClients.every(c => (config.selectedClients || []).includes(c.id)) ? (<><i className="bi bi-x-circle me-1"></i>ยกเลิกทั้งหมด</>) : (<><i className="bi bi-check-all me-1"></i>เลือกทั้งหมด</>)}
                   </button>
                 </div>
-
                 {allClients.length === 0 ? (
-                  <div className="text-center text-muted bg-light p-4 rounded-4 border">
-                    <i className="bi bi-building fs-1 d-block mb-2 opacity-25"></i>
-                    <p className="m-0">ยังไม่มีข้อมูลลูกค้า กรุณาเพิ่มข้อมูลลูกค้าที่เมนู <strong>"ลูกค้าของเรา"</strong> ก่อน</p>
-                  </div>
+                  <div className="text-center text-muted bg-light p-4 rounded-4 border"><i className="bi bi-building fs-1 d-block mb-2 opacity-25"></i><p className="m-0">ยังไม่มีข้อมูลลูกค้า กรุณาเพิ่มที่เมนู <strong>"ลูกค้าของเรา"</strong></p></div>
                 ) : (
                   <div className="row g-3">
                     {allClients.map(cli => {
                       const isSelected = (config.selectedClients || []).includes(cli.id);
                       return (
                         <div key={cli.id} className="col-6 col-md-4 col-lg-3">
-                          <div
-                            onClick={() => handleClientSelect(cli.id)}
-                            className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative"
-                            style={{
-                              cursor: 'pointer',
-                              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                              borderColor: isSelected ? 'var(--primary)' : '#e2e8f0',
-                              borderWidth: isSelected ? '2px' : '1px',
-                              background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff',
-                              boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none',
-                              minHeight: '100px',
-                            }}
+                          <div onClick={() => handleClientSelect(cli.id)} className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative"
+                            style={{ cursor: 'pointer', transition: 'all 0.25s ease', borderColor: isSelected ? 'var(--primary)' : '#e2e8f0', borderWidth: isSelected ? '2px' : '1px', background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff', boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none', minHeight: '100px' }}
                           >
-                            {isSelected && (
-                              <span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}>
-                                <i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i>
-                              </span>
-                            )}
-                            {cli.logo ? (
-                              <img src={cli.logo} alt={cli.name} className="mb-2" style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px', background: '#f8fafc', padding: '4px' }} />
-                            ) : (
-                              <div className="bg-light text-secondary rounded-3 mb-2 d-flex align-items-center justify-content-center" style={{ width: '56px', height: '56px' }}>
-                                <i className="bi bi-building fs-4"></i>
-                              </div>
-                            )}
+                            {isSelected && (<span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}><i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i></span>)}
+                            {cli.logo ? (<img src={cli.logo} alt={cli.name} className="mb-2" style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px', background: '#f8fafc', padding: '4px' }} />) : (<div className="bg-light text-secondary rounded-3 mb-2 d-flex align-items-center justify-content-center" style={{ width: '56px', height: '56px' }}><i className="bi bi-building fs-4"></i></div>)}
                             <div className="fw-bold text-dark text-truncate w-100" style={{ fontSize: '0.78rem' }}>{cli.name}</div>
                           </div>
                         </div>
@@ -539,56 +469,11 @@ export default function AdminHomeConfig() {
                 )}
               </div>
             )}
-          </div>
 
-          {/* 6. CTA Card */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ transition: 'all 0.3s ease' }}>
-            <div 
-              className="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onClick={() => toggleSection('cta')}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-            >
-              <div className="d-flex align-items-center gap-3">
-                <div className="p-2 rounded-3 bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                  <i className="bi bi-megaphone fs-5"></i>
-                </div>
-                <div>
-                  <h5 className="fw-bold m-0 text-dark">ป้ายประกาศด้านล่าง (Call to Action)</h5>
-                  <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วน "พร้อมเริ่มโปรเจกต์ใหม่?" ก่อนถึง Footer</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-center gap-3" onClick={e => e.stopPropagation()}>
-                <span className={`badge rounded-pill px-2.5 py-1 ${config.showCTA ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                  {config.showCTA ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                </span>
-                <div className="form-check form-switch fs-4 m-0 d-flex align-items-center">
-                  <input className="form-check-input" type="checkbox" role="switch" checked={config.showCTA} onChange={() => handleToggle('showCTA')} style={{ cursor: 'pointer' }} />
-                </div>
-                <button type="button" className="btn btn-link text-secondary p-0 ms-2" onClick={() => toggleSection('cta')}>
-                  <i className={`bi bi-chevron-${collapsed.cta ? 'down' : 'up'} fs-5`}></i>
-                </button>
-              </div>
-            </div>
-            {!collapsed.cta && (
-              <div className="card-body p-4">
-                {!config.showCTA && (
-                  <div className="alert alert-secondary border-0 rounded-3 mb-0 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
-                    <i className="bi bi-eye-slash-fill"></i>
-                    <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
-                  </div>
-                )}
-                {config.showCTA && (
-                  <p className="text-muted m-0" style={{ fontSize: '0.85rem' }}>
-                    <i className="bi bi-info-circle-fill text-primary me-2"></i> ส่วนแบนเนอร์พื้นสีไล่ระดับ (Gradient) ท้ายเพจที่จะกระตุ้นการตัดสินใจของผู้เข้าชมเพื่อกดปุ่มติดต่อและลิงก์ไปยังหน้า /contact ทันที
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

@@ -19,6 +19,7 @@ class HomeConfig(db.Model):
     selected_clients = db.Column(db.Text, default='[]')  # JSON array of client IDs
     show_cta = db.Column(db.Boolean, default=True)
     about_section = db.Column(db.Text, default='{}')
+    navbar_config = db.Column(db.Text, default='{}')  # JSON: {"home":true,"about":true,...}
 
     def to_dict(self):
         try:
@@ -29,6 +30,10 @@ class HomeConfig(db.Model):
             sel_clients = json.loads(self.selected_clients) if self.selected_clients else []
         except (json.JSONDecodeError, TypeError):
             sel_clients = []
+        try:
+            navbar_cfg = json.loads(self.navbar_config) if self.navbar_config else {}
+        except (json.JSONDecodeError, TypeError):
+            navbar_cfg = {}
         return {
             'showAbout': self.show_about,
             'showServices': self.show_services,
@@ -42,4 +47,5 @@ class HomeConfig(db.Model):
             'selectedClients': sel_clients,
             'showCTA': self.show_cta,
             'aboutSection': json.loads(self.about_section) if self.about_section else {},
+            'navbarConfig': navbar_cfg,
         }

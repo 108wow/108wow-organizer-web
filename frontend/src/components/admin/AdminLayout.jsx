@@ -9,7 +9,7 @@ import StatusModal from './StatusModal';
 // Context for admin modals — renders modals at layout root (outside scrollable content)
 const AdminModalContext = createContext(null);
 
-export function useAdminModal() {
+function useAdminModal() {
   return useContext(AdminModalContext);
 }
 
@@ -18,8 +18,33 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const path = location.pathname;
   const user = getUser();
-  
+
   const [companyInfo, setCompanyInfo] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (!e.target.closest('.admin-sidebar-footer')) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     companyAPI.get().then(setCompanyInfo).catch(console.error);
@@ -72,42 +97,166 @@ export default function AdminLayout() {
 
   return (
     <AdminModalContext.Provider value={modalCtx}>
-      <div className="admin-layout d-flex" style={{ minHeight: '100vh', backgroundColor: '#f0f4f8' }}>
+      <div className="admin-layout d-flex" style={{ minHeight: '100vh', backgroundColor: '#f0f4f8', overflow: 'hidden' }}>
+        <style>{`
+          .admin-sidebar {
+            width: 260px;
+            z-index: 1040;
+            background: var(--navy);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            color: #fff;
+            flex-shrink: 0;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          /* Desktop behavior */
+          @media (min-width: 769px) {
+            .admin-sidebar.collapsed {
+              width: 80px;
+            }
+            .admin-sidebar.collapsed .sidebar-text,
+            .admin-sidebar.collapsed .sidebar-title,
+            .admin-sidebar.collapsed .sidebar-logo-container {
+              display: none !important;
+            }
+            .admin-sidebar.collapsed .sidebar-header-box {
+              flex-direction: column;
+              padding: 1rem 0 !important;
+              gap: 15px !important;
+            }
+            .admin-sidebar.collapsed .sidebar-toggle-btn {
+              margin: 0 !important;
+            }
+            .admin-sidebar.collapsed .nav-link {
+              justify-content: center;
+              padding: 0.8rem 0 !important;
+            }
+            .admin-sidebar.collapsed .nav-link i {
+              font-size: 1.3rem !important;
+            }
+            .admin-sidebar.collapsed .sidebar-footer-btn {
+              justify-content: center !important;
+              padding: 0.8rem 0 !important;
+            }
+            .admin-sidebar.collapsed .dropdown-menu {
+              left: 100% !important;
+              bottom: 0 !important;
+              margin-left: 10px;
+            }
+          }
+          
+          /* Mobile behavior */
+          @media (max-width: 768px) {
+            .admin-sidebar {
+              position: fixed;
+              top: 0;
+              bottom: 0;
+              left: 0;
+              transform: translateX(-100%);
+              margin-left: 0 !important;
+            }
+            .admin-sidebar.mobile-open {
+              transform: translateX(0);
+            }
+            .admin-sidebar-overlay {
+              position: fixed;
+              inset: 0;
+              background: rgba(15,23,42,0.6);
+              backdrop-filter: blur(2px);
+              z-index: 1030;
+              opacity: 0;
+              visibility: hidden;
+              transition: all 0.3s ease;
+            }
+            .admin-sidebar-overlay.open {
+              opacity: 1;
+              visibility: visible;
+            }
+            
+            /* Adjust header on mobile */
+            .admin-header-title { font-size: 1rem !important; }
+            .admin-header-badge { display: none !important; }
+            .admin-main-content { padding: 1.5rem !important; }
+            .admin-user-info { display: none !important; }
+          }
+
+          /* Animated Toggle Button */
+          .sidebar-toggle-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .sidebar-toggle-btn:hover {
+            background: var(--primary);
+            color: var(--navy);
+            border-color: var(--primary);
+            transform: scale(1.05);
+          }
+          .sidebar-toggle-btn i {
+            transition: transform 0.3s ease;
+          }
+          .admin-sidebar.collapsed .sidebar-toggle-btn i {
+            transform: rotate(180deg);
+          }
+        `}</style>
+
+        {/* Mobile Overlay */}
+        <div
+          className={`admin-sidebar-overlay ${sidebarOpen && window.innerWidth <= 768 ? 'open' : ''}`}
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+
         {/* Sidebar - Dark Premium Theme */}
-        <div className="admin-sidebar d-flex flex-column shadow-lg" style={{ width: '250px', zIndex: 10, background: 'var(--navy)', color: '#fff', flexShrink: 0 }}>
-          <div className="p-3 pb-2 d-flex align-items-center gap-2">
-            <div className="d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
-              <img src="/logo-white.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%' }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-              <div className="bg-primary rounded-3 align-items-center justify-content-center" style={{ width: 36, height: 36, display: 'none' }}>
-                <i className="bi bi-emoji-smile text-white" style={{ fontSize: '1.2rem' }}></i>
+        <div className={`admin-sidebar d-flex flex-column shadow-lg ${!sidebarOpen ? 'collapsed' : 'mobile-open'}`}>
+          <div className="sidebar-header-box p-3 d-flex align-items-center justify-content-between position-relative">
+            <div className="sidebar-logo-container flex-grow-1 d-flex align-items-center justify-content-center" style={{ maxHeight: 50 }}>
+              <img src={companyInfo.logoUrl} alt="Logo" style={{ maxWidth: '100%', maxHeight: '50px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+              <div className="bg-primary rounded-3 align-items-center justify-content-center" style={{ width: 40, height: 40, display: 'none' }}>
+                <i className="bi bi-gear-fill text-dark" style={{ fontSize: '1.2rem' }}></i>
               </div>
             </div>
-            <div>
-              <h6 className="m-0 fw-bold text-white text-truncate" style={{ fontSize: '.85rem', lineHeight: 1.2, maxWidth: '170px' }}>{companyInfo.name || 'ระบบจัดการ'}</h6>
-            </div>
+
+            {/* Header Toggle Button */}
+            <button
+              className="sidebar-toggle-btn flex-shrink-0 ms-2"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title="พับ/กาง เมนู"
+            >
+              <i className={`bi ${sidebarOpen ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'}`}></i>
+            </button>
           </div>
-          
-          <div className="px-2 flex-grow-1" style={{ overflowY: 'auto' }}>
-            <div className="small fw-bold text-uppercase mb-2 px-3 pt-2" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', fontSize: '.6rem' }}>เมนูหลัก</div>
-            <ul className="nav flex-column gap-0">
+
+          <div className="px-3 mt-3 flex-grow-1" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
+            <div className="sidebar-title small fw-bold text-uppercase mb-2 px-2" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', fontSize: '.65rem' }}>เมนูหลัก</div>
+            <ul className="nav flex-column gap-1">
               {menuItems.map((item, i) => {
                 const isActive = path === item.path || (path.startsWith(item.path) && item.path !== '/admin');
                 return (
-                  <li className="nav-item" key={i}>
-                    <Link 
-                      to={item.path} 
-                      className="nav-link rounded-3 px-3 py-2 d-flex align-items-center gap-2"
-                      style={{ 
-                        fontWeight: isActive ? 700 : 500, 
-                        fontSize: '.78rem',
+                  <li className="nav-item" key={i} title={item.name}>
+                    <Link
+                      to={item.path}
+                      onClick={() => { if (window.innerWidth <= 768) setSidebarOpen(false); }}
+                      className="nav-link rounded-3 px-3 py-2 d-flex align-items-center gap-3"
+                      style={{
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: '.82rem',
                         color: isActive ? '#fff' : 'rgba(255,255,255,0.6)',
                         background: isActive ? 'linear-gradient(90deg, rgba(163,217,0,0.15) 0%, rgba(163,217,0,0) 100%)' : 'transparent',
-                        borderLeft: isActive ? '3px solid var(--primary)' : '3px solid transparent',
-                        transition: 'all 0.2s ease'
+                        borderLeft: isActive ? '3.5px solid var(--primary)' : '3.5px solid transparent',
+                        transition: 'all 0.2s ease',
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      <i className={`bi ${item.icon} ${isActive ? 'text-primary' : ''}`} style={{ fontSize: '.9rem' }}></i>
-                      {item.name}
+                      <i className={`bi ${item.icon} ${isActive ? 'text-primary' : ''}`} style={{ fontSize: '1.05rem', marginTop: '-2px' }}></i>
+                      <span className="sidebar-text">{item.name}</span>
                     </Link>
                   </li>
                 );
@@ -115,43 +264,78 @@ export default function AdminLayout() {
             </ul>
           </div>
 
-          <div className="p-3 mt-auto border-top" style={{ borderColor: 'rgba(255,255,255,0.05) !important' }}>
-            <Link to="/" className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 mb-2" style={{ padding: '8px', border: '1px solid rgba(255,255,255,0.15)', fontSize: '.78rem' }}>
-              <i className="bi bi-box-arrow-left"></i> กลับไปเว็บไซต์หลัก
-            </Link>
-            <button onClick={handleLogout} className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 rounded-3" style={{ padding: '8px', fontSize: '.78rem' }}>
-              <i className="bi bi-power"></i> ออกจากระบบ
+          <div className="admin-sidebar-footer p-3 mt-auto border-top position-relative" style={{ borderColor: 'rgba(255,255,255,0.05) !important', background: 'var(--navy)' }}>
+            <button
+              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              className="sidebar-footer-btn btn w-100 d-flex gap-3 p-2 align-items-center rounded-3 shadow-none border-0"
+              style={{ background: userDropdownOpen ? 'rgba(255,255,255,0.05)' : 'transparent', transition: 'all 0.2s', color: '#fff' }}
+              title={user?.displayName || 'Admin'}
+            >
+              <div className="bg-primary bg-opacity-25 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 38, height: 38 }}>
+                <i className="bi bi-person-fill fs-5"></i>
+              </div>
+              <div className="sidebar-text small text-start flex-grow-1 text-truncate d-flex flex-column">
+                <span className="fw-bold text-white" style={{ fontSize: '.85rem' }}>{user?.displayName || 'Admin'}</span>
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)' }}>{user?.username || 'admin'}</span>
+              </div>
+              <i className="sidebar-text bi bi-three-dots-vertical" style={{ color: 'rgba(255,255,255,0.4)' }}></i>
             </button>
+
+            {/* Dropdown Menu (Drop-up style) */}
+            {userDropdownOpen && (
+              <div
+                className="dropdown-menu show shadow-lg border-0 rounded-4 p-2 w-100"
+                style={{
+                  position: 'absolute', bottom: '100%', left: 0, marginBottom: '10px',
+                  background: '#1e293b',
+                  animation: 'adminFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 1050
+                }}
+              >
+                <div className="px-3 py-2 mb-2 d-flex gap-3 align-items-center border-bottom pb-3" style={{ borderColor: 'rgba(255,255,255,0.1) !important' }}>
+                  <div className="bg-primary text-navy rounded-circle d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style={{ width: 42, height: 42 }}>
+                    <i className="bi bi-person-fill fs-5"></i>
+                  </div>
+                  <div className="small text-start flex-grow-1 text-truncate">
+                    <div className="fw-bold text-white" style={{ fontSize: '.9rem' }}>{user?.displayName || 'Admin'}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>{user?.username || 'admin'}</div>
+                  </div>
+                </div>
+                <Link to="/admin/settings" className="dropdown-item rounded-3 py-2 px-3 fw-semibold d-flex align-items-center gap-2" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
+                  <i className="bi bi-person-gear fs-6" style={{ color: '#94a3b8' }}></i> ตั้งค่าบัญชี
+                </Link>
+                <Link to="/" className="dropdown-item rounded-3 py-2 px-3 fw-semibold d-flex align-items-center gap-2" style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
+                  <i className="bi bi-box-arrow-up-right fs-6" style={{ color: '#94a3b8' }}></i> หน้าเว็บไซต์หลัก
+                </Link>
+                <hr className="dropdown-divider my-2" style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                <button onClick={handleLogout} className="dropdown-item rounded-3 py-2 px-3 text-danger fw-bold d-flex align-items-center gap-2" style={{ fontSize: '0.85rem' }}>
+                  <i className="bi bi-power fs-6"></i> ออกจากระบบ
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="admin-content flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto', height: '100vh' }}>
+        <div className="admin-content flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto', height: '100vh', transition: 'width 0.3s ease' }}>
           {/* Top Navbar */}
-          <header className="bg-white px-5 py-3 d-flex justify-content-between align-items-center shadow-sm" style={{ zIndex: 9, position: 'sticky', top: 0 }}>
-            <h5 className="m-0 fw-bold text-dark d-flex align-items-center gap-2">
-              <span className="bg-primary text-white rounded-pill px-3 py-1 small" style={{ fontSize: '0.75rem' }}>BETA</span>
-              ระบบจัดการเนื้อหาเว็บไซต์
-            </h5>
-            <div className="d-flex align-items-center gap-4">
-              <button className="btn btn-light rounded-circle p-2 position-relative">
-                <i className="bi bi-bell fs-5 text-secondary"></i>
-                <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+          <header className="bg-white px-4 py-3 d-flex justify-content-between align-items-center shadow-sm" style={{ zIndex: 9, position: 'sticky', top: 0 }}>
+            <div className="d-flex align-items-center gap-3">
+              <button
+                className="btn btn-light rounded-2 d-md-none d-flex align-items-center justify-content-center p-2"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                style={{ width: 36, height: 36, border: '1.5px solid #e2e8f0' }}
+              >
+                <i className="bi bi-list fs-5 text-dark"></i>
               </button>
-              <div className="d-flex align-items-center gap-3 border-start ps-4">
-                <div className="text-end">
-                  <div className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>{user?.displayName || 'Admin'}</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>{user?.username || 'admin'}</div>
-                </div>
-                <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: 45, height: 45 }}>
-                  <i className="bi bi-person-fill fs-4"></i>
-                </div>
-              </div>
+              <h5 className="admin-header-title m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                <span className="admin-header-badge bg-primary text-white rounded-pill px-3 py-1 small" style={{ fontSize: '0.75rem' }}>BETA</span>
+                ระบบจัดการเนื้อหา
+              </h5>
             </div>
           </header>
 
           {/* Page Content Outlet */}
-          <main className="p-5 flex-grow-1">
+          <main className="admin-main-content p-5 flex-grow-1">
             <div className="container-fluid p-0" style={{ maxWidth: '1400px' }}>
               <Outlet />
             </div>

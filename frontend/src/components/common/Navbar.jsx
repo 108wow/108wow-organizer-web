@@ -1,18 +1,23 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { companyAPI } from '../../api';
+import { companyAPI, homeConfigAPI } from '../../api';
 
 export default function Navbar() {
   const { pathname } = useLocation();
   const [companyInfo, setCompanyInfo] = useState({ name: 'SUSPENDED TECH', logoUrl: '' });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [navbarConfig, setNavbarConfig] = useState({});
 
   useEffect(() => {
     companyAPI.get().then(d => { 
       const newName = d.name || 'SUSPENDED TECH';
       setCompanyInfo({ name: newName, logoUrl: d.logoUrl || '' }); 
       document.title = newName;
+    }).catch(() => {});
+
+    homeConfigAPI.get().then(d => {
+      if (d && d.navbarConfig) setNavbarConfig(d.navbarConfig);
     }).catch(() => {});
 
     const offcanvasEl = document.getElementById('mainNav');
@@ -30,16 +35,17 @@ export default function Navbar() {
       }
     };
   }, []);
-  const links = [
-    { to: '/', label: 'HOME' },
-    { to: '/about', label: 'ABOUT US' },
-    { to: '/team', label: 'TEAM' },
-    { to: '/services', label: 'SERVICES' },
-    { to: '/gallery', label: 'GALLERY' },
-    { to: '/clients', label: 'CLIENTS' },
-    { to: '/blog', label: 'BLOG' },
-    { to: '/contact', label: 'CONTACT US' },
+  const allLinks = [
+    { to: '/', label: 'HOME', key: 'home' },
+    { to: '/about', label: 'ABOUT US', key: 'about' },
+    { to: '/team', label: 'TEAM', key: 'team' },
+    { to: '/services', label: 'SERVICES', key: 'services' },
+    { to: '/gallery', label: 'GALLERY', key: 'gallery' },
+    { to: '/clients', label: 'CLIENTS', key: 'clients' },
+    { to: '/blog', label: 'BLOG', key: 'blog' },
+    { to: '/contact', label: 'CONTACT US', key: 'contact' },
   ];
+  const links = allLinks.filter(l => navbarConfig[l.key] !== false);
 
   const handleLinkClick = () => {
     if (isMenuOpen) {

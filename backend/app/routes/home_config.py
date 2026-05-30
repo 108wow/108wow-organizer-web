@@ -43,5 +43,8 @@ def update_config(current_user):
     if 'aboutSection' in data:
         config.about_section = json.dumps(data['aboutSection'])
 
+    if 'navbarConfig' in data:
+        config.navbar_config = json.dumps(data['navbarConfig'])
+
     db.session.commit()
     return jsonify(config.to_dict())
