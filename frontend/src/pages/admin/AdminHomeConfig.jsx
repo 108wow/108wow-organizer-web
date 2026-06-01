@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { homeConfigAPI, serviceAPI, clientAPI } from '../../api';
 import ImageUploader from '../../components/admin/ImageUploader';
 import ConfirmModal from '../../components/admin/ConfirmModal';
@@ -122,7 +122,7 @@ export default function AdminHomeConfig() {
       <StatusModal show={statusM.show} status={statusM.status} message={statusM.message} onClose={()=>setStatusM(p=>({...p,show:false}))} />
 
       {/* Header Bar */}
-      <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 px-4 rounded-4 shadow-sm sticky-top" style={{ top: '80px', zIndex: 10 }}>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4 bg-white p-3 px-4 rounded-4 shadow-sm">
         <div>
           <h4 className="fw-bold m-0 text-dark d-flex align-items-center gap-2">
             <i className="bi bi-sliders2 text-primary"></i>
@@ -130,68 +130,55 @@ export default function AdminHomeConfig() {
           </h4>
           <p className="text-muted m-0" style={{ fontSize: '0.8rem' }}>เปิด/ปิด และกำหนดข้อมูลที่จะแสดงในแต่ละส่วนของหน้า Home</p>
         </div>
-        <button className="btn btn-primary fw-bold px-4 py-2 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
+        <button className="btn btn-primary fw-bold px-4 py-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
           <i className="bi bi-save"></i>บันทึก
         </button>
       </div>
 
-      <div className="row g-4">
-        {/* ===== LEFT: Section Navigator ===== */}
-        <div className="col-lg-4 col-xl-3">
-          <div className="bg-white rounded-4 shadow-sm p-3 position-sticky" style={{ top: '150px' }}>
-            <div className="small fw-bold text-uppercase text-muted mb-3 px-2" style={{ letterSpacing: '1px', fontSize: '.65rem' }}>ส่วนประกอบหน้าแรก</div>
-            <div className="d-flex flex-column gap-1">
-              {sections.map(s => {
-                const isActive = activeSection === s.key;
-                const isEnabled = s.toggle ? config[s.toggle] : true;
-                return (
-                  <button
-                    key={s.key}
-                    onClick={() => setActiveSection(s.key)}
-                    className="btn text-start rounded-3 px-3 py-2 d-flex align-items-center gap-3 border-0 position-relative"
-                    style={{
-                      background: isActive ? 'linear-gradient(90deg, rgba(163,217,0,0.12) 0%, rgba(163,217,0,0) 100%)' : 'transparent',
-                      borderLeft: isActive ? '3px solid var(--primary)' : '3px solid transparent',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: 36, height: 36, background: `${s.color}15` }}>
-                      <i className={`bi ${s.icon}`} style={{ color: s.color, fontSize: '1rem' }}></i>
-                    </div>
-                    <div className="flex-grow-1 text-truncate">
-                      <div className="fw-semibold text-dark" style={{ fontSize: '.82rem', lineHeight: 1.2 }}>{s.label}</div>
-                      <div className="text-muted" style={{ fontSize: '.65rem' }}>{s.sublabel}</div>
-                    </div>
-                    {s.toggle && (
-                      <span className={`badge rounded-pill ${isEnabled ? 'bg-success' : 'bg-secondary'} bg-opacity-10 ${isEnabled ? 'text-success' : 'text-secondary'}`} style={{ fontSize: '.6rem', fontWeight: 700 }}>
-                        {isEnabled ? 'ON' : 'OFF'}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      {/* ===== TOP: Horizontal Pill Navigator ===== */}
+      <div className="mb-4 admin-pill-nav hide-scrollbar">
+        {sections.map(s => {
+          const isActive = activeSection === s.key;
+          const isEnabled = s.toggle ? config[s.toggle] : true;
+          return (
+            <button
+              key={s.key}
+              onClick={() => setActiveSection(s.key)}
+              className={`btn rounded-pill px-4 py-2 d-flex align-items-center gap-2 flex-shrink-0 fw-bold admin-pill-item ${isActive ? 'active' : ''}`}
+              style={{
+                color: isActive ? 'var(--navy)' : '#64748b'
+              }}
+            >
+              <i className={`bi ${s.icon}`} style={{ fontSize: '1.1rem' }}></i>
+              {s.label}
+              {s.toggle && (
+                <span className="badge rounded-pill ms-1" style={{ fontSize: '.65rem', padding: '4px 8px', background: isEnabled ? (isActive ? 'var(--navy)' : '#e2e8f0') : 'transparent', color: isEnabled ? (isActive ? 'var(--primary)' : '#64748b') : '#94a3b8', border: isEnabled ? 'none' : '1px solid #cbd5e1' }}>
+                  {isEnabled ? 'ON' : 'OFF'}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* ===== RIGHT: Section Detail Panel ===== */}
-        <div className="col-lg-8 col-xl-9">
-          <div className="bg-white rounded-4 shadow-sm p-4" style={{ minHeight: '400px' }}>
+      <div className="row">
+        {/* ===== MAIN: Section Detail Panel ===== */}
+        <div className="col-12">
+          <div className="bg-white rounded-4 shadow-sm p-4 p-md-5 anim-slide-up" key={activeSection} style={{ minHeight: '500px' }}>
 
             {/* ---- Navbar Section ---- */}
             {activeSection === 'navbar' && (
               <div>
-                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: '#0a0f0d15' }}>
-                    <i className="bi bi-signpost-split fs-4" style={{ color: '#0a0f0d' }}></i>
+                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-2 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: '#0a0f0d15' }}>
+                      <i className="bi bi-signpost-split fs-4" style={{ color: '#0a0f0d' }}></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold m-0 text-dark">เมนูนำทาง (Navbar)</h5>
+                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เปิด/ปิด เมนูที่แสดงบน Navbar ฝั่งหน้าบ้าน</p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="fw-bold m-0 text-dark">เมนูนำทาง (Navbar)</h5>
-                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เปิด/ปิด เมนูที่แสดงบน Navbar ฝั่งหน้าบ้าน</p>
-                  </div>
-                  <span className="badge rounded-pill px-2 py-1 bg-primary bg-opacity-10 text-primary ms-auto" style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                    {Object.values(config.navbarConfig || {}).filter(Boolean).length} / {Object.keys(config.navbarConfig || {}).length} เมนู
-                  </span>
                 </div>
                 <div className="alert alert-light border rounded-3 mb-4 py-2 px-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
                   <i className="bi bi-info-circle-fill text-primary"></i>
@@ -211,9 +198,9 @@ export default function AdminHomeConfig() {
                     const navCfg = config.navbarConfig || {};
                     const isEnabled = navCfg[item.key] !== false;
                     return (
-                      <div key={item.key} className="col-6 col-md-4 col-lg-3">
+                      <div key={item.key} className="col-6 col-md-4 col-lg-3 anim-slide-up-delay-1">
                         <div
-                          className="p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center"
+                          className="p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center admin-grid-item-hover"
                           style={{
                             transition: 'all 0.25s ease',
                             borderColor: isEnabled ? 'var(--primary)' : '#e2e8f0',
@@ -249,16 +236,18 @@ export default function AdminHomeConfig() {
             {/* ---- About Us Section ---- */}
             {activeSection === 'about' && (
               <div>
-                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: 'rgba(163,217,0,0.12)' }}>
-                    <i className="bi bi-info-circle fs-4 text-primary"></i>
+                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="d-flex align-items-center gap-3 flex-grow-1">
+                    <div className="p-2 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: 'rgba(163,217,0,0.12)' }}>
+                      <i className="bi bi-info-circle fs-4 text-primary"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold m-0 text-dark">เกี่ยวกับเรา (About Us)</h5>
+                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแนะนำบริษัทด้านล่าง Hero Banner</p>
+                    </div>
                   </div>
-                  <div className="flex-grow-1">
-                    <h5 className="fw-bold m-0 text-dark">เกี่ยวกับเรา (About Us)</h5>
-                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแนะนำบริษัทด้านล่าง Hero Banner</p>
-                  </div>
-                  <div className="d-flex align-items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <span className={`badge rounded-pill px-2 py-1 ${config.showAbout ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                  <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0" onClick={e => e.stopPropagation()}>
+                    <span className={`badge rounded-pill px-3 py-2 ${config.showAbout ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.9rem', fontWeight: 700 }}>
                       {config.showAbout ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                     </span>
                     <div className="form-check form-switch fs-4 m-0">
@@ -277,16 +266,16 @@ export default function AdminHomeConfig() {
                     <ImageUploader value={config.aboutSection?.image || ''} onChange={handleAboutImage} label="รูปภาพประกอบ" recommendedSize="600x750px (แนวตั้ง 4:5 แบบโพลารอยด์)" aspectRatio={4/5} />
                     <div className="admin-form-group mt-3">
                       <label>วิดีโอ YouTube/Vimeo (ถ้ามี)</label>
-                      <input type="text" name="videoUrl" value={config.aboutSection?.videoUrl || ''} onChange={handleAboutChange} placeholder="วางลิงก์วิดีโอเพื่อแสดงปุ่ม Play บนรูป" />
+                      <input type="text" className="form-control" name="videoUrl" value={config.aboutSection?.videoUrl || ''} onChange={handleAboutChange} placeholder="วางลิงก์วิดีโอเพื่อแสดงปุ่ม Play บนรูป" />
                     </div>
                     <div className="row g-2 mt-2">
-                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความบน (เช่น เลข)</label><input type="text" name="badgeTopText" value={config.aboutSection?.badgeTopText || ''} onChange={handleAboutChange} placeholder="14" /></div></div>
-                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความล่าง</label><input type="text" name="badgeBottomText" value={config.aboutSection?.badgeBottomText || ''} onChange={handleAboutChange} placeholder="ปีแห่งความสำเร็จ" /></div></div>
+                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความบน (เช่น เลข)</label><input type="text" className="form-control" name="badgeTopText" value={config.aboutSection?.badgeTopText || ''} onChange={handleAboutChange} placeholder="14" /></div></div>
+                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความล่าง</label><input type="text" className="form-control" name="badgeBottomText" value={config.aboutSection?.badgeBottomText || ''} onChange={handleAboutChange} placeholder="ปีแห่งความสำเร็จ" /></div></div>
                     </div>
                   </div>
                   <div className="col-md-7">
-                    <div className="admin-form-group"><label>หัวข้อหลัก (Title)</label><input type="text" name="title" value={config.aboutSection?.title || ''} onChange={handleAboutChange} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" /></div>
-                    <div className="admin-form-group"><label>คำอธิบาย (Description)</label><textarea name="description" rows="3" value={config.aboutSection?.description || ''} onChange={handleAboutChange} placeholder="ข้อความแนะนำบริษัท..."></textarea></div>
+                    <div className="admin-form-group"><label>หัวข้อหลัก (Title)</label><input type="text" className="form-control" name="title" value={config.aboutSection?.title || ''} onChange={handleAboutChange} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" /></div>
+                    <div className="admin-form-group"><label>คำอธิบาย (Description)</label><textarea className="form-control" name="description" rows="6" value={config.aboutSection?.description || ''} onChange={handleAboutChange} placeholder="ข้อความแนะนำบริษัท..."></textarea></div>
                     <div className="admin-form-group">
                       <label className="d-flex justify-content-between align-items-center mb-2">
                         รายการจุดเด่น (List Items)
@@ -305,8 +294,8 @@ export default function AdminHomeConfig() {
                       </div>
                     </div>
                     <div className="row g-2 mt-2">
-                      <div className="col-6"><div className="admin-form-group"><label>ข้อความปุ่ม CTA</label><input type="text" name="buttonText" value={config.aboutSection?.buttonText || ''} onChange={handleAboutChange} placeholder="ติดต่อร่วมงานกับเรา" /></div></div>
-                      <div className="col-6"><div className="admin-form-group"><label>ลิงก์ปุ่ม CTA</label><input type="text" name="buttonLink" value={config.aboutSection?.buttonLink || ''} onChange={handleAboutChange} placeholder="/contact" /></div></div>
+                      <div className="col-6"><div className="admin-form-group"><label>ข้อความปุ่ม CTA</label><input type="text" className="form-control" name="buttonText" value={config.aboutSection?.buttonText || ''} onChange={handleAboutChange} placeholder="ติดต่อร่วมงานกับเรา" /></div></div>
+                      <div className="col-6"><div className="admin-form-group"><label>ลิงก์ปุ่ม CTA</label><input type="text" className="form-control" name="buttonLink" value={config.aboutSection?.buttonLink || ''} onChange={handleAboutChange} placeholder="/contact" /></div></div>
                     </div>
                   </div>
                 </div>
@@ -316,15 +305,17 @@ export default function AdminHomeConfig() {
             {/* ---- Services Section ---- */}
             {activeSection === 'services' && (
               <div>
-                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: 'rgba(25,135,84,0.1)' }}>
-                    <i className="bi bi-briefcase fs-4 text-success"></i>
+                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="d-flex align-items-center gap-3 flex-grow-1">
+                    <div className="p-2 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: 'rgba(25,135,84,0.1)' }}>
+                      <i className="bi bi-briefcase fs-4 text-success"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold m-0 text-dark">บริการของเรา (Services)</h5>
+                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เลือกบริการที่จะแสดงในหน้าแรก</p>
+                    </div>
                   </div>
-                  <div className="flex-grow-1">
-                    <h5 className="fw-bold m-0 text-dark">บริการของเรา (Services)</h5>
-                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>เลือกบริการที่จะแสดงในหน้าแรก</p>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
+                  <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0">
                     <span className={`badge rounded-pill px-2 py-1 ${config.showServices ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
                       {config.showServices ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                     </span>
@@ -343,8 +334,8 @@ export default function AdminHomeConfig() {
                   {allServices.map(svc => {
                     const isSelected = (config.selectedServices || []).includes(svc.id);
                     return (
-                      <div key={svc.id} className="col-6 col-md-4 col-lg-3">
-                        <div onClick={() => handleServiceSelect(svc.id)} className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative"
+                      <div key={svc.id} className="col-6 col-md-4 col-lg-3 anim-slide-up-delay-1">
+                        <div onClick={() => handleServiceSelect(svc.id)} className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative admin-grid-item-hover"
                           style={{ cursor: 'pointer', transition: 'all 0.25s ease', borderColor: isSelected ? 'var(--primary)' : '#e2e8f0', borderWidth: isSelected ? '2px' : '1px', background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff', boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none' }}
                         >
                           {isSelected && (<span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}><i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i></span>)}
@@ -368,16 +359,18 @@ export default function AdminHomeConfig() {
               const isEnabled = config[meta.toggle];
               return (
                 <div>
-                  <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                    <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: `${meta.color}18` }}>
-                      <i className={`bi ${meta.icon} fs-4`} style={{ color: meta.color }}></i>
+                  <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+                    <div className="d-flex align-items-center gap-3 flex-grow-1">
+                      <div className="p-2 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: `${meta.color}18` }}>
+                        <i className={`bi ${meta.icon} fs-4`} style={{ color: meta.color }}></i>
+                      </div>
+                      <div>
+                        <h5 className="fw-bold m-0 text-dark">{meta.label}</h5>
+                        <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>{meta.desc}</p>
+                      </div>
                     </div>
-                    <div className="flex-grow-1">
-                      <h5 className="fw-bold m-0 text-dark">{meta.label}</h5>
-                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>{meta.desc}</p>
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <span className={`badge rounded-pill px-2 py-1 ${isEnabled ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                    <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                      <span className={`badge rounded-pill px-3 py-2 ${isEnabled ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.9rem', fontWeight: 700 }}>
                         {isEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                       </span>
                       <div className="form-check form-switch fs-4 m-0">
@@ -402,16 +395,18 @@ export default function AdminHomeConfig() {
             {/* ---- Customers Section ---- */}
             {activeSection === 'customers' && (
               <div>
-                <div className="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                  <div className="p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, background: 'rgba(108,117,125,0.1)' }}>
-                    <i className="bi bi-building fs-4 text-secondary"></i>
+                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+                  <div className="d-flex align-items-center gap-3 flex-grow-1">
+                    <div className="p-2 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: 'rgba(108,117,125,0.1)' }}>
+                      <i className="bi bi-building fs-4 text-secondary"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold m-0 text-dark">ลูกค้าของเรา (Customers / Clients)</h5>
+                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแสดงโลโก้แบรนด์ลูกค้าวิ่งสไลด์</p>
+                    </div>
                   </div>
-                  <div className="flex-grow-1">
-                    <h5 className="fw-bold m-0 text-dark">ลูกค้าของเรา (Customers / Clients)</h5>
-                    <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแสดงโลโก้แบรนด์ลูกค้าวิ่งสไลด์</p>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <span className={`badge rounded-pill px-2 py-1 ${config.showCustomers ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+                  <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                    <span className={`badge rounded-pill px-3 py-2 ${config.showCustomers ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'}`} style={{ fontSize: '0.9rem', fontWeight: 700 }}>
                       {config.showCustomers ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                     </span>
                     <div className="form-check form-switch fs-4 m-0">
@@ -438,12 +433,12 @@ export default function AdminHomeConfig() {
                   </div>
                 </div>
                 {/* Brand Selection */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-3">
                   <h6 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
                     <i className="bi bi-check2-square text-success"></i> เลือกแบรนด์ลูกค้า
                     <span className="badge bg-primary bg-opacity-10 text-primary ms-2" style={{ fontSize: '0.7rem' }}>{(config.selectedClients || []).length} / {allClients.length}</span>
                   </h6>
-                  <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3" style={{ fontSize: '0.78rem' }} onClick={handleSelectAllClients}>
+                  <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3 align-self-stretch align-self-sm-auto" style={{ fontSize: '0.78rem' }} onClick={handleSelectAllClients}>
                     {allClients.length > 0 && allClients.every(c => (config.selectedClients || []).includes(c.id)) ? (<><i className="bi bi-x-circle me-1"></i>ยกเลิกทั้งหมด</>) : (<><i className="bi bi-check-all me-1"></i>เลือกทั้งหมด</>)}
                   </button>
                 </div>
@@ -454,8 +449,8 @@ export default function AdminHomeConfig() {
                     {allClients.map(cli => {
                       const isSelected = (config.selectedClients || []).includes(cli.id);
                       return (
-                        <div key={cli.id} className="col-6 col-md-4 col-lg-3">
-                          <div onClick={() => handleClientSelect(cli.id)} className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative"
+                        <div key={cli.id} className="col-6 col-md-4 col-lg-3 anim-slide-up-delay-1">
+                          <div onClick={() => handleClientSelect(cli.id)} className="p-3 rounded-4 border text-center h-100 d-flex flex-column align-items-center justify-content-center position-relative admin-grid-item-hover"
                             style={{ cursor: 'pointer', transition: 'all 0.25s ease', borderColor: isSelected ? 'var(--primary)' : '#e2e8f0', borderWidth: isSelected ? '2px' : '1px', background: isSelected ? 'rgba(163,217,0,0.05)' : '#fff', boxShadow: isSelected ? '0 8px 24px rgba(163,217,0,0.08)' : 'none', minHeight: '100px' }}
                           >
                             {isSelected && (<span className="position-absolute top-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center m-2 shadow" style={{ width: 22, height: 22 }}><i className="bi bi-check-lg" style={{ fontSize: '0.75rem' }}></i></span>)}

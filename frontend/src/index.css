@@ -2,6 +2,8 @@
 
 :root {
   --primary: #a3d900;
+  --bs-primary: #a3d900;
+  --bs-primary-rgb: 163, 217, 0;
   --primary-hover: #8cbf00;
   --primary-dark: #6d9500;
   --primary-soft: #f4fce3;
@@ -3828,3 +3830,118 @@ body {
 .blog-rich-content .ql-size-small { font-size: 0.75em; }
 .blog-rich-content .ql-size-large { font-size: 1.5em; }
 .blog-rich-content .ql-size-huge { font-size: 2.5em; }
+
+/* ─── Admin Redesign Animations ─── */
+@keyframes slideUpFadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.anim-slide-up {
+  animation: slideUpFadeIn 0.3s ease-out forwards;
+}
+
+.anim-slide-up-delay-1 { animation: slideUpFadeIn 0.3s ease-out 0.05s forwards; opacity: 0; }
+.anim-slide-up-delay-2 { animation: slideUpFadeIn 0.3s ease-out 0.1s forwards; opacity: 0; }
+
+/* Grid Item Hover Enhancements */
+.admin-grid-item-hover {
+  transition: all 0.25s ease;
+}
+.admin-grid-item-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(163,217,0,0.15) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Form Input Modernization */
+.admin-form-group input.form-control,
+.admin-form-group textarea.form-control {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  padding: 0.6rem 0.8rem;
+}
+.admin-form-group input.form-control:focus,
+.admin-form-group textarea.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(163,217,0,0.15);
+  outline: none;
+}
+/* Sidebar Hover */
+.admin-sidebar-hover:hover {
+  background-color: #f8fafc !important;
+  transform: translateX(3px);
+}
+
+/* Hide scrollbar for horizontal scrolling elements */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+
+/* Admin Responsive Pill Nav */
+.admin-pill-nav {
+  display: flex;
+  overflow: auto;
+  align-items: center;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  gap: 0.5rem;
+  padding: 0.25rem 0.25rem 0.75rem 0.25rem;
+}
+
+.admin-pill-item {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.admin-pill-item:hover:not(.active) {
+  background-color: #f8fafc !important;
+  transform: translateY(-2px);
+}
+
+.admin-pill-item.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--navy) !important;
+  box-shadow: 0 4px 15px rgba(163,217,0,0.3);
+}
+
+/* Desktop override */
+@media (min-width: 992px) {
+  .admin-pill-nav {
+    background-color: #fff;
+    border-radius: 50rem;
+    padding: 0.5rem !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid #e2e8f0;
+    gap: 0.25rem;
+  }
+  
+  .admin-pill-item {
+    border: 0 !important;
+    background: transparent;
+    box-shadow: none;
+  }
+  
+  .admin-pill-item.active {
+    background: var(--primary) !important;
+  }
+}
+
+
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+

@@ -69,7 +69,7 @@ export default function Home() {
 
       {/* ──── About ──── */}
       {homeConfig.showAbout && (
-        <section className="d-flex align-items-center py-5 pattern-dots" style={{ backgroundColor: 'var(--bg-white)', minHeight: '100vh' }}>
+        <section className="d-flex align-items-center py-5 pattern-dots" style={{ backgroundColor: 'var(--bg-white)' }}>
           <div className="container">
             <div className="row g-5 align-items-center">
               <div className="col-lg-6">
@@ -97,7 +97,7 @@ export default function Home() {
               </div>
               <div className="col-lg-6">
                   <span className="section-label">About Us</span>
-                  <h2 className="section-title mb-4" style={{ fontSize: '2rem', fontWeight: 800 }}>{homeConfig.aboutSection?.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
+                  <h2 className="section-title mb-4">{homeConfig.aboutSection?.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
                   <p className="lead text-muted mb-4" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.description || companyInfo.about}</p>
                   
                   {homeConfig.aboutSection?.listItems && homeConfig.aboutSection.listItems.length > 0 ? (
@@ -128,7 +128,7 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <Link to={homeConfig.aboutSection?.buttonLink || "/about"} className="btn btn-primary rounded-pill px-4 py-2 fw-bold" style={{ fontSize: '1rem', boxShadow: '0 4px 15px rgba(163,217,0,0.3)' }}>
+                  <Link to={homeConfig.aboutSection?.buttonLink || "/about"} className="btn btn-main px-4 py-2">
                     {homeConfig.aboutSection?.buttonText || "ติดต่อร่วมงานกับเรา"}
                   </Link>
                 </div>
@@ -162,7 +162,7 @@ export default function Home() {
 
       {/* ──── Services ──── */}
       {homeConfig.showServices && (
-        <section className="d-flex align-items-center py-5" style={{ backgroundColor: 'var(--bg-section)', minHeight: '100vh' }}>
+        <section className="d-flex align-items-center py-5" style={{ backgroundColor: 'var(--bg-section)' }}>
           <div className="w-100">
             <div className="container">
               <div className="section-header text-center">
@@ -220,12 +220,12 @@ export default function Home() {
 
       {/* ──── Why Choose Us ──── */}
       {homeConfig.showWhyUs && (
-        <section className="d-flex align-items-center py-5" style={{ background: 'var(--bg-white)', minHeight: '100vh' }}>
+        <section className="d-flex align-items-center py-5" style={{ background: 'var(--bg-white)' }}>
           <div className="container">
             <div className="row g-5 align-items-center">
               <div className="col-lg-6">
                 <span className="section-label">Why Choose Us</span>
-                <h2 className="section-title" style={{ fontSize: '2.4rem', fontWeight: 800 }}>ทำไมต้องเลือกเรา?</h2>
+                <h2 className="section-title">ทำไมต้องเลือกเรา?</h2>
                 <p className="text-muted lead mb-4">ด้วยประสบการณ์และทีมงานมืออาชีพ เราพร้อมส่งมอบผลงานที่ดีที่สุดให้คุณ</p>
                 {[
                   { icon: 'bi-stars', title: 'ทีมผู้เชี่ยวชาญ', desc: 'ทีมงานผ่านโปรเจกต์มาหลายร้อยโปรเจกต์' },
@@ -264,7 +264,7 @@ export default function Home() {
 
       {/* ──── Customers ──── */}
       {homeConfig.showCustomers && (
-        <section className="d-flex align-items-center py-5 pattern-dots" style={{ backgroundColor: 'var(--bg-white)', overflow: 'hidden', minHeight: '100vh' }}>
+        <section className="d-flex align-items-center py-5 pattern-dots" style={{ backgroundColor: 'var(--bg-white)', overflow: 'hidden' }}>
           <div className="w-100">
             <div className="container">
               <div className="section-header text-center">
@@ -320,22 +320,14 @@ export default function Home() {
       {homeConfig.showCTA && (
         <section className="py-5">
           <div className="container">
-            <div className="rounded-4 p-5 shadow-sm" style={{ backgroundColor: 'var(--primary)', position: 'relative', overflow: 'hidden' }}>
-              {/* Decorative shapes */}
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
-              <div style={{ position: 'absolute', bottom: -40, left: 20, width: 80, height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
-              <div style={{ position: 'absolute', top: 40, left: -20, width: 60, height: 60, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
-              
+            <div className="rounded-4 p-5 position-relative overflow-hidden" style={{ backgroundColor: 'var(--navy)', border: '1px solid var(--border-blue)', boxShadow: 'var(--shadow-blue)' }}>
               <div className="position-relative z-1 py-3 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
                 <div className="text-center text-lg-start">
-                  <h2 className="fw-bold mb-2" style={{ fontSize: '2.4rem', color: 'var(--navy)' }}>พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?</h2>
-                  <p className="mb-0 mx-auto mx-lg-0" style={{ maxWidth: 650, fontSize: '1.1rem', color: 'var(--navy)', opacity: 0.85 }}>ไม่ว่าจะเป็นงานกีฬาสี ปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!</p>
+                  <h2 className="section-title text-white mb-2">พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?</h2>
+                  <p className="mb-0 mx-auto mx-lg-0 section-desc" style={{ color: 'rgba(255,255,255,0.7)', maxWidth: 650 }}>ไม่ว่าจะเป็นงานกีฬาสี ปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!</p>
                 </div>
                 <div className="flex-shrink-0 mt-3 mt-lg-0">
-                  <Link to="/contact" className="btn fw-bold px-5 py-3 rounded-pill shadow-sm" style={{ backgroundColor: 'var(--navy)', color: '#fff', transition: 'transform 0.2s', border: 'none', whiteSpace: 'nowrap' }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  >
+                  <Link to="/contact" className="btn btn-main px-5 py-3 text-nowrap">
                     ทักมาคุยกับเรา <i className="bi bi-chat-dots ms-2"></i>
                   </Link>
                 </div>

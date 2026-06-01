@@ -16,6 +16,7 @@ import Contact from './pages/Contact';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHero from './pages/admin/AdminHero';
+import AdminHeroEditor from './pages/admin/AdminHeroEditor';
 import AdminServices from './pages/admin/AdminServices';
 import AdminGallery from './pages/admin/AdminGallery';
 import AdminBlog from './pages/admin/AdminBlog';
@@ -71,6 +72,8 @@ export default function App() {
           <Route path="home-settings" element={<AdminHomeConfig />} />
           <Route path="page-heroes" element={<AdminPageHeroes />} />
           <Route path="hero" element={<AdminHero />} />
+          <Route path="hero/new" element={<AdminHeroEditor />} />
+          <Route path="hero/edit/:id" element={<AdminHeroEditor />} />
           <Route path="services" element={<AdminServices />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="blog" element={<AdminBlog />} />

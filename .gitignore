@@ -49,3 +49,8 @@ backend/uploads/
 backend/instance/
 backend/migrations/
 *.db
+
+# AI Agent files
+.gemini/
+.agents/
+.impeccable/

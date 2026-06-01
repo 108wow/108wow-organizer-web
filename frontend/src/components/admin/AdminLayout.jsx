@@ -178,6 +178,29 @@ export default function AdminLayout() {
             .admin-header-badge { display: none !important; }
             .admin-main-content { padding: 1.5rem !important; }
             .admin-user-info { display: none !important; }
+            
+            /* Staggered Fade In for Mobile */
+            .admin-sidebar.mobile-open .nav-item {
+              animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+              opacity: 0;
+            }
+            .admin-sidebar.mobile-open .nav-item:nth-child(1) { animation-delay: 0.05s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(2) { animation-delay: 0.1s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(3) { animation-delay: 0.15s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(4) { animation-delay: 0.2s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(5) { animation-delay: 0.25s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(6) { animation-delay: 0.3s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(7) { animation-delay: 0.35s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(8) { animation-delay: 0.4s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(9) { animation-delay: 0.45s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(10) { animation-delay: 0.5s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(11) { animation-delay: 0.55s; }
+            .admin-sidebar.mobile-open .nav-item:nth-child(12) { animation-delay: 0.6s; }
+          }
+          
+          @keyframes slideInRight {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
           }
 
           /* Animated Toggle Button */
@@ -224,13 +247,21 @@ export default function AdminLayout() {
               </div>
             </div>
 
-            {/* Header Toggle Button */}
+            {/* Desktop Toggle Button */}
             <button
-              className="sidebar-toggle-btn flex-shrink-0 ms-2"
+              className="sidebar-toggle-btn flex-shrink-0 ms-2 d-none d-md-flex"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               title="พับ/กาง เมนู"
             >
               <i className={`bi ${sidebarOpen ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'}`}></i>
+            </button>
+            {/* Mobile Close Button */}
+            <button
+              className="btn btn-link d-md-none p-1 ms-2"
+              onClick={() => setSidebarOpen(false)}
+              style={{ fontSize: '1.5rem', lineHeight: 1, color: 'var(--primary)' }}
+            >
+              <i className="bi bi-x-lg"></i>
             </button>
           </div>
 
@@ -321,11 +352,25 @@ export default function AdminLayout() {
           <header className="bg-white px-4 py-3 d-flex justify-content-between align-items-center shadow-sm" style={{ zIndex: 9, position: 'sticky', top: 0 }}>
             <div className="d-flex align-items-center gap-3">
               <button
-                className="btn btn-light rounded-2 d-md-none d-flex align-items-center justify-content-center p-2"
+                className="d-md-none d-flex align-items-center justify-content-center border-0"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                style={{ width: 36, height: 36, border: '1.5px solid #e2e8f0' }}
+                style={{ 
+                  width: 38, height: 38, 
+                  background: 'var(--navy)',
+                  color: 'var(--primary)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: sidebarOpen ? '0 0 15px rgba(163,217,0,0.4)' : '0 4px 10px rgba(10, 15, 13, 0.1)'
+                }}
               >
-                <i className="bi bi-list fs-5 text-dark"></i>
+                <i 
+                  className={`bi ${sidebarOpen ? 'bi-x-lg' : 'bi-list'}`} 
+                  style={{ 
+                    fontSize: '1.4rem',
+                    transition: 'transform 0.3s ease',
+                    transform: sidebarOpen ? 'rotate(90deg)' : 'rotate(0)'
+                  }}
+                ></i>
               </button>
               <h5 className="admin-header-title m-0 fw-bold text-dark d-flex align-items-center gap-2">
                 <span className="admin-header-badge bg-primary text-white rounded-pill px-3 py-1 small" style={{ fontSize: '0.75rem' }}>BETA</span>
