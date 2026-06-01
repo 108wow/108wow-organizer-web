@@ -6,12 +6,19 @@ import LoadingOverlay from '../../components/admin/LoadingOverlay';
 import StatusModal from '../../components/admin/StatusModal';
 
 export default function AdminHomeConfig() {
-  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersRows: 3, selectedClients: [], aboutSection: {}, navbarConfig: { home: true, about: true, team: true, services: true, gallery: true, clients: true, blog: true, contact: true } });
+  const [config, setConfig] = useState({ showAbout: true, showServices: true, showWhyUs: true, showStats: true, showCustomers: true, showCTA: true, selectedServices: [], servicesLimit: 4, customersRows: 3, selectedClients: [], aboutSections: [], navbarConfig: { home: true, about: true, team: true, services: true, gallery: true, clients: true, blog: true, contact: true } });
   const [allServices, setAllServices] = useState([]);
   const [allClients, setAllClients] = useState([]);
 
   useEffect(() => {
-    homeConfigAPI.get().then(d => setConfig(prev => ({ ...prev, ...d }))).catch(() => {});
+    homeConfigAPI.get().then(d => {
+      // Auto-migrate legacy aboutSection to array if needed
+      let sections = d.aboutSections || [];
+      if (!d.aboutSections && d.aboutSection && Object.keys(d.aboutSection).length > 0) {
+        sections = [d.aboutSection];
+      }
+      setConfig(prev => ({ ...prev, ...d, aboutSections: sections }));
+    }).catch(() => {});
     serviceAPI.list().then(d => setAllServices(d)).catch(() => {});
     clientAPI.list().then(d => setAllClients(d)).catch(() => {});
   }, []);
@@ -19,92 +26,49 @@ export default function AdminHomeConfig() {
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
   const [statusM, setStatusM] = useState({ show: false, status: 'success', message: '' });
-  const [collapsed, setCollapsed] = useState({
-    navbar: false,
-    about: false,
-    services: false,
-    whyUs: true,
-    stats: true,
-    customers: true,
-    cta: true
-  });
   
-  const toggleSection = (key) => setCollapsed(p => ({ ...p, [key]: !p[key] }));
-
   const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
-  const handleToggle = (key) => {
-    setConfig(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const handleToggle = (key) => setConfig(prev => ({ ...prev, [key]: !prev[key] }));
+  const handleChange = (e) => setConfig(prev => ({ ...prev, [e.target.name]: parseInt(e.target.value) || 0 }));
+  
+  const handleServiceSelect = (id) => setConfig(prev => { const s = prev.selectedServices || []; return { ...prev, selectedServices: s.includes(id) ? s.filter(sid => sid !== id) : [...s, id] }; });
+  const handleClientSelect = (id) => setConfig(prev => { const s = prev.selectedClients || []; return { ...prev, selectedClients: s.includes(id) ? s.filter(sid => sid !== id) : [...s, id] }; });
+  const handleSelectAllClients = () => { const a = allClients.map(c => c.id); setConfig(prev => ({ ...prev, selectedClients: a.every(id => (prev.selectedClients || []).includes(id)) ? [] : a })); };
 
-  const handleServiceSelect = (id) => {
+  // --- About Sections Handlers ---
+  const handleAddAboutSection = () => {
+    setConfig(prev => ({ ...prev, aboutSections: [...(prev.aboutSections || []), { title: 'New About Section', listItems: [] }] }));
+  };
+  const handleRemoveAboutSection = (index) => {
+    setConfirm({ show: true, type: 'danger', title: 'ลบ Section', message: `ยืนยันการลบ About Us Section ที่ ${index + 1}?`, action: async () => {
+      setConfig(prev => { const s = [...(prev.aboutSections || [])]; s.splice(index, 1); return { ...prev, aboutSections: s }; });
+    }});
+  };
+  const handleMoveAboutSection = (index, dir) => {
     setConfig(prev => {
-      const selected = prev.selectedServices || [];
-      if (selected.includes(id)) {
-        return { ...prev, selectedServices: selected.filter(sid => sid !== id) };
-      } else {
-        return { ...prev, selectedServices: [...selected, id] };
-      }
+      const s = [...(prev.aboutSections || [])];
+      if (dir === -1 && index > 0) [s[index - 1], s[index]] = [s[index], s[index - 1]];
+      else if (dir === 1 && index < s.length - 1) [s[index + 1], s[index]] = [s[index], s[index + 1]];
+      return { ...prev, aboutSections: s };
     });
   };
-
-  const handleClientSelect = (id) => {
-    setConfig(prev => {
-      const selected = prev.selectedClients || [];
-      if (selected.includes(id)) {
-        return { ...prev, selectedClients: selected.filter(sid => sid !== id) };
-      } else {
-        return { ...prev, selectedClients: [...selected, id] };
-      }
-    });
+  const updateAboutSection = (index, field, value) => {
+    setConfig(prev => { const s = [...(prev.aboutSections || [])]; s[index] = { ...s[index], [field]: value }; return { ...prev, aboutSections: s }; });
   };
-
-  const handleSelectAllClients = () => {
-    const allIds = allClients.map(c => c.id);
-    const allSelected = allIds.every(id => (config.selectedClients || []).includes(id));
-    setConfig(prev => ({ ...prev, selectedClients: allSelected ? [] : allIds }));
+  const updateAboutList = (sIndex, lIndex, value) => {
+    setConfig(prev => { const s = [...(prev.aboutSections || [])]; const l = [...(s[sIndex].listItems || [])]; l[lIndex] = value; s[sIndex] = { ...s[sIndex], listItems: l }; return { ...prev, aboutSections: s }; });
   };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setConfig(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+  const addAboutList = (sIndex) => {
+    setConfig(prev => { const s = [...(prev.aboutSections || [])]; s[sIndex] = { ...s[sIndex], listItems: [...(s[sIndex].listItems || []), ''] }; return { ...prev, aboutSections: s }; });
   };
-
-  const handleAboutChange = (e) => {
-    const { name, value } = e.target;
-    setConfig(prev => ({ ...prev, aboutSection: { ...(prev.aboutSection || {}), [name]: value } }));
-  };
-
-  const handleAboutImage = (url) => {
-    setConfig(prev => ({ ...prev, aboutSection: { ...(prev.aboutSection || {}), image: url } }));
-  };
-
-  const handleListChange = (index, value) => {
-    setConfig(prev => {
-      const newList = [...(prev.aboutSection?.listItems || [])];
-      newList[index] = value;
-      return { ...prev, aboutSection: { ...prev.aboutSection, listItems: newList } };
-    });
-  };
-
-  const handleAddListItem = () => {
-    setConfig(prev => {
-      const newList = [...(prev.aboutSection?.listItems || []), ''];
-      return { ...prev, aboutSection: { ...prev.aboutSection, listItems: newList } };
-    });
-  };
-
-  const handleRemoveListItem = (index) => {
-    setConfig(prev => {
-      const newList = [...(prev.aboutSection?.listItems || [])];
-      newList.splice(index, 1);
-      return { ...prev, aboutSection: { ...prev.aboutSection, listItems: newList } };
-    });
+  const removeAboutList = (sIndex, lIndex) => {
+    setConfig(prev => { const s = [...(prev.aboutSections || [])]; const l = [...(s[sIndex].listItems || [])]; l.splice(lIndex, 1); s[sIndex] = { ...s[sIndex], listItems: l }; return { ...prev, aboutSections: s }; });
   };
 
   const [activeSection, setActiveSection] = useState('navbar');
+  const [expandedAboutIndex, setExpandedAboutIndex] = useState(0); // Track which accordion is open
 
-  // Section definitions for the left sidebar
   const sections = [
     { key: 'navbar', label: 'เมนูนำทาง', sublabel: 'Navbar', icon: 'bi-signpost-split', color: '#0a0f0d' },
     { key: 'about', label: 'เกี่ยวกับเรา', sublabel: 'About Us', icon: 'bi-info-circle', color: '#a3d900', toggle: 'showAbout' },
@@ -130,7 +94,7 @@ export default function AdminHomeConfig() {
           </h4>
           <p className="text-muted m-0" style={{ fontSize: '0.8rem' }}>เปิด/ปิด และกำหนดข้อมูลที่จะแสดงในแต่ละส่วนของหน้า Home</p>
         </div>
-        <button className="btn btn-primary fw-bold px-4 py-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
+        <button className="btn btn-primary fw-bold px-4 py-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 hover-lift" onClick={() => setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าหน้าแรก?', action: async () => { await homeConfigAPI.update(config); } })}>
           <i className="bi bi-save"></i>บันทึก
         </button>
       </div>
@@ -145,9 +109,7 @@ export default function AdminHomeConfig() {
               key={s.key}
               onClick={() => setActiveSection(s.key)}
               className={`btn rounded-pill px-4 py-2 d-flex align-items-center gap-2 flex-shrink-0 fw-bold admin-pill-item ${isActive ? 'active' : ''}`}
-              style={{
-                color: isActive ? 'var(--navy)' : '#64748b'
-              }}
+              style={{ color: isActive ? 'var(--navy)' : '#64748b' }}
             >
               <i className={`bi ${s.icon}`} style={{ fontSize: '1.1rem' }}></i>
               {s.label}
@@ -233,7 +195,7 @@ export default function AdminHomeConfig() {
               </div>
             )}
 
-            {/* ---- About Us Section ---- */}
+            {/* ---- About Us Sections ---- */}
             {activeSection === 'about' && (
               <div>
                 <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
@@ -243,7 +205,7 @@ export default function AdminHomeConfig() {
                     </div>
                     <div>
                       <h5 className="fw-bold m-0 text-dark">เกี่ยวกับเรา (About Us)</h5>
-                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแนะนำบริษัทด้านล่าง Hero Banner</p>
+                      <p className="text-muted m-0" style={{ fontSize: '0.78rem' }}>ส่วนแนะนำบริษัทด้านล่าง Hero Banner (เพิ่มได้หลาย Section แสดงสลับซ้ายขวา)</p>
                     </div>
                   </div>
                   <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0" onClick={e => e.stopPropagation()}>
@@ -261,43 +223,93 @@ export default function AdminHomeConfig() {
                     <span>ส่วนนี้ถูกปิดใช้งานอยู่และจะไม่แสดงบนหน้าแรกของเว็บไซต์</span>
                   </div>
                 )}
-                <div className="row g-4">
-                  <div className="col-md-5">
-                    <ImageUploader value={config.aboutSection?.image || ''} onChange={handleAboutImage} label="รูปภาพประกอบ" recommendedSize="600x750px (แนวตั้ง 4:5 แบบโพลารอยด์)" aspectRatio={4/5} />
-                    <div className="admin-form-group mt-3">
-                      <label>วิดีโอ YouTube/Vimeo (ถ้ามี)</label>
-                      <input type="text" className="form-control" name="videoUrl" value={config.aboutSection?.videoUrl || ''} onChange={handleAboutChange} placeholder="วางลิงก์วิดีโอเพื่อแสดงปุ่ม Play บนรูป" />
-                    </div>
-                    <div className="row g-2 mt-2">
-                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความบน (เช่น เลข)</label><input type="text" className="form-control" name="badgeTopText" value={config.aboutSection?.badgeTopText || ''} onChange={handleAboutChange} placeholder="14" /></div></div>
-                      <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความล่าง</label><input type="text" className="form-control" name="badgeBottomText" value={config.aboutSection?.badgeBottomText || ''} onChange={handleAboutChange} placeholder="ปีแห่งความสำเร็จ" /></div></div>
-                    </div>
-                  </div>
-                  <div className="col-md-7">
-                    <div className="admin-form-group"><label>หัวข้อหลัก (Title)</label><input type="text" className="form-control" name="title" value={config.aboutSection?.title || ''} onChange={handleAboutChange} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" /></div>
-                    <div className="admin-form-group"><label>คำอธิบาย (Description)</label><textarea className="form-control" name="description" rows="6" value={config.aboutSection?.description || ''} onChange={handleAboutChange} placeholder="ข้อความแนะนำบริษัท..."></textarea></div>
-                    <div className="admin-form-group">
-                      <label className="d-flex justify-content-between align-items-center mb-2">
-                        รายการจุดเด่น (List Items)
-                        <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold" style={{ fontSize: '0.75rem' }} onClick={handleAddListItem}><i className="bi bi-plus-lg"></i> เพิ่มรายการ</button>
-                      </label>
-                      <div className="d-flex flex-column gap-2">
-                        {(config.aboutSection?.listItems || []).map((item, idx) => (
-                          <div key={idx} className="d-flex gap-2 align-items-center">
-                            <input type="text" className="form-control form-control-sm rounded-3" value={item} onChange={(e) => handleListChange(idx, e.target.value)} placeholder={`รายการที่ ${idx + 1}`} />
-                            <button type="button" className="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center" style={{ width: 28, height: 28 }} onClick={() => handleRemoveListItem(idx)}><i className="bi bi-trash"></i></button>
+                
+                <div className="mb-4 d-flex justify-content-between align-items-center">
+                  <h6 className="fw-bold m-0">รายการ About Sections ({(config.aboutSections || []).length})</h6>
+                  <button className="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold hover-lift" onClick={handleAddAboutSection}>
+                    <i className="bi bi-plus-lg me-1"></i> เพิ่ม Section ใหม่
+                  </button>
+                </div>
+
+                <div className="d-flex flex-column gap-3">
+                  {(config.aboutSections || []).map((section, idx) => {
+                    const isExpanded = expandedAboutIndex === idx;
+                    return (
+                      <div key={idx} className="card border rounded-4 shadow-sm overflow-hidden">
+                        {/* Accordion Header */}
+                        <div 
+                          className={`card-header p-3 d-flex justify-content-between align-items-center ${isExpanded ? 'bg-light border-bottom' : 'bg-white border-bottom-0'}`} 
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setExpandedAboutIndex(isExpanded ? -1 : idx)}
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'} text-muted`}></i>
+                            <div className="fw-bold text-dark">
+                              <span className="badge bg-primary bg-opacity-10 text-primary me-2">Section {idx + 1}</span>
+                              {section.title || 'ไม่มีหัวข้อ'}
+                            </div>
                           </div>
-                        ))}
-                        {(!config.aboutSection?.listItems || config.aboutSection?.listItems.length === 0) && (
-                          <div className="text-muted small text-center bg-light border p-3 rounded-4">ยังไม่มีรายการ คุณสามารถกดปุ่มเพิ่มรายการด้านบนได้</div>
+                          <div className="d-flex gap-2" onClick={e => e.stopPropagation()}>
+                            <button className="btn btn-sm btn-light border rounded-2" disabled={idx === 0} onClick={() => handleMoveAboutSection(idx, -1)}><i className="bi bi-arrow-up"></i></button>
+                            <button className="btn btn-sm btn-light border rounded-2" disabled={idx === (config.aboutSections || []).length - 1} onClick={() => handleMoveAboutSection(idx, 1)}><i className="bi bi-arrow-down"></i></button>
+                            <button className="btn btn-sm btn-outline-danger rounded-2 ms-2" onClick={() => handleRemoveAboutSection(idx)}><i className="bi bi-trash"></i> ลบ</button>
+                          </div>
+                        </div>
+
+                        {/* Accordion Body */}
+                        {isExpanded && (
+                          <div className="card-body p-4 bg-white">
+                            <div className="row g-4">
+                              <div className="col-md-5">
+                                <ImageUploader value={section.image || ''} onChange={(url) => updateAboutSection(idx, 'image', url)} label="รูปภาพประกอบ" recommendedSize="600x750px (แนวตั้ง 4:5 แบบโพลารอยด์)" aspectRatio={4/5} />
+                                <div className="admin-form-group mt-3">
+                                  <label>วิดีโอ YouTube/Vimeo (ถ้ามี)</label>
+                                  <input type="text" className="form-control" value={section.videoUrl || ''} onChange={(e) => updateAboutSection(idx, 'videoUrl', e.target.value)} placeholder="วางลิงก์วิดีโอเพื่อแสดงปุ่ม Play บนรูป" />
+                                </div>
+                                <div className="row g-2 mt-2">
+                                  <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความบน (เช่น เลข)</label><input type="text" className="form-control" value={section.badgeTopText || ''} onChange={(e) => updateAboutSection(idx, 'badgeTopText', e.target.value)} placeholder="14" /></div></div>
+                                  <div className="col-6"><div className="admin-form-group"><label>ป้ายข้อความล่าง</label><input type="text" className="form-control" value={section.badgeBottomText || ''} onChange={(e) => updateAboutSection(idx, 'badgeBottomText', e.target.value)} placeholder="ปีแห่งความสำเร็จ" /></div></div>
+                                </div>
+                              </div>
+                              <div className="col-md-7">
+                                <div className="admin-form-group"><label>หัวข้อหลัก (Title)</label><input type="text" className="form-control" value={section.title || ''} onChange={(e) => updateAboutSection(idx, 'title', e.target.value)} placeholder="เปลี่ยนทุกไอเดียให้เป็นความประทับใจไปกับ 108" /></div>
+                                <div className="admin-form-group"><label>คำอธิบาย (Description)</label><textarea className="form-control" rows="6" value={section.description || ''} onChange={(e) => updateAboutSection(idx, 'description', e.target.value)} placeholder="ข้อความแนะนำบริษัท..."></textarea></div>
+                                <div className="admin-form-group">
+                                  <label className="d-flex justify-content-between align-items-center mb-2">
+                                    รายการจุดเด่น (List Items)
+                                    <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold" style={{ fontSize: '0.75rem' }} onClick={() => addAboutList(idx)}><i className="bi bi-plus-lg"></i> เพิ่มรายการ</button>
+                                  </label>
+                                  <div className="d-flex flex-column gap-2">
+                                    {(section.listItems || []).map((item, lIdx) => (
+                                      <div key={lIdx} className="d-flex gap-2 align-items-center">
+                                        <input type="text" className="form-control form-control-sm rounded-3" value={item} onChange={(e) => updateAboutList(idx, lIdx, e.target.value)} placeholder={`รายการที่ ${lIdx + 1}`} />
+                                        <button type="button" className="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center" style={{ width: 28, height: 28 }} onClick={() => removeAboutList(idx, lIdx)}><i className="bi bi-trash"></i></button>
+                                      </div>
+                                    ))}
+                                    {(!section.listItems || section.listItems.length === 0) && (
+                                      <div className="text-muted small text-center bg-light border p-3 rounded-4">ยังไม่มีรายการ คุณสามารถกดปุ่มเพิ่มรายการด้านบนได้</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="row g-2 mt-2">
+                                  <div className="col-6"><div className="admin-form-group"><label>ข้อความปุ่ม CTA</label><input type="text" className="form-control" value={section.buttonText || ''} onChange={(e) => updateAboutSection(idx, 'buttonText', e.target.value)} placeholder="ติดต่อร่วมงานกับเรา" /></div></div>
+                                  <div className="col-6"><div className="admin-form-group"><label>ลิงก์ปุ่ม CTA</label><input type="text" className="form-control" value={section.buttonLink || ''} onChange={(e) => updateAboutSection(idx, 'buttonLink', e.target.value)} placeholder="/contact" /></div></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
+                    );
+                  })}
+                  {(!config.aboutSections || config.aboutSections.length === 0) && (
+                    <div className="text-center p-5 bg-light rounded-4 border">
+                      <i className="bi bi-file-earmark-plus fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                      <h6 className="fw-bold text-dark">ยังไม่มี Section</h6>
+                      <p className="text-muted small">คลิก "เพิ่ม Section ใหม่" เพื่อสร้างเนื้อหาเกี่ยวกับเรา</p>
+                      <button className="btn btn-primary rounded-pill px-4 mt-2" onClick={handleAddAboutSection}>เพิ่ม Section</button>
                     </div>
-                    <div className="row g-2 mt-2">
-                      <div className="col-6"><div className="admin-form-group"><label>ข้อความปุ่ม CTA</label><input type="text" className="form-control" name="buttonText" value={config.aboutSection?.buttonText || ''} onChange={handleAboutChange} placeholder="ติดต่อร่วมงานกับเรา" /></div></div>
-                      <div className="col-6"><div className="admin-form-group"><label>ลิงก์ปุ่ม CTA</label><input type="text" className="form-control" name="buttonLink" value={config.aboutSection?.buttonLink || ''} onChange={handleAboutChange} placeholder="/contact" /></div></div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -471,4 +483,3 @@ export default function AdminHomeConfig() {
     </div>
   );
 }
-

@@ -68,97 +68,107 @@ export default function Home() {
       </div>
 
       {/* ──── About ──── */}
-      {homeConfig.showAbout && (
-        <section className="d-flex align-items-center py-5 pattern-dots" style={{ backgroundColor: 'var(--bg-white)' }}>
-          <div className="container">
-            <div className="row g-5 align-items-center">
-              <div className="col-lg-6">
-                <div className="about-home-img-wrapper">
-                  <img src={homeConfig.aboutSection?.image || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"} alt="About" />
-                  
-                  {homeConfig.aboutSection?.videoUrl && (
-                    <div className="about-play-btn" onClick={() => setShowVideo(true)}>
-                      <i className="bi bi-play-fill"></i>
-                    </div>
-                  )}
+      {homeConfig.showAbout && (() => {
+        // Compute about sections (fallback to legacy single object)
+        const aboutSections = homeConfig.aboutSections && homeConfig.aboutSections.length > 0 
+          ? homeConfig.aboutSections 
+          : (homeConfig.aboutSection && Object.keys(homeConfig.aboutSection).length > 0 ? [homeConfig.aboutSection] : []);
 
-                  {(homeConfig.aboutSection?.badgeTopText || homeConfig.aboutSection?.badgeBottomText) ? (
-                    <div className="about-home-badge">
-                      <h2>{homeConfig.aboutSection?.badgeTopText}</h2>
-                      <p>{homeConfig.aboutSection?.badgeBottomText}</p>
-                    </div>
-                  ) : (
-                    <div className="about-home-badge">
-                      <h2>25</h2>
-                      <p>Years Exp</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="col-lg-6">
-                  <span className="section-label">About Us</span>
-                  <h2 className="section-title mb-4">{homeConfig.aboutSection?.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
-                  <p className="lead text-muted mb-4" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.description || companyInfo.about}</p>
-                  
-                  {homeConfig.aboutSection?.listItems && homeConfig.aboutSection.listItems.length > 0 ? (
-                    <div className="d-flex flex-column gap-3 mb-5 mt-4">
-                      {homeConfig.aboutSection.listItems.map((item, idx) => (
-                        <div key={idx} className="d-flex align-items-center gap-3">
-                          <span className="about-list-icon"><i className="bi bi-check-lg"></i></span>
-                          <span className="text-dark fw-bold" style={{ fontSize: '1.05rem' }}>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="row g-3 mb-4">
-                      <div className="col-6 d-flex align-items-start gap-3">
-                        <i className="bi bi-bullseye fs-3 text-primary"></i>
-                        <div>
-                          <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet1Title || 'Mission'}</h6>
-                          <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet1Desc || `${companyInfo.mission?.substring(0, 60)}...`}</p>
+        return (
+          <>
+            {aboutSections.map((section, idx) => {
+              const isEven = idx % 2 === 0;
+              const isLast = idx === aboutSections.length - 1;
+              return (
+                <section key={idx} className={`d-flex align-items-center pt-5 ${!isLast ? 'pb-5' : ''} pattern-dots`} style={{ backgroundColor: 'var(--bg-white)', paddingBottom: isLast ? '12rem' : '' }}>
+                  <div className="container">
+                    <div className="row g-5 align-items-center">
+                      <div className={`col-lg-6 ${!isEven ? 'order-lg-2' : ''}`}>
+                        <div className="about-home-img-wrapper">
+                          <img src={section.image || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"} alt={section.title || "About"} />
+                          
+                          {section.videoUrl && (
+                            <div className="about-play-btn" onClick={() => setShowVideo(section.videoUrl)}>
+                              <i className="bi bi-play-fill"></i>
+                            </div>
+                          )}
+
+                          {(section.badgeTopText || section.badgeBottomText) && (
+                            <div className="about-home-badge">
+                              <h2>{section.badgeTopText}</h2>
+                              <p>{section.badgeBottomText}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="col-6 d-flex align-items-start gap-3">
-                        <i className="bi bi-eye fs-3 text-primary"></i>
-                        <div>
-                          <h6 className="fw-bold mb-1">{homeConfig.aboutSection?.bullet2Title || 'Vision'}</h6>
-                          <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{homeConfig.aboutSection?.bullet2Desc || `${companyInfo.vision?.substring(0, 60)}...`}</p>
-                        </div>
+                      <div className={`col-lg-6 ${!isEven ? 'order-lg-1' : ''}`}>
+                        <span className="section-label">About Us</span>
+                        <h2 className="section-title mb-4">{section.title || `เกี่ยวกับ ${companyInfo.name}`}</h2>
+                        <p className="lead text-muted mb-4" style={{ whiteSpace: 'pre-wrap' }}>{section.description || companyInfo.about}</p>
+                        
+                        {section.listItems && section.listItems.length > 0 ? (
+                          <div className="d-flex flex-column gap-3 mb-5 mt-4">
+                            {section.listItems.map((item, lIdx) => (
+                              <div key={lIdx} className="d-flex align-items-center gap-3">
+                                <span className="about-list-icon"><i className="bi bi-check-lg"></i></span>
+                                <span className="text-dark fw-bold" style={{ fontSize: '1.05rem' }}>{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="row g-3 mb-4">
+                            <div className="col-6 d-flex align-items-start gap-3">
+                              <i className="bi bi-bullseye fs-3 text-primary"></i>
+                              <div>
+                                <h6 className="fw-bold mb-1">{section.bullet1Title || 'Mission'}</h6>
+                                <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{section.bullet1Desc || `${(companyInfo.mission || '').substring(0, 60)}...`}</p>
+                              </div>
+                            </div>
+                            <div className="col-6 d-flex align-items-start gap-3">
+                              <i className="bi bi-eye fs-3 text-primary"></i>
+                              <div>
+                                <h6 className="fw-bold mb-1">{section.bullet2Title || 'Vision'}</h6>
+                                <p className="text-muted small m-0" style={{ whiteSpace: 'pre-wrap' }}>{section.bullet2Desc || `${(companyInfo.vision || '').substring(0, 60)}...`}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <Link to={section.buttonLink || "/about"} className="btn btn-main px-4 py-2">
+                          {section.buttonText || "ติดต่อร่วมงานกับเรา"}
+                        </Link>
                       </div>
                     </div>
-                  )}
-                  
-                  <Link to={homeConfig.aboutSection?.buttonLink || "/about"} className="btn btn-main px-4 py-2">
-                    {homeConfig.aboutSection?.buttonText || "ติดต่อร่วมงานกับเรา"}
-                  </Link>
-                </div>
-            </div>
-          </div>
+                  </div>
+                </section>
+              );
+            })}
 
-          {/* Video Modal */}
-          {showVideo && homeConfig.aboutSection?.videoUrl && (
-            <div className="modal-backdrop fade show d-flex align-items-center justify-content-center" style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)' }} onClick={() => setShowVideo(false)}>
-              <div className="container position-relative" style={{ maxWidth: '900px' }} onClick={e => e.stopPropagation()}>
-                <button 
-                  className="btn btn-link text-white position-absolute top-0 end-0 text-decoration-none fs-1"
-                  onClick={() => setShowVideo(false)}
-                  style={{ zIndex: 10000, marginTop: '-50px', marginRight: '-20px' }}
-                >
-                  <i className="bi bi-x"></i>
-                </button>
-                <div className="ratio ratio-16x9 shadow-lg rounded overflow-hidden bg-black">
-                  <iframe 
-                    src={homeConfig.aboutSection.videoUrl.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/") + "?autoplay=1"} 
-                    title="Video" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                  ></iframe>
+            {/* Video Modal */}
+            {typeof showVideo === 'string' && showVideo && (
+              <div className="modal-backdrop fade show d-flex align-items-center justify-content-center" style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)' }} onClick={() => setShowVideo(null)}>
+                <div className="container position-relative" style={{ maxWidth: '900px' }} onClick={e => e.stopPropagation()}>
+                  <button 
+                    className="btn btn-link text-white position-absolute top-0 end-0 text-decoration-none fs-1"
+                    onClick={() => setShowVideo(null)}
+                    style={{ zIndex: 10000, marginTop: '-50px', marginRight: '-20px' }}
+                  >
+                    <i className="bi bi-x"></i>
+                  </button>
+                  <div className="ratio ratio-16x9 shadow-lg rounded overflow-hidden bg-black">
+                    <iframe 
+                      src={showVideo.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/") + "?autoplay=1"} 
+                      title="Video" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                    ></iframe>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </section>
-      )}
+            )}
+          </>
+        );
+      })()}
 
       {/* ──── Services ──── */}
       {homeConfig.showServices && (

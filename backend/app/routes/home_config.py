@@ -40,7 +40,9 @@ def update_config(current_user):
     if 'selectedClients' in data:
         config.selected_clients = json.dumps(data['selectedClients'])
 
-    if 'aboutSection' in data:
+    if 'aboutSections' in data:
+        config.about_section = json.dumps(data['aboutSections'])
+    elif 'aboutSection' in data:
         config.about_section = json.dumps(data['aboutSection'])
 
     if 'navbarConfig' in data:

@@ -34,6 +34,18 @@ class HomeConfig(db.Model):
             navbar_cfg = json.loads(self.navbar_config) if self.navbar_config else {}
         except (json.JSONDecodeError, TypeError):
             navbar_cfg = {}
+        try:
+            about_data = json.loads(self.about_section) if self.about_section else {}
+            if isinstance(about_data, list):
+                about_sections = about_data
+                about_section = {}
+            else:
+                about_sections = []
+                about_section = about_data
+        except (json.JSONDecodeError, TypeError):
+            about_sections = []
+            about_section = {}
+
         return {
             'showAbout': self.show_about,
             'showServices': self.show_services,
@@ -46,6 +58,7 @@ class HomeConfig(db.Model):
             'customersRows': self.customers_rows or 3,
             'selectedClients': sel_clients,
             'showCTA': self.show_cta,
-            'aboutSection': json.loads(self.about_section) if self.about_section else {},
+            'aboutSection': about_section,
+            'aboutSections': about_sections,
             'navbarConfig': navbar_cfg,
         }
