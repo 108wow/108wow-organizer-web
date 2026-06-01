@@ -2898,21 +2898,43 @@ body {
 }
 
 .about-home-badge h2 {
-  font-size: 2.8rem;
+  font-size: 2.5rem;
   font-weight: 950;
   margin: 0;
   line-height: 0.9;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
   color: #0a0f0d;
 }
 
 .about-home-badge p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: rgba(10, 15, 13, 0.7);
+}
+
+/* Mobile adjustments to prevent horizontal overflow */
+@media (max-width: 768px) {
+  .about-home-img-wrapper {
+    width: 85%;
+    margin-bottom: 3rem;
+  }
+  .about-home-badge {
+    left: -15px;
+    padding: 8px 20px;
+    bottom: 25px;
+  }
+  .about-home-badge::before {
+    border-left: 15px solid transparent;
+  }
+  .about-home-badge h2 {
+    font-size: 1.5rem;
+  }
+  .about-home-badge p {
+    font-size: 0.65rem;
+  }
 }
 
 .about-play-btn {
