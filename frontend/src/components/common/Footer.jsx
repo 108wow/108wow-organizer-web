@@ -4,6 +4,7 @@ import { companyAPI } from '../../api';
 
 export default function Footer() {
   const [info, setInfo] = useState({ name: 'SUSPENDED TECH', about: '', address: '', phone: '', email: '' });
+  const [sdOpen, setSdOpen] = useState(false);
 
   useEffect(() => {
     companyAPI.get().then(d => setInfo(d)).catch(() => { });
@@ -30,7 +31,32 @@ export default function Footer() {
           <div className="footer-bottom"><span>© 2026 {info.name}. All rights reserved.</span></div>
         </div>
       </footer>
-      <Link to="/contact" className="floating-cta"><i className="bi bi-chat-dots-fill"></i> ติดต่อเรา</Link>
+      <div className="speed-dial-container">
+        <div className={`speed-dial-menu ${sdOpen ? '' : 'hidden'}`}>
+          {info.showLine && info.lineId && (
+            <a href={info.lineId.startsWith('http') ? info.lineId : `https://line.me/ti/p/~${info.lineId}`} target="_blank" rel="noreferrer" className="speed-dial-item sd-line" title="LINE">
+              <i className="bi bi-line"></i>
+            </a>
+          )}
+          {info.showFacebook && info.facebook && (
+            <a href={info.facebook} target="_blank" rel="noreferrer" className="speed-dial-item sd-facebook" title="Facebook">
+              <i className="bi bi-facebook"></i>
+            </a>
+          )}
+          {info.showInstagram && info.instagram && (
+            <a href={info.instagram} target="_blank" rel="noreferrer" className="speed-dial-item sd-instagram" title="Instagram">
+              <i className="bi bi-instagram"></i>
+            </a>
+          )}
+          <Link to="/contact" className="speed-dial-item sd-contact" title="Contact Us" onClick={() => setSdOpen(false)}>
+            <i className="bi bi-envelope-fill"></i>
+          </Link>
+        </div>
+        
+        <button className="speed-dial-btn" onClick={() => setSdOpen(!sdOpen)}>
+          <i className={`bi ${sdOpen ? 'bi-x-lg' : 'bi-chat-dots-fill'}`} style={{ transition: 'all 0.3s ease', transform: sdOpen ? 'rotate(90deg)' : 'rotate(0)' }}></i>
+        </button>
+      </div>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import Carousel from 'react-bootstrap/Carousel';
 import { heroAPI, companyAPI, serviceAPI, clientAPI, homeConfigAPI } from '../api';
 
 export default function Home() {
@@ -84,7 +85,7 @@ export default function Home() {
                   <div className="container">
                     <div className="row gy-5 gx-4 gx-lg-5 align-items-center">
                       <div className={`col-lg-6 ${!isEven ? 'order-lg-2' : ''}`}>
-                        <div className="about-home-img-wrapper">
+                        <div className={`about-home-img-wrapper ${!isEven ? 'tilt-right' : ''}`}>
                           <img src={section.image || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"} alt={section.title || "About"} />
                           
                           {section.videoUrl && (
@@ -248,8 +249,8 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Full-width seamless grid */}
-            <div className="container-fluid px-0 mt-4">
+            {/* Desktop: Full-width seamless grid (unchanged) */}
+            <div className="container-fluid px-0 mt-4 d-none d-md-block">
               <div className="row g-0">
                 {(() => {
                   const activeServices = services.filter(svc => svc.isActive !== false && (homeConfig.selectedServices || []).includes(svc.id));
@@ -286,8 +287,33 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Mobile: Horizontal scroll (Peeking layout to show it's swipeable) */}
+            <div className="d-block d-md-none mt-4 px-3">
+              <div className="services-mobile-scroll">
+                {(() => {
+                  const activeServices = services.filter(svc => svc.isActive !== false && (homeConfig.selectedServices || []).includes(svc.id));
+                  // แกล้งจำลองให้เป็นลูปด้วยการก็อปปี้ข้อมูล 3 ชุดต่อกัน
+                  const loopServices = [...activeServices, ...activeServices, ...activeServices];
+                  return loopServices.map((svc, idx) => (
+                    <div key={`${svc.id}-${idx}`} className="services-mobile-card" style={{ flex: '0 0 85%', maxWidth: '85%' }}>
+                      <div className="svc-grid-full" style={{ borderRadius: '16px', overflow: 'hidden', height: '300px' }}>
+                        <img src={svc.image} alt={svc.title} />
+                        <div className="svc-content">
+                          <h5>{svc.title}</h5>
+                          <p>{svc.description?.substring(0, 50)}...</p>
+                          <Link to="/contact" className="svc-btn">สอบถามเพิ่มเติม</Link>
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
             <div className="text-center mt-5">
-              <Link to="/services" className="btn btn-outline-primary rounded-pill px-5 py-2">ดูบริการทั้งหมด <i className="bi bi-arrow-right ms-2"></i></Link>
+              <Link to="/services" className="btn btn-main px-5 py-3 fs-6 fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                ดูบริการทั้งหมด <i className="bi bi-arrow-right"></i>
+              </Link>
             </div>
           </div>
         </section>

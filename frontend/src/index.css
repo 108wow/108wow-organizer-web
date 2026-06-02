@@ -675,6 +675,75 @@ body {
   letter-spacing: 0.5px
 }
 
+/* ─── Floating Speed Dial ─── */
+.speed-dial-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.speed-dial-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: bottom center;
+}
+
+.speed-dial-menu.hidden {
+  opacity: 0;
+  transform: scale(0.5) translateY(20px);
+  pointer-events: none;
+}
+
+.speed-dial-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+.speed-dial-btn:hover {
+  transform: scale(1.05);
+  background: var(--primary-hover);
+}
+
+.speed-dial-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}
+.speed-dial-item:hover {
+  transform: scale(1.1);
+  color: #fff;
+}
+.sd-line { background: #00B900; }
+.sd-facebook { background: #1877F2; }
+.sd-instagram { background: #E4405F; }
+.sd-contact { background: var(--navy); color: #fff; }
+
 .svc-grid-full:hover .svc-btn {
   opacity: 1;
   transform: translateY(0)
@@ -685,6 +754,32 @@ body {
   color: var(--text-dark);
   border-color: var(--primary-hover)
 }
+
+/* ─── Services Mobile Horizontal Scroll ─── */
+.services-mobile-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.services-mobile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.services-mobile-card {
+  flex: 0 0 80%;
+  max-width: 80%;
+  scroll-snap-align: start;
+}
+
+.services-mobile-card .svc-grid-full {
+  height: 280px;
+}
+
 
 /* ─── Service Card (Page) ─── */
 .service-card {
@@ -2320,19 +2415,15 @@ body {
   font-size: .72rem
 }
 
-/* ─── Floating CTA ─── */
-.floating-cta {
+/* ─── Floating Speed Dial ─── */
+.speed-dial-container {
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 999;
-  background: var(--primary);
-  color: #fff;
-  padding: 11px 20px;
-  border-radius: var(--radius);
   font-weight: 700;
   font-size: .78rem;
-  box-shadow: var(--shadow-blue);
+  box-shadow: none;
   cursor: pointer;
   transition: var(--transition);
   text-decoration: none;
@@ -2857,8 +2948,12 @@ body {
   transition: transform 0.3s ease;
 }
 
-.about-home-img-wrapper:hover {
+.about-home-img-wrapper:hover, .about-home-img-wrapper.tilt-right:hover {
   transform: rotate(0deg) scale(1.02);
+}
+
+.about-home-img-wrapper.tilt-right {
+  transform: rotate(3deg);
 }
 
 .about-home-img-wrapper img {
