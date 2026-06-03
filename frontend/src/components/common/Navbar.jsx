@@ -4,26 +4,26 @@ import { companyAPI, homeConfigAPI } from '../../api';
 
 export default function Navbar() {
   const { pathname } = useLocation();
-  const [companyInfo, setCompanyInfo] = useState({ name: 'SUSPENDED TECH', logoUrl: '' });
+  const [companyInfo, setCompanyInfo] = useState({ name: '', logoUrl: '' });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navbarConfig, setNavbarConfig] = useState({});
 
   useEffect(() => {
-    companyAPI.get().then(d => { 
-      const newName = d.name || 'SUSPENDED TECH';
-      setCompanyInfo({ name: newName, logoUrl: d.logoUrl || '' }); 
+    companyAPI.get().then(d => {
+      const newName = d.name || '';
+      setCompanyInfo({ name: newName, logoUrl: d.logoUrl || '' });
       document.title = newName;
-    }).catch(() => {});
+    }).catch(() => { });
 
     homeConfigAPI.get().then(d => {
       if (d && d.navbarConfig) setNavbarConfig(d.navbarConfig);
-    }).catch(() => {});
+    }).catch(() => { });
 
     const offcanvasEl = document.getElementById('mainNav');
     const handleShow = () => setIsMenuOpen(true);
     const handleHide = () => setIsMenuOpen(false);
-    
+
     if (offcanvasEl) {
       offcanvasEl.addEventListener('show.bs.offcanvas', handleShow);
       offcanvasEl.addEventListener('hide.bs.offcanvas', handleHide);

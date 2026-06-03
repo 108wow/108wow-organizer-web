@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import Home from './pages/Home';
@@ -30,7 +30,7 @@ import AdminPageHeroes from './pages/admin/AdminPageHeroes';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLogin from './pages/admin/AdminLogin';
 
-import { getToken } from './api';
+import { getToken, companyAPI, homeConfigAPI } from './api';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -59,6 +59,30 @@ function PublicLayout() {
 }
 
 export default function App() {
+  const [isWakingUp, setIsWakingUp] = useState(true);
+
+  useEffect(() => {
+    // Wake up the backend and wait for essential APIs
+    Promise.all([
+      companyAPI.get().catch(() => {}),
+      homeConfigAPI.get().catch(() => {})
+    ]).finally(() => {
+      // Add a slight delay for smooth aesthetic transition
+      setTimeout(() => setIsWakingUp(false), 800);
+    });
+  }, []);
+
+  if (isWakingUp) {
+    return (
+      <div className="global-startup-loader">
+        <div className="startup-orb"></div>
+        <div className="startup-orb-2"></div>
+        <div className="startup-spinner"></div>
+        <div className="startup-text">POWERED BY 108 WOW</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <ScrollToTop />
