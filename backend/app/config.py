@@ -12,8 +12,8 @@ class Config:
     MYSQL_PORT = os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT', '3306')
     MYSQL_DB = os.environ.get('MYSQL_DB') or os.environ.get('MYSQLDATABASE', 'suspended_tech')
 
-    # If Railway provides a full MYSQL_URL, use it (but change mysql:// to mysql+mysqldb://)
-    _mysql_url = os.environ.get('MYSQL_URL')
+    # If Railway provides a full MYSQL_URL or DATABASE_URL, use it (but change mysql:// to mysql+mysqldb://)
+    _mysql_url = os.environ.get('MYSQL_URL') or os.environ.get('DATABASE_URL')
     if _mysql_url:
         SQLALCHEMY_DATABASE_URI = _mysql_url.replace("mysql://", "mysql+mysqldb://")
     else:
