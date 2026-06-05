@@ -10,6 +10,7 @@ migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
+    app.url_map.strict_slashes = False
     app.config.from_object('app.config.Config')
 
     # Ensure upload folder exists
