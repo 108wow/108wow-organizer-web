@@ -30,7 +30,9 @@ def update_company(current_user):
                       ('googleMapEmbed', 'google_map_embed'),
                       ('facebook', 'facebook'), ('showFacebook', 'show_facebook'),
                       ('lineId', 'line_id'), ('showLine', 'show_line'),
-                      ('instagram', 'instagram'), ('showInstagram', 'show_instagram')]:
+                      ('instagram', 'instagram'), ('showInstagram', 'show_instagram'),
+                      ('ctaTitle', 'cta_title'), ('ctaSubtitle', 'cta_subtitle'),
+                      ('ctaButtonText', 'cta_button_text'), ('ctaButtonLink', 'cta_button_link')]:
         if key in data:
             setattr(info, attr, data[key])
     db.session.commit()

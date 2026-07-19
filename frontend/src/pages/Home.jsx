@@ -424,12 +424,12 @@ export default function Home() {
             <div className="py-3 position-relative overflow-hidden">
               <div className="position-relative z-1 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
                 <div className="text-center text-lg-start">
-                  <h2 className="section-title mb-2" style={{ color: 'var(--navy)' }}>พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?</h2>
-                  <p className="mb-0 mx-auto mx-lg-0 section-desc" style={{ color: 'rgba(10, 15, 13, 0.75)', maxWidth: 650, fontWeight: 500 }}>ไม่ว่าจะเป็นงานกีฬาสี ปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!</p>
+                  <h2 className="section-title mb-2" style={{ color: 'var(--navy)' }}>{companyInfo.ctaTitle}</h2>
+                  <p className="mb-0 mx-auto mx-lg-0 section-desc" style={{ color: 'rgba(10, 15, 13, 0.75)', maxWidth: 650, fontWeight: 500 }}>{companyInfo.ctaSubtitle}</p>
                 </div>
                 <div className="flex-shrink-0 mt-3 mt-lg-0">
                   <Link to="/contact" className="btn px-5 py-3 text-nowrap" style={{ backgroundColor: 'var(--navy)', color: '#fff', borderRadius: '50px', fontWeight: 600 }}>
-                    ทักมาคุยกับเรา <i className="bi bi-chat-dots ms-2"></i>
+                    {companyInfo.ctaButtonText} <i className="bi bi-chat-dots ms-2"></i>
                   </Link>
                 </div>
               </div>

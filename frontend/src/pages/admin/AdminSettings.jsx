@@ -6,10 +6,10 @@ import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 
 export default function AdminSettings() {
-  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900', about: '', address: '', email: '', officeHours: '', footerName: '' });
+  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900', about: '', address: '', email: '', officeHours: '', footerName: '', ctaTitle: '', ctaSubtitle: '', ctaButtonText: '' });
 
   useEffect(() => {
-    companyAPI.get().then(d => setForm(p => ({ ...p, name: d.name || '', tagline: d.tagline || '', logoUrl: d.logoUrl || '', about: d.about || '', address: d.address || '', email: d.email || '', officeHours: d.officeHours || '', footerName: d.footerName || '' }))).catch(() => {});
+    companyAPI.get().then(d => setForm(p => ({ ...p, name: d.name || '', tagline: d.tagline || '', logoUrl: d.logoUrl || '', about: d.about || '', address: d.address || '', email: d.email || '', officeHours: d.officeHours || '', footerName: d.footerName || '', ctaTitle: d.ctaTitle || '', ctaSubtitle: d.ctaSubtitle || '', ctaButtonText: d.ctaButtonText || '' }))).catch(() => {});
   }, []);
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function AdminSettings() {
   const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกการตั้งค่าเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
-    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: async () => { await companyAPI.update({ name: form.name, tagline: form.tagline, logoUrl: form.logoUrl, about: form.about, address: form.address, email: form.email, officeHours: form.officeHours, footerName: form.footerName }); } });
+    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: async () => { await companyAPI.update({ name: form.name, tagline: form.tagline, logoUrl: form.logoUrl, about: form.about, address: form.address, email: form.email, officeHours: form.officeHours, footerName: form.footerName, ctaTitle: form.ctaTitle, ctaSubtitle: form.ctaSubtitle, ctaButtonText: form.ctaButtonText }); } });
   };
 
   return (
@@ -40,6 +40,29 @@ export default function AdminSettings() {
             <div className="card-body p-4">
               <div className="admin-form-group"><label>ชื่อเว็บไซต์ (Site Name)</label><input type="text" name="name" value={form.name} onChange={handleChange} /><small className="text-muted">แสดงบน Navbar และ Title ของเว็บ</small></div>
               <div className="admin-form-group"><label>Tagline / สโลแกน</label><input type="text" name="tagline" value={form.tagline} onChange={handleChange} /><small className="text-muted">คำอธิบายสั้นๆ ของเว็บไซต์</small></div>
+            </div>
+          </div>
+
+          <div className="card border-0 shadow-sm rounded-4 mt-4">
+            <div className="card-header bg-white border-bottom pt-4 pb-3 px-4"><h5 className="fw-bold m-0"><i className="bi bi-megaphone me-2 text-primary"></i>การตั้งค่า Call To Action (ก่อน Footer)</h5></div>
+            <div className="card-body p-4">
+              <div className="admin-form-group">
+                <label>หัวข้อ (CTA Title)</label>
+                <input type="text" name="ctaTitle" value={form.ctaTitle} onChange={handleChange} className="form-control" placeholder="พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?" />
+              </div>
+              <div className="admin-form-group mt-3">
+                <label>ข้อความรอง (CTA Subtitle)</label>
+                <textarea name="ctaSubtitle" value={form.ctaSubtitle} onChange={handleChange} rows="2" className="form-control" placeholder="ไม่ว่าจะเป็นงานกีฬาปาร์ตี้ สัมมนา..."></textarea>
+              </div>
+              <div className="row mt-3">
+                <div className="col-md-12">
+                  <div className="admin-form-group">
+                    <label>ข้อความปุ่ม (Button Text)</label>
+                    <input type="text" name="ctaButtonText" value={form.ctaButtonText} onChange={handleChange} className="form-control" placeholder="ทักมาคุยกับเรา" />
+                    <small className="text-muted">ปุ่มนี้จะลิงก์ไปยังหน้าติดต่อเรา (/contact) เสมอ</small>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

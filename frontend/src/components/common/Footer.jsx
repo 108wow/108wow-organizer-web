@@ -23,39 +23,39 @@ export default function Footer() {
                 )}
               </div>
               <Link to="/" className="d-block mb-3 text-decoration-none">
-                <div style={{ fontWeight: 800, fontSize: '1.8rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{info.footerName || info.name}</div>
+                <div style={{ fontWeight: 800, fontSize: '1.8rem', color: '#fff', letterSpacing: '0.5px' }}>{info.footerName || info.name}</div>
               </Link>
               <p style={{ lineHeight: 1.8, fontSize: '0.9rem', marginBottom: 0 }}>{info.about}</p>
             </div>
             
             {/* Contact Columns */}
-            <div className="col-md-4 col-lg-auto mt-4 mt-lg-0 footer-contact-col">
+            <div className="col-md-4 col-lg mt-4 mt-lg-0 footer-contact-col">
               <div className="d-flex flex-column align-items-start">
                 <i className="bi bi-geo-alt mb-3" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '3rem', lineHeight: 1 }}></i>
                 <div>
                   <h5 className="mb-2" style={{ color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>ADDRESS</h5>
-                  <p className="mb-0" style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{info.address || '123 Sport Ave, Bangkok 10110'}</p>
+                  <p className="mb-0" style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{info.address}</p>
                 </div>
               </div>
             </div>
             
-            <div className="col-md-4 col-lg-auto mt-4 mt-lg-0 footer-contact-col">
+            <div className="col-md-4 col-lg mt-4 mt-lg-0 footer-contact-col">
               <div className="d-flex flex-column align-items-start">
                 <i className="bi bi-envelope mb-3" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '3rem', lineHeight: 1 }}></i>
                 <div>
                   <h5 className="mb-2" style={{ color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>MAIL TO US</h5>
-                  <p className="mb-1" style={{ fontSize: '0.9rem' }}>{info.email || 'contact@example.com'}</p>
-                  <p className="mb-0" style={{ fontSize: '0.9rem' }}>{info.phone || '+66 2 123 4567'}</p>
+                  <p className="mb-1" style={{ fontSize: '0.9rem' }}>{info.email}</p>
+                  <p className="mb-0" style={{ fontSize: '0.9rem' }}>{info.phone}</p>
                 </div>
               </div>
             </div>
 
-            <div className="col-md-4 col-lg-auto mt-4 mt-lg-0 footer-contact-col">
+            <div className="col-md-4 col-lg mt-4 mt-lg-0 footer-contact-col">
               <div className="d-flex flex-column align-items-start">
                 <i className="bi bi-clock mb-3" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '3rem', lineHeight: 1 }}></i>
                 <div>
                   <h5 className="mb-2" style={{ color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>OFFICE HOURS</h5>
-                  <p className="mb-0" style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{info.officeHours || 'จันทร์ - ศุกร์ 09:00 - 18:00\nปิดเสาร์-อาทิตย์'}</p>
+                  <p className="mb-0" style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{info.officeHours}</p>
                 </div>
               </div>
             </div>

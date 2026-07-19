@@ -24,6 +24,10 @@ class CompanyInfo(db.Model):
     show_line = db.Column(db.Boolean, default=True)
     instagram = db.Column(db.String(500), default='')
     show_instagram = db.Column(db.Boolean, default=True)
+    cta_title = db.Column(db.String(255), default='พร้อมเปลี่ยนไอเดียให้เป็นงานสุดว้าวหรือยัง?')
+    cta_subtitle = db.Column(db.Text, default='ไม่ว่าจะเป็นงานกีฬาปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!')
+    cta_button_text = db.Column(db.String(100), default='ทักมาคุยกับเรา')
+    cta_button_link = db.Column(db.String(255), default='/contact')
 
     def to_dict(self):
         return {
@@ -46,6 +50,10 @@ class CompanyInfo(db.Model):
             'showLine': self.show_line if self.show_line is not None else True,
             'instagram': self.instagram or '',
             'showInstagram': self.show_instagram if self.show_instagram is not None else True,
+            'ctaTitle': self.cta_title,
+            'ctaSubtitle': self.cta_subtitle,
+            'ctaButtonText': self.cta_button_text,
+            'ctaButtonLink': self.cta_button_link,
         }
 
 
