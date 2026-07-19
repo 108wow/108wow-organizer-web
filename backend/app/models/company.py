@@ -7,6 +7,7 @@ class CompanyInfo(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), default='SUSPENDED TECH')
+    footer_name = db.Column(db.String(255), default='')
     tagline = db.Column(db.String(255), default='')
     about = db.Column(db.Text, default='')
     mission = db.Column(db.Text, default='')
@@ -14,6 +15,7 @@ class CompanyInfo(db.Model):
     address = db.Column(db.Text, default='')
     phone = db.Column(db.String(50), default='')
     email = db.Column(db.String(100), default='')
+    office_hours = db.Column(db.String(255), default='จันทร์ - ศุกร์ 09:00 - 18:00\nปิดเสาร์-อาทิตย์')
     logo_url = db.Column(db.String(500), default='')
     google_map_embed = db.Column(db.Text, default='')
     facebook = db.Column(db.String(500), default='')
@@ -27,6 +29,7 @@ class CompanyInfo(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'footerName': self.footer_name or self.name,
             'tagline': self.tagline,
             'about': self.about,
             'mission': self.mission,
@@ -34,6 +37,7 @@ class CompanyInfo(db.Model):
             'address': self.address,
             'phone': self.phone,
             'email': self.email,
+            'officeHours': self.office_hours or '',
             'logoUrl': self.logo_url,
             'googleMapEmbed': self.google_map_embed or '',
             'facebook': self.facebook or '',

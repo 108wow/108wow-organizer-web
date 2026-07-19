@@ -23,9 +23,10 @@ def update_company(current_user):
         info = CompanyInfo(id=1)
         db.session.add(info)
     data = request.get_json()
-    for key, attr in [('name', 'name'), ('tagline', 'tagline'), ('about', 'about'),
+    for key, attr in [('name', 'name'), ('footerName', 'footer_name'), ('tagline', 'tagline'), ('about', 'about'),
                       ('mission', 'mission'), ('vision', 'vision'), ('address', 'address'),
                       ('phone', 'phone'), ('email', 'email'), ('logoUrl', 'logo_url'),
+                      ('officeHours', 'office_hours'),
                       ('googleMapEmbed', 'google_map_embed'),
                       ('facebook', 'facebook'), ('showFacebook', 'show_facebook'),
                       ('lineId', 'line_id'), ('showLine', 'show_line'),

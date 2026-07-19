@@ -6,10 +6,10 @@ import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 
 export default function AdminSettings() {
-  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900' });
+  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900', about: '', address: '', email: '', officeHours: '', footerName: '' });
 
   useEffect(() => {
-    companyAPI.get().then(d => setForm(p => ({ ...p, name: d.name || '', tagline: d.tagline || '', logoUrl: d.logoUrl || '' }))).catch(() => {});
+    companyAPI.get().then(d => setForm(p => ({ ...p, name: d.name || '', tagline: d.tagline || '', logoUrl: d.logoUrl || '', about: d.about || '', address: d.address || '', email: d.email || '', officeHours: d.officeHours || '', footerName: d.footerName || '' }))).catch(() => {});
   }, []);
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function AdminSettings() {
   const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกการตั้งค่าเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
-    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: async () => { await companyAPI.update({ name: form.name, tagline: form.tagline, logoUrl: form.logoUrl }); } });
+    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: async () => { await companyAPI.update({ name: form.name, tagline: form.tagline, logoUrl: form.logoUrl, about: form.about, address: form.address, email: form.email, officeHours: form.officeHours, footerName: form.footerName }); } });
   };
 
   return (
@@ -40,6 +40,35 @@ export default function AdminSettings() {
             <div className="card-body p-4">
               <div className="admin-form-group"><label>ชื่อเว็บไซต์ (Site Name)</label><input type="text" name="name" value={form.name} onChange={handleChange} /><small className="text-muted">แสดงบน Navbar และ Title ของเว็บ</small></div>
               <div className="admin-form-group"><label>Tagline / สโลแกน</label><input type="text" name="tagline" value={form.tagline} onChange={handleChange} /><small className="text-muted">คำอธิบายสั้นๆ ของเว็บไซต์</small></div>
+            </div>
+          </div>
+
+          <div className="card border-0 shadow-sm rounded-4 mt-4">
+            <div className="card-header bg-white border-bottom pt-4 pb-3 px-4"><h5 className="fw-bold m-0"><i className="bi bi-layout-text-window-reverse me-2 text-primary"></i>การตั้งค่า Footer</h5></div>
+            <div className="card-body p-4">
+              <div className="admin-form-group">
+                <label>ชื่อบริษัท (แสดงที่ Footer)</label>
+                <input type="text" name="footerName" value={form.footerName} onChange={handleChange} className="form-control" placeholder="ชื่อที่จะแสดงใน Footer" />
+                <small className="text-muted">หากเว้นว่างไว้ จะใช้ "ชื่อเว็บไซต์ (Site Name)" แทน</small>
+              </div>
+              <div className="admin-form-group mt-3">
+                <label>คำบรรยายบริษัท (About)</label>
+                <textarea name="about" value={form.about} onChange={handleChange} rows="3" className="form-control" placeholder="เราคือ Organizer สายครีเอทีฟ..."></textarea>
+                <small className="text-muted">ข้อความแนะนำตัวสั้นๆ แสดงใต้โลโก้ที่ Footer</small>
+              </div>
+              <div className="admin-form-group mt-3">
+                <label>ที่อยู่ (Address)</label>
+                <textarea name="address" value={form.address} onChange={handleChange} rows="2" className="form-control" placeholder="123 อาคาร..."></textarea>
+              </div>
+              <div className="admin-form-group mt-3">
+                <label>อีเมล (Email)</label>
+                <input type="email" name="email" value={form.email} onChange={handleChange} className="form-control" placeholder="contact@example.com" />
+              </div>
+              <div className="admin-form-group mt-3">
+                <label>เวลาทำการ (Office Hours)</label>
+                <textarea name="officeHours" value={form.officeHours} onChange={handleChange} rows="2" className="form-control" placeholder="จันทร์ - ศุกร์ 09:00 - 18:00"></textarea>
+                <small className="text-muted">พิมพ์เวลาทำการของคุณได้เลย (เคาะบรรทัดใหม่ได้)</small>
+              </div>
             </div>
           </div>
         </div>
