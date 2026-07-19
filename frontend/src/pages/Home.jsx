@@ -81,9 +81,9 @@ export default function Home() {
               const isEven = idx % 2 === 0;
               const isLast = idx === aboutSections.length - 1;
               return (
-                <section key={idx} className={`d-flex align-items-center pt-5 ${!isLast ? 'pb-5' : ''} pattern-dots`} style={{ backgroundColor: 'var(--bg-white)', paddingBottom: isLast ? '12rem' : '' }}>
+                <section key={idx} className="d-flex align-items-center pattern-dots about-section" style={{ backgroundColor: 'var(--bg-white)', minHeight: '100vh', boxSizing: 'border-box' }}>
                   <div className="container">
-                    <div className="row gy-5 gx-4 gx-lg-5 align-items-center">
+                    <div className="row gy-5 gx-4 gx-lg-5 align-items-center about-home-row">
                       <div className={`col-lg-6 ${!isEven ? 'order-lg-2' : ''}`}>
                         <div className={`about-home-img-wrapper ${!isEven ? 'tilt-right' : ''}`}>
                           <img src={section.image || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"} alt={section.title || "About"} />
@@ -104,7 +104,7 @@ export default function Home() {
                       </div>
                       <div className={`col-lg-6 px-4 px-lg-3 ${!isEven ? 'order-lg-1' : ''}`}>
                         <span className="section-label">About Us</span>
-                        <h2 className="section-title mb-4 d-none d-lg-block fs-1" style={{ wordBreak: 'break-word', lineHeight: '1.3' }}>
+                        <h2 className="section-title about-home-section-title mb-4 d-none d-lg-block fs-1" style={{ wordBreak: 'break-word', lineHeight: '1.3' }}>
                           {section.title || `เกี่ยวกับ ${companyInfo.name}`}
                         </h2>
                         <h2 className="section-title mb-4 d-block d-lg-none" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', hyphens: 'auto', fontSize: 'clamp(1.5rem, 7vw, 2.5rem)', lineHeight: '1.2', letterSpacing: '-0.5px' }}>
@@ -113,11 +113,11 @@ export default function Home() {
                         
                         {/* Desktop Description (Unchanged) */}
                         <div className="d-none d-lg-block">
-                          <p className="text-muted mb-4 fs-5" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
+                          <p className="text-muted about-home-desc mb-4 fs-5" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                             {section.description || companyInfo.about}
                           </p>
                           {section.listItems && section.listItems.length > 0 ? (
-                            <div className="d-flex flex-column gap-4 mb-5 mt-4">
+                            <div className="d-flex flex-column gap-4 mb-5 mt-4 about-home-list">
                               {section.listItems.map((item, lIdx) => (
                                 <div key={lIdx} className="d-flex align-items-center gap-3">
                                   <span className="about-list-icon"><i className="bi bi-check-lg"></i></span>

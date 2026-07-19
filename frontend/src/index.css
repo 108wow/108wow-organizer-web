@@ -4124,3 +4124,52 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Medium desktop screens (1366×768, 1440×900, etc.) */
+@media (min-width: 769px) and (max-width: 1440px) {
+  .about-home-img-wrapper {
+    /* Inherit default aspect-ratio: 4/5 */
+    width: 85%;
+    padding: 10px 10px 44px 10px;
+  }
+  .about-home-badge {
+    padding: 10px 24px;
+    bottom: 28px;
+    left: -18px;
+  }
+  .about-home-badge h2 {
+    font-size: 1.8rem;
+  }
+  .about-home-badge p {
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+  .about-home-section-title {
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem) !important;
+    margin-bottom: 1rem !important;
+    line-height: 1.3 !important;
+  }
+  .about-home-desc {
+    font-size: 1rem !important;
+    line-height: 1.7 !important;
+    margin-bottom: 1rem !important;
+  }
+  .about-home-list {
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    margin-top: 1rem !important;
+  }
+  .about-home-list .fs-5 {
+    font-size: 1rem !important;
+  }
+  .about-home-row {
+    --bs-gutter-y: 2rem !important;
+  }
+}
+
+/* About section — full viewport per section with navbar offset */
+.about-section {
+  padding-top: 85px;
+  padding-bottom: 2rem;
+  scroll-snap-align: start;
+}
