@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { companyAPI, homeConfigAPI } from '../../api';
+import { companyAPI, homeConfigAPI, serviceAPI } from '../../api';
 
 export default function Navbar() {
   const { pathname } = useLocation();
@@ -8,6 +8,7 @@ export default function Navbar() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navbarConfig, setNavbarConfig] = useState({});
+  const [services, setServices] = useState([]);
 
   useEffect(() => {
     companyAPI.get().then(d => {
@@ -19,6 +20,10 @@ export default function Navbar() {
     homeConfigAPI.get().then(d => {
       if (d && d.navbarConfig) setNavbarConfig(d.navbarConfig);
     }).catch(() => { });
+    
+    serviceAPI.list().then(d => {
+      setServices(d.filter(s => s.isActive !== false));
+    }).catch(() => {});
 
     const offcanvasEl = document.getElementById('mainNav');
     const handleShow = () => setIsMenuOpen(true);
@@ -40,11 +45,13 @@ export default function Navbar() {
     { to: '/about', label: 'ABOUT US', key: 'about' },
     { to: '/team', label: 'TEAM', key: 'team' },
     { to: '/services', label: 'SERVICES', key: 'services' },
+    { to: '/rent-equipment', label: 'RENT EQUIPMENT', key: 'equipment' },
     { to: '/gallery', label: 'GALLERY', key: 'gallery' },
     { to: '/clients', label: 'CLIENTS', key: 'clients' },
     { to: '/blog', label: 'BLOG', key: 'blog' },
     { to: '/contact', label: 'CONTACT US', key: 'contact' },
   ];
+
   const links = allLinks.filter(l => navbarConfig[l.key] !== false);
 
   const handleLinkClick = () => {
@@ -84,11 +91,32 @@ export default function Navbar() {
           </div>
           <div className="offcanvas-body px-4 py-4 px-lg-0 py-lg-0">
             <ul className="navbar-nav justify-content-end flex-grow-1 pe-lg-0">
-              {links.map((l, index) => (
-                <li className="nav-item mobile-nav-item" key={l.to} style={{ '--delay': `${index * 0.08}s` }}>
-                  <Link className={`nav-link mobile-nav-link ${pathname === l.to ? 'active' : ''}`} to={l.to} onClick={handleLinkClick}>{l.label}</Link>
-                </li>
-              ))}
+              {links.map((l, index) => {
+                if (l.key === 'services' && services.length > 0) {
+                  return (
+                    <li className="nav-item dropdown dropdown-hover mobile-nav-item" key={l.to} style={{ '--delay': `${index * 0.08}s` }}>
+                      <Link className="nav-link mobile-nav-link" to={l.to} onClick={handleLinkClick}>
+                        {l.label}
+                      </Link>
+                      <ul className="dropdown-menu border-0 shadow-lg dropdown-menu-dark-custom">
+                        {services.map(s => (
+                          <li key={s.id}>
+                            <Link className="dropdown-item py-2 px-3 fw-bold dropdown-item-custom" to={`/services#service-${s.id}`} onClick={handleLinkClick}>
+                              {s.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  );
+                }
+                
+                return (
+                  <li className="nav-item mobile-nav-item" key={l.to} style={{ '--delay': `${index * 0.08}s` }}>
+                    <Link className={`nav-link mobile-nav-link ${pathname === l.to ? 'active' : ''}`} to={l.to} onClick={handleLinkClick}>{l.label}</Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

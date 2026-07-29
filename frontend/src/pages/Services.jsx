@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import HeroSection from '../components/common/HeroSection';
 import { serviceAPI, pageHeroAPI, galleryAPI } from '../api';
 
@@ -9,6 +9,7 @@ export default function Services() {
   const [galleryItems, setGalleryItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const sliderRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     Promise.all([serviceAPI.list(), pageHeroAPI.list(), galleryAPI.list()])
@@ -19,6 +20,19 @@ export default function Services() {
         setLoaded(true);
       }).catch(() => setLoaded(true));
   }, []);
+
+  useEffect(() => {
+    if (loaded && location.hash) {
+      setTimeout(() => {
+        const id = location.hash.replace('#', '');
+        const el = document.getElementById(id);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [loaded, location.hash]);
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -74,7 +88,7 @@ export default function Services() {
               }
               
               return (
-                <div key={svc.id} className={`bento-item anim d${(i % 6) + 1} ${theme}`}>
+                <div key={svc.id} id={`service-${svc.id}`} className={`bento-item anim d${(i % 6) + 1} ${theme}`}>
                   {svc.image && (
                     <img src={svc.image} alt={svc.title} className="bento-bg-img" />
                   )}

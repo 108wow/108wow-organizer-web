@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Team from './pages/Team';
 import Services from './pages/Services';
+import RentEquipment from './pages/RentEquipment';
 import Gallery from './pages/Gallery';
 import Clients from './pages/Clients';
 import Blog from './pages/Blog';
@@ -18,7 +19,9 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHero from './pages/admin/AdminHero';
 import AdminHeroEditor from './pages/admin/AdminHeroEditor';
 import AdminServices from './pages/admin/AdminServices';
+import AdminEquipment from './pages/admin/AdminEquipment';
 import AdminGallery from './pages/admin/AdminGallery';
+
 import AdminBlog from './pages/admin/AdminBlog';
 import AdminBlogEditor from './pages/admin/AdminBlogEditor';
 import AdminTeam from './pages/admin/AdminTeam';
@@ -99,6 +102,7 @@ export default function App() {
           <Route path="hero/new" element={<AdminHeroEditor />} />
           <Route path="hero/edit/:id" element={<AdminHeroEditor />} />
           <Route path="services" element={<AdminServices />} />
+          <Route path="equipment" element={<AdminEquipment />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="blog/new" element={<AdminBlogEditor />} />
@@ -116,12 +120,14 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/team" element={<Team />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/rent-equipment" element={<RentEquipment />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
         </Route>
+
       </Routes>
     </>
   );

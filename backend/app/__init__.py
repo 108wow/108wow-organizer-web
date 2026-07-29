@@ -36,6 +36,7 @@ def create_app():
     from app.routes.upload import upload_bp
     from app.routes.auth import auth_bp
     from app.routes.about_config import about_config_bp
+    from app.routes.equipment import equipment_bp
     app.register_blueprint(heroes_bp, url_prefix='/api/heroes')
     app.register_blueprint(services_bp, url_prefix='/api/services')
     app.register_blueprint(gallery_bp, url_prefix='/api/gallery')
@@ -50,6 +51,8 @@ def create_app():
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(about_config_bp, url_prefix='/api/about-config')
+    app.register_blueprint(equipment_bp, url_prefix='/api/equipment')
+
     # Serve uploaded files
     from flask import send_from_directory
 

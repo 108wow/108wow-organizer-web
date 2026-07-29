@@ -12,3 +12,5 @@ from app.models.home_config import HomeConfig
 from app.models.contact import ContactMessage
 from app.models.user import AdminUser
 from app.models.about_config import AboutConfig
+from app.models.equipment import Equipment
+

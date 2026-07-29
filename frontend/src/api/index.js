@@ -201,6 +201,23 @@ export const contactAPI = {
   deleteMessage: (id) => del(`/contact/messages/${id}`),
 };
 
+// ─── Equipment ───
+export const equipmentAPI = {
+  list: (params) => {
+    const q = new URLSearchParams();
+    if (params?.category) q.append('category', params.category);
+    if (params?.search) q.append('search', params.search);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return get(`/equipment${qs}`);
+  },
+  get: (id) => get(`/equipment/${id}`),
+  create: (data) => post('/equipment', data),
+  update: (id, data) => put(`/equipment/${id}`, data),
+  delete: (id) => del(`/equipment/${id}`),
+  reorder: (items) => put('/equipment/reorder', items),
+};
+
+
 // ─── Upload ───
 export async function uploadImage(file) {
   const formData = new FormData();

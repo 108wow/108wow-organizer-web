@@ -86,6 +86,7 @@ export default function AdminLayout() {
     { name: 'แบนเนอร์หลัก (Main Hero)', path: '/admin/hero', icon: 'bi-images' },
     { name: 'แบนเนอร์ย่อย (Page Heroes)', path: '/admin/page-heroes', icon: 'bi-card-heading' },
     { name: 'บริการ (Services)', path: '/admin/services', icon: 'bi-briefcase' },
+    { name: 'อุปกรณ์ให้เช่า (Rent Equipment)', path: '/admin/equipment', icon: 'bi-box-seam' },
     { name: 'แกลลอรี่ (Gallery)', path: '/admin/gallery', icon: 'bi-collection' },
     { name: 'บทความ (Blog)', path: '/admin/blog', icon: 'bi-journal-text' },
     { name: 'ทีมงาน (Team)', path: '/admin/team', icon: 'bi-people' },
@@ -94,6 +95,7 @@ export default function AdminLayout() {
     { name: 'ติดต่อเรา (Contact)', path: '/admin/contact', icon: 'bi-envelope' },
     { name: 'ตั้งค่าทั่วไป (Settings)', path: '/admin/settings', icon: 'bi-gear' },
   ];
+
 
   return (
     <AdminModalContext.Provider value={modalCtx}>
