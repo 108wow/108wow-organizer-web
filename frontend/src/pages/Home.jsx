@@ -32,6 +32,30 @@ export default function Home() {
     }).catch(() => setLoaded(true));
   }, []);
 
+  // IntersectionObserver for smooth entrance/scroll-reveal animations
+  useEffect(() => {
+    if (!loaded) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          } else {
+            entry.target.classList.remove('active');
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+
+
+    const elements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [loaded]);
+
   if (!loaded) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner-border text-primary" /></div>;
 
   return (
@@ -71,23 +95,22 @@ export default function Home() {
       {/* ──── About ──── */}
       {homeConfig.showAbout && (() => {
         // Compute about sections (fallback to legacy single object)
-        const aboutSections = homeConfig.aboutSections && homeConfig.aboutSections.length > 0 
-          ? homeConfig.aboutSections 
+        const aboutSections = homeConfig.aboutSections && homeConfig.aboutSections.length > 0
+          ? homeConfig.aboutSections
           : (homeConfig.aboutSection && Object.keys(homeConfig.aboutSection).length > 0 ? [homeConfig.aboutSection] : []);
 
         return (
           <>
             {aboutSections.map((section, idx) => {
               const isEven = idx % 2 === 0;
-              const isLast = idx === aboutSections.length - 1;
               return (
-                <section key={idx} className="d-flex align-items-center pattern-dots about-section" style={{ backgroundColor: 'var(--bg-white)', minHeight: '100vh', boxSizing: 'border-box' }}>
+                <section key={idx} className="d-flex align-items-center pattern-dots about-section overflow-hidden" style={{ backgroundColor: 'var(--bg-white)', minHeight: '100vh', boxSizing: 'border-box' }}>
                   <div className="container">
                     <div className="row gy-5 gx-4 gx-lg-5 align-items-center about-home-row">
-                      <div className={`col-lg-6 ${!isEven ? 'order-lg-2' : ''}`}>
+                      <div className={`col-lg-6 ${!isEven ? 'order-lg-2' : ''} ${isEven ? 'reveal-left' : 'reveal-right'}`}>
                         <div className={`about-home-img-wrapper ${!isEven ? 'tilt-right' : ''}`}>
                           <img src={section.image || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"} alt={section.title || "About"} />
-                          
+
                           {section.videoUrl && (
                             <div className="about-play-btn" onClick={() => setShowVideo(section.videoUrl)}>
                               <i className="bi bi-play-fill"></i>
@@ -95,14 +118,14 @@ export default function Home() {
                           )}
 
                           {(section.badgeTopText || section.badgeBottomText) && (
-                            <div className="about-home-badge">
+                            <div className="about-home-badge shadow-lg">
                               <h2>{section.badgeTopText}</h2>
                               <p>{section.badgeBottomText}</p>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className={`col-lg-6 px-4 px-lg-3 ${!isEven ? 'order-lg-1' : ''}`}>
+                      <div className={`col-lg-6 px-4 px-lg-3 ${!isEven ? 'order-lg-1 reveal-left' : 'reveal-right'}`}>
                         <span className="section-label">About Us</span>
                         <h2 className="section-title about-home-section-title mb-4 d-none d-lg-block fs-1" style={{ wordBreak: 'break-word', lineHeight: '1.3' }}>
                           {section.title || `เกี่ยวกับ ${companyInfo.name}`}
@@ -110,8 +133,8 @@ export default function Home() {
                         <h2 className="section-title mb-4 d-block d-lg-none" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', hyphens: 'auto', fontSize: 'clamp(1.5rem, 7vw, 2.5rem)', lineHeight: '1.2', letterSpacing: '-0.5px' }}>
                           {section.title || `เกี่ยวกับ ${companyInfo.name}`}
                         </h2>
-                        
-                        {/* Desktop Description (Unchanged) */}
+
+                        {/* Desktop Description */}
                         <div className="d-none d-lg-block">
                           <p className="text-muted about-home-desc mb-4 fs-5" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                             {section.description || companyInfo.about}
@@ -145,7 +168,7 @@ export default function Home() {
                           )}
                         </div>
 
-                        {/* Mobile Description & Lists (Editorial Redesign) */}
+                        {/* Mobile Description & Lists */}
                         <div className="d-block d-lg-none pe-2">
                           {(() => {
                             const text = section.description || companyInfo.about || '';
@@ -199,8 +222,8 @@ export default function Home() {
                             </div>
                           )}
                         </div>
-                        
-                        <Link to={section.buttonLink || "/about"} className="btn btn-main px-4 py-2 mt-2 mt-lg-0">
+
+                        <Link to={section.buttonLink || "/about"} className="btn btn-main px-4 py-2 mt-2 mt-lg-0 shadow-sm">
                           {section.buttonText || "ติดต่อร่วมงานกับเรา"}
                         </Link>
                       </div>
@@ -214,7 +237,7 @@ export default function Home() {
             {typeof showVideo === 'string' && showVideo && (
               <div className="modal-backdrop fade show d-flex align-items-center justify-content-center" style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)' }} onClick={() => setShowVideo(null)}>
                 <div className="container position-relative" style={{ maxWidth: '900px' }} onClick={e => e.stopPropagation()}>
-                  <button 
+                  <button
                     className="btn btn-link text-white position-absolute top-0 end-0 text-decoration-none fs-1"
                     onClick={() => setShowVideo(null)}
                     style={{ zIndex: 10000, marginTop: '-50px', marginRight: '-20px' }}
@@ -222,10 +245,10 @@ export default function Home() {
                     <i className="bi bi-x"></i>
                   </button>
                   <div className="ratio ratio-16x9 shadow-lg rounded overflow-hidden bg-black">
-                    <iframe 
-                      src={showVideo.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/") + "?autoplay=1"} 
-                      title="Video" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    <iframe
+                      src={showVideo.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/") + "?autoplay=1"}
+                      title="Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     ></iframe>
                   </div>
@@ -238,27 +261,30 @@ export default function Home() {
 
       {/* ──── Services ──── */}
       {homeConfig.showServices && (
-        <section className="d-flex align-items-center py-5" style={{ backgroundColor: 'var(--bg-section)' }}>
+        <section className="services-section-100vh overflow-hidden bg-black">
           <div className="w-100">
-            <div className="container">
-              <div className="section-header text-center">
-                <span className="section-label">Our Services</span>
-                <h2 className="section-title">บริการของเรา</h2>
-                <div className="underline mx-auto"></div>
-                <p className="section-desc center">โซลูชันครบวงจรเพื่อตอบโจทย์ทุกความต้องการทางธุรกิจของคุณ</p>
+
+            <div className="container reveal-up">
+              <div className="section-header text-center mb-5 d-flex flex-column align-items-center">
+                <div className="d-inline-flex align-items-center gap-2 mb-3 shadow-sm" style={{ padding: '6px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '50px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <i className="bi bi-stars text-primary"></i>
+                  <span className="text-white-50 small fw-bold text-uppercase" style={{ letterSpacing: '1px' }}>Our Expertise</span>
+                </div>
+                <h2 className="section-title text-white fw-bolder mb-0" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-1px' }}>
+                  บริการของเรา
+                </h2>
               </div>
             </div>
-            
-            {/* Desktop: Full-width seamless grid (unchanged) */}
+
+            {/* Desktop: Full-width seamless grid (High-End Redesign) */}
             <div className="container-fluid px-0 mt-4 d-none d-md-block">
               <div className="row g-0">
                 {(() => {
                   const activeServices = services.filter(svc => svc.isActive !== false && (homeConfig.selectedServices || []).includes(svc.id));
                   const total = activeServices.length;
-                  
+
                   return activeServices.map((svc, index) => {
-                    // Dynamic Grid Auto-Balance Logic
-                    let colClass = "col-12 col-md-6 col-lg-3"; 
+                    let colClass = "col-12 col-md-6 col-lg-3";
                     if (total === 1) colClass = "col-12";
                     else if (total === 2) colClass = "col-12 col-md-6";
                     else if (total === 3) colClass = "col-12 col-md-4";
@@ -269,15 +295,21 @@ export default function Home() {
                     } else if (total === 7) {
                       colClass = index < 4 ? "col-12 col-md-6 col-lg-3" : "col-12 col-md-4";
                     }
-                    
+
+                    const delayClass = `delay-${(index % 4) + 1}`;
+                    const numStr = String(index + 1).padStart(2, '0');
+
                     return (
-                      <div key={svc.id} className={colClass}>
+                      <div key={svc.id} className={`${colClass} reveal-scale ${delayClass}`}>
                         <div className="svc-grid-full">
                           <img src={svc.image} alt={svc.title} />
                           <div className="svc-content">
+                            <div className="svc-line"></div>
                             <h5>{svc.title}</h5>
-                            <p>{svc.description?.substring(0, 50)}...</p>
-                            <Link to="/contact" className="svc-btn">สอบถามรายละเอียดเพิ่มเติม</Link>
+                            <p>{svc.description ? (svc.description.length > 55 ? `${svc.description.substring(0, 55)}...` : svc.description) : 'โซลูชันจัดงานคุณภาพสูง'}</p>
+                            <Link to="/contact" className="svc-btn-wrap">
+                              <span className="svc-btn">สอบถามรายละเอียด</span>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -287,21 +319,23 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Mobile: Horizontal scroll (Peeking layout to show it's swipeable) */}
-            <div className="d-block d-md-none mt-4 px-3">
+            {/* Mobile: Horizontal scroll */}
+            <div className="d-block d-md-none mt-4 px-3 reveal-up">
               <div className="services-mobile-scroll">
                 {(() => {
                   const activeServices = services.filter(svc => svc.isActive !== false && (homeConfig.selectedServices || []).includes(svc.id));
-                  // แกล้งจำลองให้เป็นลูปด้วยการก็อปปี้ข้อมูล 3 ชุดต่อกัน
                   const loopServices = [...activeServices, ...activeServices, ...activeServices];
                   return loopServices.map((svc, idx) => (
                     <div key={`${svc.id}-${idx}`} className="services-mobile-card" style={{ flex: '0 0 85%', maxWidth: '85%' }}>
                       <div className="svc-grid-full" style={{ borderRadius: '16px', overflow: 'hidden', height: '300px' }}>
                         <img src={svc.image} alt={svc.title} />
                         <div className="svc-content">
+                          <div className="svc-line"></div>
                           <h5>{svc.title}</h5>
                           <p>{svc.description?.substring(0, 50)}...</p>
-                          <Link to="/contact" className="svc-btn">สอบถามเพิ่มเติม</Link>
+                          <Link to="/contact" className="svc-btn-wrap">
+                            <span className="svc-btn">สอบถามรายละเอียด</span>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -310,7 +344,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="text-center mt-5">
+
+            <div className="text-center mt-5 reveal-up">
               <Link to="/services" className="btn btn-main px-5 py-3 fs-6 fw-bold shadow-sm d-inline-flex align-items-center gap-2">
                 ดูบริการทั้งหมด <i className="bi bi-arrow-right"></i>
               </Link>
@@ -321,10 +356,10 @@ export default function Home() {
 
       {/* ──── Why Choose Us ──── */}
       {homeConfig.showWhyUs && (
-        <section className="d-flex align-items-center py-5" style={{ background: 'var(--bg-white)' }}>
+        <section className="d-flex align-items-center py-5 overflow-hidden" style={{ background: 'var(--bg-white)' }}>
           <div className="container">
             <div className="row g-5 align-items-center">
-              <div className="col-lg-6">
+              <div className="col-lg-6 reveal-left">
                 <span className="section-label">Why Choose Us</span>
                 <h2 className="section-title">ทำไมต้องเลือกเรา?</h2>
                 <p className="text-muted lead mb-4">ด้วยประสบการณ์และทีมงานมืออาชีพ เราพร้อมส่งมอบผลงานที่ดีที่สุดให้คุณ</p>
@@ -333,14 +368,14 @@ export default function Home() {
                   { icon: 'bi-award', title: 'คุณภาพมาตรฐานสากล', desc: 'ใช้ Best Practices ในทุกขั้นตอน' },
                   { icon: 'bi-headset', title: 'ซัพพอร์ตตลอด 24/7', desc: 'ทีม Support พร้อมดูแลตลอดเวลา' },
                 ].map((w, i) => (
-                  <div key={i} className={`d-flex align-items-start gap-3 mb-3 anim d${i + 1}`}>
+                  <div key={i} className={`d-flex align-items-start gap-3 mb-3 reveal-up delay-${i + 1}`}>
                     <div className="bg-primary bg-opacity-10 rounded-3 p-3"><i className={`bi ${w.icon} text-primary fs-4`}></i></div>
                     <div><h6 className="fw-bold m-0">{w.title}</h6><p className="text-muted m-0 small">{w.desc}</p></div>
                   </div>
                 ))}
               </div>
-              <div className="col-lg-6 mt-4 mt-lg-0">
-                <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80" alt="Team" className="img-fluid" style={{ borderRadius: 'var(--radius-lg)' }} />
+              <div className="col-lg-6 mt-4 mt-lg-0 reveal-right">
+                <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80" alt="Team" className="img-fluid shadow-lg" style={{ borderRadius: 'var(--radius-lg)' }} />
               </div>
             </div>
           </div>
@@ -349,11 +384,11 @@ export default function Home() {
 
       {/* ──── Stats ──── */}
       {homeConfig.showStats && (
-        <section className="stat-bar py-5 text-center" style={{ background: 'linear-gradient(90deg,#0f172a,#1e293b)', minHeight: 200 }}>
+        <section className="stat-bar py-5 text-center overflow-hidden" style={{ background: 'linear-gradient(90deg,#0f172a,#1e293b)', minHeight: 200 }}>
           <div className="container">
             <div className="row g-4">
               {companyStats.map((s, i) => (
-                <div key={i} className={`col-6 col-md-3 anim d${i + 1}`}>
+                <div key={i} className={`col-6 col-md-3 reveal-scale delay-${(i % 4) + 1}`}>
                   <h2 className="fw-bold text-white mb-0" style={{ fontSize: '2.5rem' }}>{s.value}</h2>
                   <p className="text-white-50 m-0">{s.label}</p>
                 </div>
@@ -365,9 +400,9 @@ export default function Home() {
 
       {/* ──── Customers ──── */}
       {homeConfig.showCustomers && (
-        <section className="d-flex align-items-center py-5 pattern-dots" style={{ backgroundColor: 'var(--bg-white)', overflow: 'hidden' }}>
+        <section className="d-flex align-items-center py-5 pattern-dots overflow-hidden" style={{ backgroundColor: 'var(--bg-white)' }}>
           <div className="w-100">
-            <div className="container">
+            <div className="container reveal-up">
               <div className="section-header text-center">
                 <span className="section-label">Part of Our Success</span>
                 <h2 className="section-title">OUR BELOVED CUSTOMERS</h2>
@@ -378,22 +413,20 @@ export default function Home() {
             {/* Dynamic Marquee Rows */}
             {(() => {
               const selectedIds = homeConfig.selectedClients || [];
-              const filteredClients = selectedIds.length > 0 
+              const filteredClients = selectedIds.length > 0
                 ? clients.filter(c => selectedIds.includes(c.id))
                 : clients;
               const rows = homeConfig.customersRows || 3;
               const directions = ['scroll-left', 'scroll-right', 'scroll-left-slow'];
-              
+
               return Array.from({ length: rows }, (_, rowIdx) => {
-                // Distribute clients across rows with offset
                 const offset = rowIdx * Math.floor(filteredClients.length / rows);
                 const rowClients = [...filteredClients.slice(offset), ...filteredClients.slice(0, offset)];
-                // Repeat 4x for seamless marquee loop
                 const displayClients = [...rowClients, ...rowClients, ...rowClients, ...rowClients];
                 const dir = directions[rowIdx % directions.length];
-                
+
                 return (
-                  <div className="marquee-wrap" key={`row-${rowIdx}`}>
+                  <div className="marquee-wrap reveal-up" key={`row-${rowIdx}`}>
                     <div className={`marquee-track ${dir}`}>
                       {displayClients.map((c, i) => (
                         <div key={`r${rowIdx}-${i}`} className="marquee-item">
@@ -407,7 +440,7 @@ export default function Home() {
               });
             })()}
 
-            <div className="container mt-5">
+            <div className="container mt-5 reveal-up">
               <div className="d-flex justify-content-center gap-3">
                 <Link to="/clients" className="btn btn-main"><i className="bi bi-people me-2"></i>OUR CUSTOMERS</Link>
                 <Link to="/contact" className="btn btn-outline"><i className="bi bi-briefcase me-2"></i>WORK WITH US</Link>
@@ -419,16 +452,16 @@ export default function Home() {
 
       {/* ──── CTA ──── */}
       {homeConfig.showCTA && (
-        <section className="py-5" style={{ backgroundColor: 'var(--primary)' }}>
-          <div className="container">
-            <div className="py-3 position-relative overflow-hidden">
+        <section className="py-5 overflow-hidden" style={{ backgroundColor: 'var(--primary)' }}>
+          <div className="container reveal-up">
+            <div className="py-3 position-relative">
               <div className="position-relative z-1 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
                 <div className="text-center text-lg-start">
                   <h2 className="section-title mb-2" style={{ color: 'var(--navy)' }}>{companyInfo.ctaTitle}</h2>
                   <p className="mb-0 mx-auto mx-lg-0 section-desc" style={{ color: 'rgba(10, 15, 13, 0.75)', maxWidth: 650, fontWeight: 500 }}>{companyInfo.ctaSubtitle}</p>
                 </div>
                 <div className="flex-shrink-0 mt-3 mt-lg-0">
-                  <Link to="/contact" className="btn px-5 py-3 text-nowrap" style={{ backgroundColor: 'var(--navy)', color: '#fff', borderRadius: '50px', fontWeight: 600 }}>
+                  <Link to="/contact" className="btn px-5 py-3 text-nowrap shadow-lg" style={{ backgroundColor: 'var(--navy)', color: '#fff', borderRadius: '50px', fontWeight: 600 }}>
                     {companyInfo.ctaButtonText} <i className="bi bi-chat-dots ms-2"></i>
                   </Link>
                 </div>
