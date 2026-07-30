@@ -84,3 +84,4 @@ def delete_stat(current_user, id):
     db.session.delete(s)
     db.session.commit()
     return jsonify({'message': 'Deleted'})
+
