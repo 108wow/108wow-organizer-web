@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import HeroSection from '../components/common/HeroSection';
 import { equipmentAPI, pageHeroAPI, companyAPI } from '../api';
 import useScrollReveal from '../hooks/useScrollReveal';
@@ -9,9 +10,41 @@ const SORT_OPTIONS = [
   { value: 'name-desc', label: 'ชื่ออุปกรณ์ (ฮ - ก)', icon: 'bi-sort-alpha-up-alt' },
 ];
 
-const GRID_FADE_OUT_MS = 200;
 const SEARCH_DEBOUNCE_MS = 220;
-const SORT_CLOSE_MS = 150; // must match the eqSortMenuOut animation duration
+const EASE = [0.16, 1, 0.3, 1];
+
+// Shared motion config for both filter dropdowns
+const menuMotion = {
+  initial: { opacity: 0, y: -10, scale: 0.95 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.15, ease: 'easeIn' } },
+  transition: { duration: 0.28, ease: EASE },
+};
+
+const menuItemMotion = (i) => ({
+  initial: { opacity: 0, y: -8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3, ease: EASE, delay: 0.03 + i * 0.045 },
+});
+
+const IMG_FALLBACK = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" fill="%230f172a"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2364748b" font-size="11">No Image</text></svg>';
+
+// Direction-aware slide for the modal gallery: +1 = next, -1 = previous
+const slideVariants = {
+  enter: (dir) => ({ opacity: 0, x: dir > 0 ? 70 : -70, scale: 0.96 }),
+  center: { opacity: 1, x: 0, scale: 1 },
+  exit: (dir) => ({ opacity: 0, x: dir > 0 ? -70 : 70, scale: 0.96 }),
+};
+
+// Info panel children stagger in behind the modal's own entrance
+const panelStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.18 } },
+};
+const panelItem = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
+};
 
 export default function RentEquipment() {
   const [equipmentList, setEquipmentList] = useState([]);
@@ -19,82 +52,35 @@ export default function RentEquipment() {
   const [activeCategory, setActiveCategory] = useState('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
-  // What the grid is actually rendering right now — committed only after the fade-out finishes
-  const [applied, setApplied] = useState({ category: 'ทั้งหมด', sort: 'default', search: '' });
-  const [gridPhase, setGridPhase] = useState('in');
-  const [filterKey, setFilterKey] = useState(0);
+  // Debounced copy of searchQuery so the grid doesn't re-filter on every keystroke
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [companyInfo, setCompanyInfo] = useState({});
 
-  // Modal Lightbox state & click origin tracking for zoom-up animation
+  // Modal Lightbox state. zoomOrigin holds the clicked card's offset from screen centre
+  // so the modal can appear to grow out of that card.
   const [selectedItem, setSelectedItem] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [clickOrigin, setClickOrigin] = useState({ x: 0, y: 0 });
+  const [imgDirection, setImgDirection] = useState(0);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 0, y: 0 });
 
-  // Sort dropdown — driven from React so it can animate on the way out as well as in
-  // (Bootstrap's Popper writes an inline transform on the menu, which fights any transform animation)
+  // Filter dropdowns — AnimatePresence handles the exit animation, so no closing state or timers
   const [sortOpen, setSortOpen] = useState(false);
-  const [sortClosing, setSortClosing] = useState(false);
-  const sortRef = useRef(null);
-  const sortCloseTimer = useRef(null);
-
   const [catOpen, setCatOpen] = useState(false);
-  const [catClosing, setCatClosing] = useState(false);
+  const sortRef = useRef(null);
   const catRef = useRef(null);
-  const catCloseTimer = useRef(null);
 
-  const transitionTimer = useRef(null);
-  useEffect(() => () => {
-    clearTimeout(transitionTimer.current);
-    clearTimeout(sortCloseTimer.current);
-    clearTimeout(catCloseTimer.current);
-  }, []);
-
-  const openSort = () => {
-    clearTimeout(sortCloseTimer.current);
-    setSortClosing(false);
-    setSortOpen(true);
-  };
-
-  const closeSort = () => {
-    clearTimeout(sortCloseTimer.current);
-    setSortClosing(true);
-    sortCloseTimer.current = setTimeout(() => {
-      setSortOpen(false);
-      setSortClosing(false);
-    }, SORT_CLOSE_MS);
-  };
-
-  const isSortOpen = sortOpen && !sortClosing;
-
-  const openCat = () => {
-    clearTimeout(catCloseTimer.current);
-    setCatClosing(false);
-    setCatOpen(true);
-  };
-
-  const closeCat = () => {
-    clearTimeout(catCloseTimer.current);
-    setCatClosing(true);
-    catCloseTimer.current = setTimeout(() => {
-      setCatOpen(false);
-      setCatClosing(false);
-    }, SORT_CLOSE_MS);
-  };
-
-  const isCatOpen = catOpen && !catClosing;
-
-  // Close the sort/cat menu on outside click / Escape
+  // Close whichever menu is open on outside click / Escape
   useEffect(() => {
+    if (!sortOpen && !catOpen) return;
     const handlePointerDown = (e) => {
-      if (sortOpen && sortRef.current && !sortRef.current.contains(e.target)) closeSort();
-      if (catOpen && catRef.current && !catRef.current.contains(e.target)) closeCat();
+      if (sortOpen && sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
+      if (catOpen && catRef.current && !catRef.current.contains(e.target)) setCatOpen(false);
     };
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (sortOpen) closeSort();
-        if (catOpen) closeCat();
-      }
+      if (e.key !== 'Escape') return;
+      setSortOpen(false);
+      setCatOpen(false);
     };
     document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
@@ -104,49 +90,29 @@ export default function RentEquipment() {
     };
   }, [sortOpen, catOpen]);
 
-  // Fade the grid out, swap in the new result set, then replay the staggered card entrance
-  const commitFilters = (next) => {
-    setGridPhase('out');
-    clearTimeout(transitionTimer.current);
-    transitionTimer.current = setTimeout(() => {
-      setApplied(prev => ({ ...prev, ...next }));
-      setFilterKey(k => k + 1);
-      setGridPhase('in');
-    }, GRID_FADE_OUT_MS);
-  };
-
   const handleCategoryChange = (cat) => {
-    closeCat();
-    if (cat === activeCategory) return;
+    setCatOpen(false);
     setActiveCategory(cat);
-    commitFilters({ category: cat });
   };
 
   const handleSortChange = (value) => {
-    closeSort();
-    if (value === sortBy) return;
+    setSortOpen(false);
     setSortBy(value);
-    commitFilters({ sort: value });
   };
 
   const handleResetFilters = () => {
     setActiveCategory('ทั้งหมด');
     setSortBy('default');
     setSearchQuery('');
-    commitFilters({ category: 'ทั้งหมด', sort: 'default', search: '' });
   };
 
-  // Search: debounce so the grid doesn't re-mount on every keystroke, then replay the entrance
+  // Search debounce
   useEffect(() => {
-    if (applied.search === searchQuery) return;
-    const timer = setTimeout(() => {
-      setApplied(prev => ({ ...prev, search: searchQuery }));
-      setFilterKey(k => k + 1);
-    }, SEARCH_DEBOUNCE_MS);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [searchQuery, applied.search]);
+  }, [searchQuery]);
 
-  useScrollReveal([loaded, applied, equipmentList]);
+  useScrollReveal([loaded, equipmentList]);
 
   useEffect(() => {
     Promise.all([
@@ -166,19 +132,19 @@ export default function RentEquipment() {
   // Extract unique categories
   const categories = ['ทั้งหมด', ...Array.from(new Set(equipmentList.map(item => item.category).filter(Boolean)))];
 
-  // Filter items (uses the committed filters so the grid stays stable while it fades out)
+  // Filter items — Motion animates the difference, so this can read straight from state
   const filteredItems = equipmentList.filter(item => {
-    const matchCategory = applied.category === 'ทั้งหมด' || item.category === applied.category;
-    const matchSearch = !applied.search ||
-      item.name.toLowerCase().includes(applied.search.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(applied.search.toLowerCase()));
+    const matchCategory = activeCategory === 'ทั้งหมด' || item.category === activeCategory;
+    const matchSearch = !debouncedSearch ||
+      item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(debouncedSearch.toLowerCase()));
     return matchCategory && matchSearch;
   });
 
   // Sort items
   const sortedItems = [...filteredItems].sort((a, b) => {
-    if (applied.sort === 'name-asc') return a.name.localeCompare(b.name, 'th');
-    if (applied.sort === 'name-desc') return b.name.localeCompare(a.name, 'th');
+    if (sortBy === 'name-asc') return a.name.localeCompare(b.name, 'th');
+    if (sortBy === 'name-desc') return b.name.localeCompare(a.name, 'th');
     return 0;
   });
 
@@ -187,20 +153,64 @@ export default function RentEquipment() {
   const openLightbox = (item, e) => {
     if (e && e.currentTarget) {
       const rect = e.currentTarget.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      setClickOrigin({ x: centerX, y: centerY });
+      setZoomOrigin({
+        x: rect.left + rect.width / 2 - window.innerWidth / 2,
+        y: rect.top + rect.height / 2 - window.innerHeight / 2,
+      });
     } else {
-      setClickOrigin({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      setZoomOrigin({ x: 0, y: 0 });
     }
     setSelectedItem(item);
     setActiveImageIndex(0);
+    setImgDirection(0);
   };
 
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setSelectedItem(null);
-    setActiveImageIndex(0);
+  }, []);
+
+  // Gallery images for the open item
+  const modalImages = selectedItem
+    ? (selectedItem.images && selectedItem.images.length > 0
+      ? selectedItem.images
+      : [selectedItem.coverImage].filter(Boolean))
+    : [];
+  const imageCount = modalImages.length;
+
+  const showPrevImage = useCallback(() => {
+    if (imageCount < 2) return;
+    setImgDirection(-1);
+    setActiveImageIndex(i => (i === 0 ? imageCount - 1 : i - 1));
+  }, [imageCount]);
+
+  const showNextImage = useCallback(() => {
+    if (imageCount < 2) return;
+    setImgDirection(1);
+    setActiveImageIndex(i => (i === imageCount - 1 ? 0 : i + 1));
+  }, [imageCount]);
+
+  const showImageAt = (idx) => {
+    if (idx === activeImageIndex) return;
+    setImgDirection(idx > activeImageIndex ? 1 : -1);
+    setActiveImageIndex(idx);
   };
+
+  // Lock body scroll and wire up Escape / arrow keys while the lightbox is open
+  useEffect(() => {
+    if (!selectedItem) return;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') showPrevImage();
+      else if (e.key === 'ArrowRight') showNextImage();
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [selectedItem, closeLightbox, showPrevImage, showNextImage]);
 
   const getLineLink = () => {
     if (companyInfo.lineUrl) return companyInfo.lineUrl;
@@ -273,95 +283,137 @@ export default function RentEquipment() {
               {/* Category Selector */}
               <div className="col-lg-4 col-md-6">
                 <div className="dropdown eq-sort w-100" ref={catRef}>
-                  <button
+                  <motion.button
                     type="button"
                     className="eq-sort-toggle w-100 d-flex align-items-center justify-content-between rounded-pill px-3"
-                    onClick={() => (isCatOpen ? closeCat() : openCat())}
-                    aria-expanded={isCatOpen}
+                    onClick={() => setCatOpen(o => !o)}
+                    aria-expanded={catOpen}
                     aria-haspopup="listbox"
+                    whileTap={{ scale: 0.985 }}
                   >
                     <span className="d-flex align-items-center gap-2 overflow-hidden">
                       <i className="bi bi-collection text-muted"></i>
                       <span className="text-muted d-none d-sm-inline" style={{ fontSize: '0.85rem' }}>หมวดหมู่</span>
-                      <span key={activeCategory} className="fw-semibold text-dark text-truncate eq-sort-value" style={{ fontSize: '0.9rem' }}>{activeCategory}</span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={activeCategory}
+                          className="fw-semibold text-dark text-truncate"
+                          style={{ fontSize: '0.9rem' }}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.18, ease: EASE }}
+                        >
+                          {activeCategory}
+                        </motion.span>
+                      </AnimatePresence>
                     </span>
-                    <i className="bi bi-chevron-down text-muted eq-sort-caret" style={{ fontSize: '0.75rem' }}></i>
-                  </button>
-                  {(catOpen || catClosing) && (
-                    <ul
-                      className={`dropdown-menu eq-sort-menu show border-0 p-2 w-100 ${catClosing ? 'is-closing' : ''}`}
-                      style={{ borderRadius: '16px', zIndex: 1050 }}
-                      role="listbox"
-                    >
-                      {categories.map((cat, i) => {
-                        const count = cat === 'ทั้งหมด'
-                          ? equipmentList.length
-                          : equipmentList.filter(item => item.category === cat).length;
-                        const isDisabled = count === 0;
+                    <motion.i
+                      className="bi bi-chevron-down text-muted"
+                      style={{ fontSize: '0.75rem' }}
+                      animate={{ rotate: catOpen ? 180 : 0 }}
+                      transition={{ duration: 0.3, ease: EASE }}
+                    />
+                  </motion.button>
+                  <AnimatePresence>
+                    {catOpen && (
+                      <motion.ul
+                        className="dropdown-menu eq-sort-menu show border-0 p-2 w-100"
+                        style={{ borderRadius: '16px', zIndex: 1050, transformOrigin: 'top center' }}
+                        role="listbox"
+                        {...menuMotion}
+                      >
+                        {categories.map((cat, i) => {
+                          const count = cat === 'ทั้งหมด'
+                            ? equipmentList.length
+                            : equipmentList.filter(item => item.category === cat).length;
+                          const isDisabled = count === 0;
 
-                        return (
-                          <li key={cat} className="eq-sort-item" style={{ animationDelay: `${0.03 + i * 0.045}s` }}>
-                            <button
-                              type="button"
-                              role="option"
-                              disabled={isDisabled}
-                              aria-selected={activeCategory === cat}
-                              className={`dropdown-item d-flex align-items-center gap-2 rounded-3 py-2 ${activeCategory === cat ? 'bg-primary bg-opacity-10 text-primary fw-bold' : ''} ${isDisabled ? 'disabled' : ''}`}
-                              onClick={() => handleCategoryChange(cat)}
-                              style={{ opacity: isDisabled ? 0.5 : 1 }}
-                            >
-                              <i className={`bi ${cat === 'ทั้งหมด' ? 'bi-grid-fill' : 'bi-folder2'} ${activeCategory === cat ? 'text-primary' : 'text-muted'}`}></i>
-                              <span className="flex-grow-1 text-start" style={{ fontSize: '0.9rem' }}>{cat}</span>
-                              <span className="badge rounded-pill ms-2" style={{ background: activeCategory === cat ? 'rgba(163,217,0,0.2)' : '#f1f5f9', color: activeCategory === cat ? 'var(--primary)' : '#64748b', fontSize: '0.75rem' }}>{count}</span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                          return (
+                            <motion.li key={cat} {...menuItemMotion(i)}>
+                              <button
+                                type="button"
+                                role="option"
+                                disabled={isDisabled}
+                                aria-selected={activeCategory === cat}
+                                className={`dropdown-item d-flex align-items-center gap-2 rounded-3 py-2 ${activeCategory === cat ? 'bg-primary bg-opacity-10 text-primary fw-bold' : ''} ${isDisabled ? 'disabled' : ''}`}
+                                onClick={() => handleCategoryChange(cat)}
+                                style={{ opacity: isDisabled ? 0.5 : 1 }}
+                              >
+                                <i className={`bi ${cat === 'ทั้งหมด' ? 'bi-grid-fill' : 'bi-folder2'} ${activeCategory === cat ? 'text-primary' : 'text-muted'}`}></i>
+                                <span className="flex-grow-1 text-start" style={{ fontSize: '0.9rem' }}>{cat}</span>
+                                <span className="badge rounded-pill ms-2" style={{ background: activeCategory === cat ? 'rgba(163,217,0,0.2)' : '#f1f5f9', color: activeCategory === cat ? 'var(--primary)' : '#64748b', fontSize: '0.75rem' }}>{count}</span>
+                              </button>
+                            </motion.li>
+                          );
+                        })}
+                      </motion.ul>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
               {/* Sort Selector */}
               <div className="col-lg-3 col-md-6">
                 <div className="dropdown eq-sort w-100" ref={sortRef}>
-                  <button
+                  <motion.button
                     type="button"
                     className="eq-sort-toggle w-100 d-flex align-items-center justify-content-between rounded-pill px-3"
-                    onClick={() => (isSortOpen ? closeSort() : openSort())}
-                    aria-expanded={isSortOpen}
+                    onClick={() => setSortOpen(o => !o)}
+                    aria-expanded={sortOpen}
                     aria-haspopup="listbox"
+                    whileTap={{ scale: 0.985 }}
                   >
                     <span className="d-flex align-items-center gap-2 overflow-hidden">
                       <i className="bi bi-sort-down text-muted"></i>
                       <span className="text-muted d-none d-sm-inline" style={{ fontSize: '0.85rem' }}>เรียงตาม</span>
-                      <span key={sortBy} className="fw-semibold text-dark text-truncate eq-sort-value" style={{ fontSize: '0.9rem' }}>{currentSort.label}</span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={sortBy}
+                          className="fw-semibold text-dark text-truncate"
+                          style={{ fontSize: '0.9rem' }}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.18, ease: EASE }}
+                        >
+                          {currentSort.label}
+                        </motion.span>
+                      </AnimatePresence>
                     </span>
-                    <i className="bi bi-chevron-down text-muted eq-sort-caret" style={{ fontSize: '0.75rem' }}></i>
-                  </button>
-                  {(sortOpen || sortClosing) && (
-                    <ul
-                      className={`dropdown-menu eq-sort-menu show border-0 p-2 w-100 ${sortClosing ? 'is-closing' : ''}`}
-                      style={{ borderRadius: '16px', zIndex: 1050 }}
-                      role="listbox"
-                    >
-                      {SORT_OPTIONS.map((opt, i) => (
-                        <li key={opt.value} className="eq-sort-item" style={{ animationDelay: `${0.03 + i * 0.045}s` }}>
-                          <button
-                            type="button"
-                            role="option"
-                            aria-selected={sortBy === opt.value}
-                            className={`dropdown-item d-flex align-items-center gap-2 rounded-3 py-2 ${sortBy === opt.value ? 'bg-primary bg-opacity-10 text-primary fw-bold' : ''}`}
-                            onClick={() => handleSortChange(opt.value)}
-                          >
-                            <i className={`bi ${opt.icon} ${sortBy === opt.value ? 'text-primary' : 'text-muted'}`}></i>
-                            <span className="flex-grow-1 text-start" style={{ fontSize: '0.9rem' }}>{opt.label}</span>
-                            {sortBy === opt.value && <i className="bi bi-check2 text-primary"></i>}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    <motion.i
+                      className="bi bi-chevron-down text-muted"
+                      style={{ fontSize: '0.75rem' }}
+                      animate={{ rotate: sortOpen ? 180 : 0 }}
+                      transition={{ duration: 0.3, ease: EASE }}
+                    />
+                  </motion.button>
+                  <AnimatePresence>
+                    {sortOpen && (
+                      <motion.ul
+                        className="dropdown-menu eq-sort-menu show border-0 p-2 w-100"
+                        style={{ borderRadius: '16px', zIndex: 1050, transformOrigin: 'top center' }}
+                        role="listbox"
+                        {...menuMotion}
+                      >
+                        {SORT_OPTIONS.map((opt, i) => (
+                          <motion.li key={opt.value} {...menuItemMotion(i)}>
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={sortBy === opt.value}
+                              className={`dropdown-item d-flex align-items-center gap-2 rounded-3 py-2 ${sortBy === opt.value ? 'bg-primary bg-opacity-10 text-primary fw-bold' : ''}`}
+                              onClick={() => handleSortChange(opt.value)}
+                            >
+                              <i className={`bi ${opt.icon} ${sortBy === opt.value ? 'text-primary' : 'text-muted'}`}></i>
+                              <span className="flex-grow-1 text-start" style={{ fontSize: '0.9rem' }}>{opt.label}</span>
+                              {sortBy === opt.value && <i className="bi bi-check2 text-primary"></i>}
+                            </button>
+                          </motion.li>
+                        ))}
+                      </motion.ul>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
@@ -371,35 +423,59 @@ export default function RentEquipment() {
           </div>
 
           {/* Equipment Items Grid */}
-          <div className={`eq-grid ${gridPhase === 'out' ? 'eq-grid-out' : ''}`}>
-          {sortedItems.length === 0 ? (
-            <div className="text-center py-5 bg-white rounded-4 shadow-sm my-4 equipment-animated-card" key={filterKey}>
-              <i className="bi bi-box-seam text-muted" style={{ fontSize: '3.5rem' }}></i>
-              <h4 className="fw-bold mt-3 text-dark">ไม่พบอุปกรณ์ที่ค้นหา</h4>
-              <p className="text-muted mb-3">ลองเปลี่ยนคำค้นหาหรือหมวดหมู่เพื่อค้นหาอุปกรณ์ที่คุณต้องการ</p>
-              <button className="btn btn-outline-dark rounded-pill px-4" onClick={handleResetFilters}>
-                ล้างการค้นหาทั้งหมด
-              </button>
-            </div>
-          ) : (
-            <div className="row g-4" key={filterKey}>
+          <div className="eq-grid">
+            <AnimatePresence>
+              {sortedItems.length === 0 && (
+                <motion.div
+                  key="empty"
+                  className="text-center py-5 bg-white rounded-4 shadow-sm my-4"
+                  initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -12, scale: 0.98, transition: { duration: 0.2, ease: 'easeIn' } }}
+                  transition={{ duration: 0.4, ease: EASE }}
+                >
+                  <i className="bi bi-box-seam text-muted" style={{ fontSize: '3.5rem' }}></i>
+                  <h4 className="fw-bold mt-3 text-dark">ไม่พบอุปกรณ์ที่ค้นหา</h4>
+                  <p className="text-muted mb-3">ลองเปลี่ยนคำค้นหาหรือหมวดหมู่เพื่อค้นหาอุปกรณ์ที่คุณต้องการ</p>
+                  <button className="btn btn-outline-dark rounded-pill px-4" onClick={handleResetFilters}>
+                    ล้างการค้นหาทั้งหมด
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="row g-4">
+              {/* popLayout pulls exiting cards out of flow so the survivors glide to their new slots */}
+              <AnimatePresence mode="popLayout">
               {sortedItems.map((item, index) => {
                 const imgList = item.images && item.images.length > 0 ? item.images : [item.coverImage].filter(Boolean);
                 const mainImg = item.coverImage || (imgList[0] || '');
                 const photoCount = imgList.length;
 
                 return (
-                  <div 
-                    key={item.id} 
-                    className="col-12 col-md-6 col-lg-4 col-xl-3 equipment-animated-card"
-                    style={{ animationDelay: `${(index % 12) * 0.05}s` }}
+                  <motion.div
+                    key={item.id}
+                    layout
+                    exit={{ opacity: 0, scale: 0.88, filter: 'blur(4px)', transition: { duration: 0.22, ease: 'easeIn' } }}
+                    transition={{ layout: { duration: 0.5, ease: EASE } }}
+                    className="col-12 col-md-6 col-lg-4 col-xl-3"
+                    style={{ perspective: 1200 }}
                   >
-                    <div 
+                    {/* Inner wrapper carries the scroll-reveal so its transforms never fight `layout` */}
+                    <motion.div
+                      className="h-100"
+                      initial={{ opacity: 0, y: 45, scale: 0.94, rotateX: 12, filter: 'blur(7px)' }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0, filter: 'blur(0px)' }}
+                      viewport={{ once: true, amount: 0.15 }}
+                      transition={{ duration: 0.6, ease: EASE, delay: (index % 4) * 0.07 }}
+                      style={{ transformOrigin: 'center bottom' }}
+                    >
+                    <div
                       className="card h-100 border-0 rounded-4 overflow-hidden eq-card position-relative shadow-sm d-flex flex-column"
                       onClick={(e) => openLightbox(item, e)}
-                      style={{ 
-                        cursor: 'pointer', 
-                        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
                         background: '#ffffff',
                         border: '1px solid rgba(226, 232, 240, 0.8)'
                       }}
@@ -492,203 +568,253 @@ export default function RentEquipment() {
                       </div>
 
                     </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                 );
               })}
+              </AnimatePresence>
             </div>
-          )}
           </div>
 
         </div>
       </section>
 
-      {/* Redesigned Premium Lightbox Modal with Card-Zoom Expansion Animation */}
-      {selectedItem && (
-        <div 
-          className="modal show d-block modal-backdrop-anim" 
-          tabIndex="-1"
-          style={{ 
-            background: 'rgba(15, 23, 42, 0.82)', 
-            backdropFilter: 'blur(12px)', 
-            zIndex: 1060,
-            overflowY: 'auto'
-          }}
-          onClick={closeLightbox}
-        >
-          <div 
-            className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
-            onClick={(e) => e.stopPropagation()}
+      {/* ─── Product Lightbox: split gallery / detail layout ─── */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            className="modal d-block"
+            tabIndex="-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeIn' } }}
+            transition={{ duration: 0.3, ease: EASE }}
             style={{
-              '--click-x': `${clickOrigin.x}px`,
-              '--click-y': `${clickOrigin.y}px`,
+              background: 'rgba(9, 13, 22, 0.78)',
+              backdropFilter: 'blur(14px)',
+              zIndex: 1060,
+              overflowY: 'auto',
             }}
+            onClick={closeLightbox}
           >
-            <div 
-              className="modal-content border-0 shadow-2xl overflow-hidden modal-expand-anim" 
-              style={{ 
-                background: '#ffffff',
-                borderRadius: '24px',
-                boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.35)'
-              }}
-            >
-              
-              {/* Modal Header */}
-              <div className="modal-header border-0 px-4 pt-4 pb-2 d-flex justify-content-between align-items-start position-relative">
-                <div className="pe-4">
-                  <span className="badge bg-primary bg-opacity-15 text-primary fw-bold px-3 py-1.5 rounded-pill mb-2 border border-primary border-opacity-20" style={{ fontSize: '0.78rem', letterSpacing: '0.3px' }}>
-                    <i className="bi bi-tag-fill me-1"></i> {selectedItem.category}
-                  </span>
-                  <h4 className="modal-title fw-black text-dark" style={{ fontWeight: 800, fontSize: '1.45rem', lineHeight: 1.3 }}>
-                    {selectedItem.name}
-                  </h4>
-                </div>
-                <button 
-                  type="button" 
-                  className="btn-close shadow-none p-2.5 bg-light hover-bg-dark rounded-circle transition-all flex-shrink-0"
+            <div className="modal-dialog modal-dialog-centered modal-xl" onClick={(e) => e.stopPropagation()}>
+              <motion.div
+                className="modal-content border-0 overflow-hidden eq-modal"
+                initial={{ opacity: 0, scale: 0.38, x: zoomOrigin.x, y: zoomOrigin.y }}
+                animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 24, transition: { duration: 0.22, ease: 'easeIn' } }}
+                transition={{ duration: 0.5, ease: EASE }}
+              >
+                {/* Floating close button, sits above both panels */}
+                <motion.button
+                  type="button"
+                  className="eq-modal-close d-flex align-items-center justify-content-center"
                   onClick={closeLightbox}
-                  title="ปิดหน้าต่าง"
-                ></button>
-              </div>
+                  title="ปิดหน้าต่าง (Esc)"
+                  aria-label="ปิดหน้าต่าง"
+                  initial={{ opacity: 0, rotate: -90 }}
+                  animate={{ opacity: 1, rotate: 0, transition: { delay: 0.3, duration: 0.35, ease: EASE } }}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <i className="bi bi-x-lg"></i>
+                </motion.button>
 
-              {/* Modal Body */}
-              <div className="modal-body p-4">
-                {/* Main Large Image Display - FIXED FRAME SIZE (Height 430px Constant) */}
-                {(() => {
-                  const imgs = selectedItem.images && selectedItem.images.length > 0 
-                    ? selectedItem.images 
-                    : [selectedItem.coverImage].filter(Boolean);
-                  
-                  const currentImgUrl = imgs[activeImageIndex] || selectedItem.coverImage || '';
+                <div className="row g-0">
 
-                  return (
-                    <div className="mb-4">
-                      {/* Fixed Frame Box: Exactly 430px height at all times */}
-                      <div 
-                        className="position-relative rounded-4 overflow-hidden d-flex align-items-center justify-content-center shadow-sm border border-light-subtle" 
-                        style={{ height: '430px', width: '100%', background: '#090d16' }}
-                      >
-                        {currentImgUrl ? (
-                          <img 
-                            src={currentImgUrl} 
-                            alt={selectedItem.name} 
-                            className="w-100 h-100 object-fit-contain p-3 transition-all" 
-                            style={{ transition: 'all 0.4s ease' }}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              const fallback = e.target.nextSibling;
-                              if (fallback) fallback.style.display = 'flex';
+                  {/* ── LEFT: Gallery ── */}
+                  <div className="col-lg-7">
+                    <div className="eq-modal-gallery d-flex flex-column h-100">
+
+                      <div className="eq-modal-stage position-relative flex-grow-1 overflow-hidden">
+                        <AnimatePresence initial={false} custom={imgDirection}>
+                          <motion.div
+                            key={activeImageIndex}
+                            custom={imgDirection}
+                            variants={slideVariants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{
+                              x: { duration: 0.45, ease: EASE },
+                              opacity: { duration: 0.3 },
+                              scale: { duration: 0.45, ease: EASE },
                             }}
-                          />
-                        ) : null}
+                            className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-4"
+                            drag={modalImages.length > 1 ? 'x' : false}
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.18}
+                            onDragEnd={(e, info) => {
+                              if (info.offset.x < -80) showNextImage();
+                              else if (info.offset.x > 80) showPrevImage();
+                            }}
+                            style={{ cursor: modalImages.length > 1 ? 'grab' : 'default' }}
+                          >
+                            {modalImages[activeImageIndex] ? (
+                              <img
+                                src={modalImages[activeImageIndex]}
+                                alt={selectedItem.name}
+                                className="mw-100 mh-100 object-fit-contain"
+                                draggable={false}
+                                style={{ filter: 'drop-shadow(0 18px 32px rgba(0,0,0,0.45))' }}
+                                onError={(e) => { e.target.src = IMG_FALLBACK; }}
+                              />
+                            ) : (
+                              <div className="d-flex flex-column align-items-center text-white-50">
+                                <i className="bi bi-image display-4 opacity-50 mb-2"></i>
+                                <span className="small">ไม่มีรูปภาพ</span>
+                              </div>
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
 
-                        {/* Fallback Container if Image is broken or missing */}
-                        <div 
-                          className="w-100 h-100 flex-column align-items-center justify-content-center text-white-50 p-4 text-center" 
-                          style={{ display: currentImgUrl ? 'none' : 'flex' }}
-                        >
-                          <i className="bi bi-image fs-1 opacity-40 mb-2"></i>
-                          <span className="small">ไม่สามารถโหลดรูปภาพได้</span>
-                        </div>
+                        {/* Image counter */}
+                        {modalImages.length > 1 && (
+                          <div className="eq-modal-counter position-absolute top-0 start-0 m-3 d-flex align-items-center gap-2">
+                            <i className="bi bi-images"></i>
+                            <span>
+                              <motion.span
+                                key={activeImageIndex}
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
+                                style={{ display: 'inline-block' }}
+                              >
+                                {activeImageIndex + 1}
+                              </motion.span>
+                              {` / ${modalImages.length}`}
+                            </span>
+                          </div>
+                        )}
 
-                        {/* Prev / Next Glassmorphism Buttons if multiple images */}
-                        {imgs.length > 1 && (
+                        {/* Prev / next */}
+                        {modalImages.length > 1 && (
                           <>
-                            <button 
-                              className="btn text-white rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3 p-0 d-flex align-items-center justify-content-center border-0 modal-nav-btn"
-                              onClick={() => setActiveImageIndex((prev) => (prev === 0 ? imgs.length - 1 : prev - 1))}
-                              style={{ 
-                                zIndex: 5, 
-                                width: '46px', 
-                                height: '46px',
-                                background: 'rgba(15, 23, 42, 0.65)',
-                                backdropFilter: 'blur(8px)',
-                                transition: 'all 0.25s ease'
-                              }}
-                              title="รูปก่อนหน้า"
+                            <motion.button
+                              className="eq-modal-nav start-0 ms-3"
+                              onClick={showPrevImage}
+                              title="รูปก่อนหน้า (←)"
+                              aria-label="รูปก่อนหน้า"
+                              whileHover={{ scale: 1.12, x: -3 }}
+                              whileTap={{ scale: 0.92 }}
                             >
-                              <i className="bi bi-chevron-left fs-5"></i>
-                            </button>
-                            <button 
-                              className="btn text-white rounded-circle position-absolute top-50 end-0 translate-middle-y me-3 p-0 d-flex align-items-center justify-content-center border-0 modal-nav-btn"
-                              onClick={() => setActiveImageIndex((prev) => (prev === imgs.length - 1 ? 0 : prev + 1))}
-                              style={{ 
-                                zIndex: 5, 
-                                width: '46px', 
-                                height: '46px',
-                                background: 'rgba(15, 23, 42, 0.65)',
-                                backdropFilter: 'blur(8px)',
-                                transition: 'all 0.25s ease'
-                              }}
-                              title="รูปถัดไป"
+                              <i className="bi bi-chevron-left"></i>
+                            </motion.button>
+                            <motion.button
+                              className="eq-modal-nav end-0 me-3"
+                              onClick={showNextImage}
+                              title="รูปถัดไป (→)"
+                              aria-label="รูปถัดไป"
+                              whileHover={{ scale: 1.12, x: 3 }}
+                              whileTap={{ scale: 0.92 }}
                             >
-                              <i className="bi bi-chevron-right fs-5"></i>
-                            </button>
+                              <i className="bi bi-chevron-right"></i>
+                            </motion.button>
                           </>
                         )}
                       </div>
 
-                      {/* Thumbnail Strip (if multiple images) */}
-                      {imgs.length > 1 && (
-                        <div className="d-flex gap-2.5 overflow-x-auto py-2.5 px-1 mt-2">
-                          {imgs.map((imgUrl, idx) => (
-                            <button
+                      {/* Thumbnail rail */}
+                      {modalImages.length > 1 && (
+                        <div className="eq-modal-thumbs d-flex gap-2 px-3 py-3 flex-shrink-0">
+                          {modalImages.map((imgUrl, idx) => (
+                            <motion.button
                               key={idx}
-                              onClick={() => setActiveImageIndex(idx)}
-                              className={`btn p-0 rounded-3 border-2 overflow-hidden flex-shrink-0 transition-all ${activeImageIndex === idx ? 'border-primary shadow scale-105' : 'border-transparent opacity-50 hover-opacity-100'}`}
-                              style={{ width: '72px', height: '72px', background: '#090d16' }}
+                              onClick={() => showImageAt(idx)}
+                              className={`eq-modal-thumb flex-shrink-0 ${activeImageIndex === idx ? 'is-active' : ''}`}
+                              aria-label={`ดูรูปที่ ${idx + 1}`}
+                              aria-current={activeImageIndex === idx}
+                              whileHover={{ y: -3 }}
+                              whileTap={{ scale: 0.94 }}
+                              initial={{ opacity: 0, y: 12 }}
+                              animate={{ opacity: 1, y: 0, transition: { delay: 0.3 + idx * 0.05, duration: 0.35, ease: EASE } }}
                             >
-                              <img 
-                                src={imgUrl} 
-                                alt={`thumb-${idx}`} 
-                                className="w-100 h-100 object-fit-cover"
-                                onError={(e) => {
-                                  e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 70 70"><rect width="70" height="70" fill="%230f172a"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23ffffff" font-size="10">No Image</text></svg>';
-                                }}
-                              />
-                            </button>
+                              <span className="eq-modal-thumb-img">
+                                <img
+                                  src={imgUrl}
+                                  alt={`ภาพย่อที่ ${idx + 1}`}
+                                  className="w-100 h-100 object-fit-cover"
+                                  draggable={false}
+                                  onError={(e) => { e.target.src = IMG_FALLBACK; }}
+                                />
+                              </span>
+                              {activeImageIndex === idx && (
+                                <motion.span layoutId="eq-thumb-ring" className="eq-modal-thumb-ring" transition={{ duration: 0.3, ease: EASE }} />
+                              )}
+                            </motion.button>
                           ))}
                         </div>
                       )}
                     </div>
-                  );
-                })()}
+                  </div>
 
-                {/* Description Card */}
-                <div className="p-4 rounded-4 mb-2" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <h6 className="fw-bold text-dark mb-2 d-flex align-items-center gap-2" style={{ fontSize: '0.98rem' }}>
-                    <i className="bi bi-info-circle-fill text-primary"></i> รายละเอียดอุปกรณ์
-                  </h6>
-                  <p className="text-secondary mb-0" style={{ whiteSpace: 'pre-line', lineHeight: 1.7, fontSize: '0.95rem', color: '#475569' }}>
-                    {selectedItem.description || "ไม่มีรายละเอียดเพิ่มเติมสำหรับอุปกรณ์ชิ้นนี้"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Modal Footer Bar */}
-              <div className="modal-footer border-top border-light-subtle px-4 py-3 bg-white d-flex justify-content-between align-items-center">
-                <span className="text-muted small d-none d-sm-inline-flex align-items-center gap-1">
-                  <i className="bi bi-shield-check text-success fs-6"></i> บริการจัดส่งและติดตั้งอุปกรณ์ถึงหน้างาน
-                </span>
-                <div className="d-flex gap-2.5 ms-auto">
-                  <button className="btn btn-light rounded-pill px-4 fw-semibold border" onClick={closeLightbox}>
-                    ปิด
-                  </button>
-                  <a 
-                    href={getLineLink()} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="btn btn-success rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2 text-white shadow-sm hover-scale"
-                    style={{ background: '#06C755', borderColor: '#06C755' }}
+                  {/* ── RIGHT: Details ── */}
+                  <motion.div
+                    className="col-lg-5 d-flex flex-column eq-modal-info"
+                    variants={panelStagger}
+                    initial="hidden"
+                    animate="show"
                   >
-                    <i className="bi bi-line fs-5"></i> สอบถาม / เช่าอุปกรณ์นี้
-                  </a>
-                </div>
-              </div>
+                    <div className="eq-modal-info-scroll flex-grow-1 p-4 pe-3">
+                      <motion.div variants={panelItem}>
+                        <span className="badge bg-primary bg-opacity-15 text-primary fw-bold px-3 py-2 rounded-pill border border-primary border-opacity-20" style={{ fontSize: '0.76rem', letterSpacing: '0.3px' }}>
+                          <i className="bi bi-tag-fill me-1"></i> {selectedItem.category}
+                        </span>
+                      </motion.div>
 
+                      <motion.h4 variants={panelItem} className="fw-black text-dark mt-3 mb-3" style={{ fontWeight: 800, fontSize: '1.5rem', lineHeight: 1.3 }}>
+                        {selectedItem.name}
+                      </motion.h4>
+
+                      <motion.div variants={panelItem} className="eq-modal-divider mb-3" />
+
+                      <motion.div variants={panelItem}>
+                        <h6 className="fw-bold text-dark mb-2 d-flex align-items-center gap-2" style={{ fontSize: '0.95rem' }}>
+                          <i className="bi bi-info-circle-fill text-primary"></i> รายละเอียดอุปกรณ์
+                        </h6>
+                        <p className="mb-4" style={{ whiteSpace: 'pre-line', lineHeight: 1.75, fontSize: '0.94rem', color: '#475569' }}>
+                          {selectedItem.description || 'ไม่มีรายละเอียดเพิ่มเติมสำหรับอุปกรณ์ชิ้นนี้'}
+                        </p>
+                      </motion.div>
+
+                      <motion.ul variants={panelItem} className="list-unstyled mb-0">
+                        {[
+                          { icon: 'bi-truck', text: 'จัดส่งถึงหน้างานทั่วประเทศ' },
+                          { icon: 'bi-tools', text: 'ทีมงานติดตั้งและเก็บงานให้' },
+                          { icon: 'bi-shield-check', text: 'ตรวจสอบสภาพอุปกรณ์ก่อนส่งทุกครั้ง' },
+                        ].map((f) => (
+                          <li key={f.icon} className="eq-modal-feature d-flex align-items-center gap-3 mb-2">
+                            <span className="eq-modal-feature-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                              <i className={`bi ${f.icon}`}></i>
+                            </span>
+                            <span style={{ fontSize: '0.89rem', color: '#475569' }}>{f.text}</span>
+                          </li>
+                        ))}
+                      </motion.ul>
+                    </div>
+
+                    {/* Sticky action bar */}
+                    <motion.div variants={panelItem} className="eq-modal-actions p-4 pt-3 flex-shrink-0">
+                      <motion.a
+                        href={getLineLink()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 text-white"
+                        style={{ background: '#06C755', borderColor: '#06C755' }}
+                        whileHover={{ scale: 1.02, boxShadow: '0 10px 24px rgba(6, 199, 85, 0.32)' }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <i className="bi bi-line fs-5"></i> สอบถาม / เช่าอุปกรณ์นี้
+                      </motion.a>
+                    </motion.div>
+                  </motion.div>
+
+                </div>
+              </motion.div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hover & Card Zoom Expansion Animations CSS */}
       <style>{`
@@ -719,56 +845,12 @@ export default function RentEquipment() {
           border-color: var(--primary, #a3d900);
           box-shadow: 0 0 0 3px rgba(163, 217, 0, 0.15);
         }
-        .eq-sort-toggle:active {
-          transform: scale(0.985);
-        }
-        .eq-sort-caret {
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .eq-sort-toggle[aria-expanded="true"] .eq-sort-caret {
-          transform: rotate(180deg);
-        }
-        /* Selected label swaps with a quick fade-up (keyed on sortBy to re-trigger) */
-        .eq-sort-value {
-          animation: eqSortValueSwap 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        @keyframes eqSortValueSwap {
-          0% { opacity: 0; transform: translateY(6px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Menu: positioned by CSS (no Popper), so transforms are free to animate */
+        /* Menu positioning only — Motion owns the open/close animation */
         .eq-sort-menu {
           top: 100%;
           left: 0;
           margin-top: 8px;
-          transform-origin: top center;
           box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14) !important;
-          animation: eqSortMenuIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        .eq-sort-menu.is-closing {
-          animation: eqSortMenuOut 0.15s ease-in both;
-          pointer-events: none;
-        }
-        @keyframes eqSortMenuIn {
-          0% { opacity: 0; transform: translateY(-10px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes eqSortMenuOut {
-          0% { opacity: 1; transform: translateY(0) scale(1); }
-          100% { opacity: 0; transform: translateY(-8px) scale(0.97); }
-        }
-
-        /* Options cascade in one after another */
-        .eq-sort-item {
-          animation: eqSortItemIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        @keyframes eqSortItemIn {
-          0% { opacity: 0; transform: translateY(-8px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .eq-sort-menu.is-closing .eq-sort-item {
-          animation: none;
         }
 
         .eq-sort-menu .dropdown-item {
@@ -781,25 +863,6 @@ export default function RentEquipment() {
           background: rgba(163, 217, 0, 0.18);
           color: #0f172a;
           transform: scale(0.98);
-        }
-
-        /* ── Category Pills ── */
-        .eq-cat-pill {
-          transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease,
-                      box-shadow 0.25s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .eq-cat-pill:not(.disabled):not(.is-active):hover {
-          background: #e2e8f0 !important;
-          transform: translateY(-2px);
-        }
-        .eq-cat-pill.is-active {
-          transform: translateY(-1px);
-        }
-        .eq-cat-pill:not(.disabled):active {
-          transform: scale(0.96);
-        }
-        .eq-cat-count {
-          transition: background 0.25s ease, color 0.25s ease;
         }
 
         .eq-card {
@@ -819,47 +882,164 @@ export default function RentEquipment() {
           transform: translateX(3px);
         }
         
-        .modal-nav-btn:hover {
-          background: var(--primary, #a3d900) !important;
-          color: #0f172a !important;
-          transform: translateY(-50%) scale(1.1) !important;
+        /* ─── Product Lightbox ─── */
+        .eq-modal {
+          border-radius: 26px;
+          background: #fff;
+          box-shadow: 0 40px 80px -20px rgba(9, 13, 22, 0.55);
         }
 
-        .hover-scale {
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .hover-scale:hover {
-          transform: scale(1.03);
-          box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3) !important;
+        .eq-modal-close {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          z-index: 20;
+          width: 38px;
+          height: 38px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: 50%;
+          background: rgba(9, 13, 22, 0.55);
+          backdrop-filter: blur(10px);
+          color: #fff;
+          font-size: 0.85rem;
+          cursor: pointer;
         }
 
-        /* Backdrop Blur Fade In */
-        @keyframes backdropFadeIn {
-          from { opacity: 0; backdrop-filter: blur(0px); }
-          to { opacity: 1; backdrop-filter: blur(12px); }
+        /* Gallery panel */
+        .eq-modal-gallery {
+          background: radial-gradient(circle at 50% 35%, #1b2a45 0%, #090d16 72%);
+          min-height: 560px;
         }
-        .modal-backdrop-anim {
-          animation: backdropFadeIn 0.35s ease forwards;
+        .eq-modal-stage {
+          min-height: 0;
+          touch-action: pan-y;
+        }
+        .eq-modal-stage img {
+          user-select: none;
+          -webkit-user-drag: none;
+        }
+        .eq-modal-stage:active {
+          cursor: grabbing;
         }
 
-        /* Card Zoom Expansion Keyframes */
-        @keyframes modalZoomFromCard {
-          0% {
-            opacity: 0;
-            transform: translate(calc(var(--click-x, 50vw) - 50vw), calc(var(--click-y, 50vh) - 50vh)) scale(0.2);
-            border-radius: 36px;
-          }
-          65% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 1;
-            transform: translate(0, 0) scale(1);
-            border-radius: 24px;
-          }
+        .eq-modal-counter {
+          z-index: 6;
+          padding: 5px 12px;
+          border-radius: 999px;
+          background: rgba(9, 13, 22, 0.6);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          font-size: 0.76rem;
+          font-weight: 700;
         }
-        .modal-expand-anim {
-          animation: modalZoomFromCard 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+        .eq-modal-nav {
+          position: absolute;
+          top: 50%;
+          translate: 0 -50%;
+          z-index: 6;
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 50%;
+          background: rgba(9, 13, 22, 0.6);
+          backdrop-filter: blur(10px);
+          color: #fff;
+          font-size: 1.05rem;
+          cursor: pointer;
+          transition: background 0.25s ease, color 0.25s ease;
+        }
+        .eq-modal-nav:hover {
+          background: var(--primary, #a3d900);
+          color: #0f172a;
+        }
+
+        /* Thumbnail rail */
+        .eq-modal-thumbs {
+          overflow-x: auto;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+          border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .eq-modal-thumbs::-webkit-scrollbar { height: 5px; }
+        .eq-modal-thumbs::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 999px;
+        }
+        .eq-modal-thumb {
+          position: relative;
+          width: 64px;
+          height: 64px;
+          padding: 0;
+          border: 0;
+          border-radius: 12px;
+          background: transparent;
+          cursor: pointer;
+          opacity: 0.5;
+          transition: opacity 0.25s ease;
+        }
+        .eq-modal-thumb:hover { opacity: 0.85; }
+        .eq-modal-thumb.is-active { opacity: 1; }
+        /* Clipping lives on the inner wrapper so the shared-layout ring isn't cut off mid-travel */
+        .eq-modal-thumb-img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #090d16;
+        }
+        .eq-modal-thumb-ring {
+          position: absolute;
+          inset: 0;
+          border: 2px solid var(--primary, #a3d900);
+          border-radius: 12px;
+          box-shadow: 0 0 0 3px rgba(163, 217, 0, 0.18);
+          pointer-events: none;
+        }
+
+        /* Detail panel */
+        .eq-modal-info {
+          max-height: 560px;
+          background: #fff;
+        }
+        .eq-modal-info-scroll {
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 transparent;
+        }
+        .eq-modal-info-scroll::-webkit-scrollbar { width: 6px; }
+        .eq-modal-info-scroll::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 999px;
+        }
+        .eq-modal-divider {
+          height: 3px;
+          width: 46px;
+          border-radius: 999px;
+          background: var(--primary, #a3d900);
+        }
+        .eq-modal-feature-icon {
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+          background: #f1f5f9;
+          color: var(--navy, #0f172a);
+          font-size: 0.85rem;
+        }
+        .eq-modal-actions {
+          border-top: 1px solid #e2e8f0;
+          background: #fff;
+        }
+
+        @media (max-width: 991.98px) {
+          .eq-modal-gallery { min-height: 320px; }
+          .eq-modal-info { max-height: none; }
+          .eq-modal-info-scroll { overflow-y: visible; }
         }
       `}</style>
     </>

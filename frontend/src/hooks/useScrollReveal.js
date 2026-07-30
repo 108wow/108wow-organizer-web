@@ -16,7 +16,7 @@ export default function useScrollReveal(deps = []) {
     );
 
     // Observe all reveal elements
-    const elements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale, .equipment-animated-card');
+    const elements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale');
     elements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();

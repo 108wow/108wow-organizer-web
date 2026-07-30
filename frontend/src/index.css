@@ -81,48 +81,7 @@ body {
   z-index: 1030;
 }
 
-/* ─── Equipment Animated Cards (Scroll Reveal — 3D tilt-rise with a soft focus pull) ─── */
-@keyframes equipmentCardEntrance {
-  0% {
-    opacity: 0;
-    filter: blur(8px);
-    transform: translateY(50px) scale(0.93) rotateX(14deg);
-  }
-  55% {
-    filter: blur(1.5px);
-  }
-  100% {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0) scale(1) rotateX(0deg);
-  }
-}
-
-.eq-grid .row {
-  perspective: 1400px;
-}
-
-.equipment-animated-card {
-  opacity: 0;
-  transform-origin: center bottom;
-  will-change: transform, opacity, filter;
-}
-
-.equipment-animated-card.active {
-  /* "both" keeps each card hidden during its stagger delay instead of flashing in first */
-  animation: equipmentCardEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Grid fades out before the new filter/sort result is committed */
-.eq-grid {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.eq-grid.eq-grid-out {
-  opacity: 0;
-  transform: translateY(10px) scale(0.985);
-  pointer-events: none;
-}
+/* Equipment card reveal / filter / sort transitions are owned by Motion in RentEquipment.jsx */
 
 .navbar-custom.nav-hidden {
   transform: translateY(-100%);
@@ -1531,14 +1490,18 @@ body {
   border-radius: 30px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  /* The lift is driven by Motion (whileHover); only the shadow is CSS */
+  transition: box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   display: flex;
   flex-direction: column;
 }
 
 .bento-item:hover {
-  transform: translateY(-8px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.bento-item:hover .bento-icon {
+  transform: rotate(-8deg) scale(1.08);
 }
 
 /* Grid Spans */
@@ -1660,6 +1623,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .bento-number {
@@ -1910,6 +1874,12 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  /* The lift is driven by Motion (whileHover on .feat-slide-item); only the shadow is CSS */
+  transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feat-slide-item:hover .feat-project-card {
+  box-shadow: 0 20px 40px rgba(10, 15, 13, 0.2);
 }
 
 .feat-project-card img {
@@ -1969,7 +1939,8 @@ body {
 .feat-arrow {
   position: absolute;
   top: calc(50% - 1rem);
-  transform: translateY(-50%);
+  /* Standalone `translate` so Motion's inline transform (scale) doesn't clobber the centring */
+  translate: 0 -50%;
   width: 48px;
   height: 48px;
   background: #fff;
@@ -1982,13 +1953,13 @@ body {
   justify-content: center;
   z-index: 10;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .feat-arrow:hover {
   background: var(--primary);
   color: #0a0f0d;
-  transform: translateY(-50%) scale(1.1);
   box-shadow: 0 8px 20px rgba(163, 217, 0, 0.4);
 }
 
@@ -2136,6 +2107,7 @@ body {
 
 /* ─── Modern Gallery Grid ─── */
 .gallery-ref-filter {
+  position: relative;
   background: #fff;
   border: none;
   border-radius: 12px;
@@ -2148,7 +2120,7 @@ body {
   gap: 4px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: background 0.3s ease, box-shadow 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   padding: 8px 12px;
 }
 
@@ -2159,9 +2131,28 @@ body {
   }
 }
 
+/* The lift is driven by Motion (whileHover); only the shadow is CSS */
 .gallery-ref-filter:hover {
-  transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-ref-filter .filter-count {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.gallery-ref-filter.active .filter-count {
+  background: rgba(10, 15, 13, 0.85);
+  color: var(--primary);
 }
 
 .gallery-ref-filter .filter-icon-box {
@@ -2210,7 +2201,6 @@ body {
   pointer-events: none;
   background: #e2e8f0 !important;
   box-shadow: none !important;
-  transform: none !important;
   filter: grayscale(1);
 }
 
@@ -2224,16 +2214,11 @@ body {
   color: #64748b !important;
 }
 
+/* Filter / reveal transitions are owned by Motion in Gallery.jsx */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
-
-.gallery-grid.filtering {
-  opacity: 0;
-  transform: translateY(15px);
 }
 
 @media (max-width: 991px) {
