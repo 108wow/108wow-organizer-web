@@ -2,14 +2,16 @@
 
 :root {
   --primary: #a3d900;
-  --bs-primary: #a3d900;
-  --bs-primary-rgb: 163, 217, 0;
+  --primary-rgb: 163, 217, 0;
+  --bs-primary: var(--primary);
+  --bs-primary-rgb: var(--primary-rgb);
+  --navy: #0f172a;
+  --navy-rgb: 15, 23, 42;
   --primary-hover: #8cbf00;
   --primary-dark: #6d9500;
   --primary-soft: #f4fce3;
   --accent: #f59e0b;
   --accent-soft: #fef3c7;
-  --navy: #0a0f0d;
   --bg-white: #ffffff;
   --bg-light: #f9fbf5;
   --bg-section: #f3f6ed;
@@ -70,11 +72,60 @@ body {
   border-radius: 3px
 }
 
-/* ─── Navbar ─── */
+/* ─── Smart Auto-Hiding Navbar ─── */
 .navbar-custom {
   background: var(--navy);
   padding: .5rem 0;
-  backdrop-filter: blur(12px)
+  backdrop-filter: blur(12px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  z-index: 1030;
+}
+
+/* ─── Equipment Animated Cards (Scroll Reveal — 3D tilt-rise with a soft focus pull) ─── */
+@keyframes equipmentCardEntrance {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(50px) scale(0.93) rotateX(14deg);
+  }
+  55% {
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+.eq-grid .row {
+  perspective: 1400px;
+}
+
+.equipment-animated-card {
+  opacity: 0;
+  transform-origin: center bottom;
+  will-change: transform, opacity, filter;
+}
+
+.equipment-animated-card.active {
+  /* "both" keeps each card hidden during its stagger delay instead of flashing in first */
+  animation: equipmentCardEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Grid fades out before the new filter/sort result is committed */
+.eq-grid {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.eq-grid.eq-grid-out {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+  pointer-events: none;
+}
+
+.navbar-custom.nav-hidden {
+  transform: translateY(-100%);
 }
 
 .navbar-custom .navbar-brand {
@@ -83,7 +134,7 @@ body {
   color: #fff !important;
   text-decoration: none;
   padding: 0.5rem 0;
-  letter-spacing: -.3px
+  letter-spacing: -.3px;
 }
 
 .navbar-custom .nav-logo {
@@ -103,16 +154,16 @@ body {
   text-transform: uppercase;
   letter-spacing: .8px;
   transition: var(--transition);
-  border-bottom: 2px solid transparent
+  border-bottom: 2px solid transparent;
 }
 
 .navbar-custom .nav-link:hover {
-  color: #fff !important
+  color: #fff !important;
 }
 
 .navbar-custom .nav-link.active {
   color: #fff !important;
-  border-bottom-color: var(--primary)
+  border-bottom-color: var(--primary);
 }
 
 /* ─── Section spacing ─── */
@@ -271,20 +322,20 @@ body {
   background-size: cover;
   background-position: center;
   transform: scale(1);
-  transition: none
+  will-change: transform;
 }
 
 .home-carousel .carousel-item.active .hero-bg {
-  animation: kenBurnsZoom 6s ease-out forwards
+  animation: kenBurnsZoom 7s linear forwards;
 }
 
 @keyframes kenBurnsZoom {
   0% {
-    transform: scale(1)
+    transform: scale(1);
   }
 
   100% {
-    transform: scale(1.15)
+    transform: scale(1.10);
   }
 }
 
@@ -2087,40 +2138,40 @@ body {
 .gallery-ref-filter {
   background: #fff;
   border: none;
-  border-radius: 16px;
-  width: 220px;
-  height: 100px;
+  border-radius: 12px;
+  width: 160px;
+  height: 76px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-  padding: 10px;
+  padding: 8px 12px;
 }
 
 @media (max-width: 767px) {
   .gallery-ref-filter {
     width: calc(50% - 8px);
-    height: 90px;
+    height: 72px;
   }
 }
 
 .gallery-ref-filter:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 .gallery-ref-filter .filter-icon-box {
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   background: transparent;
   color: var(--primary);
   transition: all 0.3s ease;
@@ -2129,7 +2180,7 @@ body {
 .gallery-ref-filter .filter-text {
   color: #0a0f0d;
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
@@ -2138,17 +2189,39 @@ body {
 /* Active State */
 .gallery-ref-filter.active {
   background: var(--primary);
-  box-shadow: 0 10px 30px rgba(163, 217, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(163, 217, 0, 0.3);
 }
 
 .gallery-ref-filter.active .filter-icon-box {
   background: #0a0f0d;
   color: var(--primary);
-  font-size: 1.3rem;
+  font-size: 1rem;
 }
 
 .gallery-ref-filter.active .filter-text {
   color: #0a0f0d;
+}
+
+/* Disabled State for Empty Categories */
+.gallery-ref-filter:disabled,
+.gallery-ref-filter.disabled {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  background: #e2e8f0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: grayscale(1);
+}
+
+.gallery-ref-filter:disabled .filter-icon-box,
+.gallery-ref-filter.disabled .filter-icon-box {
+  color: #94a3b8 !important;
+}
+
+.gallery-ref-filter:disabled .filter-text,
+.gallery-ref-filter.disabled .filter-text {
+  color: #64748b !important;
 }
 
 .gallery-grid {
@@ -2445,14 +2518,14 @@ body {
   }
 }
 
-/* ─── Custom Dark Dropdown ─── */
+/* ─── Custom Dark Dropdown (Clean & Seamless Redesign) ─── */
 .dropdown-menu-dark-custom {
-  background-color: rgba(15, 20, 25, 0.98);
-  backdrop-filter: blur(10px);
-  border-radius: 0;
-  border-top: 3px solid var(--primary) !important;
-  padding: 0.5rem 0;
-  min-width: 220px;
+  background: var(--navy, #0a0f0d) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 0.4rem;
+  min-width: 200px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
 }
 
 .dropdown-menu-dark-custom::after {
@@ -2466,36 +2539,41 @@ body {
 }
 
 .dropdown-menu-dark-custom .dropdown-item-custom {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.95rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0.7rem 1.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
   position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
 .dropdown-menu-dark-custom .dropdown-item-custom:hover,
 .dropdown-menu-dark-custom .dropdown-item-custom:focus {
-  background-color: transparent;
-  color: #fff;
-  transform: translateX(10px);
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--primary, #a3d900) !important;
+  transform: none !important;
 }
 
-/* ─── Navbar Dropdown Hover ─── */
+/* ─── Navbar Dropdown Hover & Animations ─── */
 @media (min-width: 992px) {
   .dropdown-hover:hover>.dropdown-menu {
     display: block;
-    margin-top: 0;
-    animation: fadeInDropdown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    margin-top: 4px;
+    animation: dropdownCleanFade 0.25s ease-out forwards;
   }
 }
 
-@keyframes fadeInDropdown {
-  from {
+@keyframes dropdownCleanFade {
+  0% {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(10px);
   }
 
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
   }

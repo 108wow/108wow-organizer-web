@@ -28,6 +28,8 @@ class CompanyInfo(db.Model):
     cta_subtitle = db.Column(db.Text, default='ไม่ว่าจะเป็นงานกีฬาปาร์ตี้ สัมมนา หรือทีมบิวดิ้ง เราพร้อมดูแลทุกขั้นตอนให้งานของคุณออกมาสมบูรณ์แบบที่สุด ทักมาคุยกันได้เลย!')
     cta_button_text = db.Column(db.String(100), default='ทักมาคุยกับเรา')
     cta_button_link = db.Column(db.String(255), default='/contact')
+    primary_color = db.Column(db.String(50), default='#a3d900')
+    navy_color = db.Column(db.String(50), default='#0f172a')
 
     def to_dict(self):
         return {
@@ -54,6 +56,8 @@ class CompanyInfo(db.Model):
             'ctaSubtitle': self.cta_subtitle,
             'ctaButtonText': self.cta_button_text,
             'ctaButtonLink': self.cta_button_link,
+            'primaryColor': self.primary_color or '#a3d900',
+            'navyColor': self.navy_color or '#0f172a',
         }
 
 

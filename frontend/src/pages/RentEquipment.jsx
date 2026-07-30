@@ -1,12 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import HeroSection from '../components/common/HeroSection';
 import { equipmentAPI, pageHeroAPI, companyAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
+
+const SORT_OPTIONS = [
+  { value: 'default', label: 'ค่าเริ่มต้น', icon: 'bi-grid' },
+  { value: 'name-asc', label: 'ชื่ออุปกรณ์ (ก - ฮ)', icon: 'bi-sort-alpha-down' },
+  { value: 'name-desc', label: 'ชื่ออุปกรณ์ (ฮ - ก)', icon: 'bi-sort-alpha-up-alt' },
+];
+
+const GRID_FADE_OUT_MS = 200;
+const SEARCH_DEBOUNCE_MS = 220;
+const SORT_CLOSE_MS = 150; // must match the eqSortMenuOut animation duration
 
 export default function RentEquipment() {
   const [equipmentList, setEquipmentList] = useState([]);
   const [hero, setHero] = useState({ title: 'EQUIPMENT SHOWCASE', subtitle: 'อุปกรณ์คุณภาพสูงสำหรับจัดงานกิจกรรมและสปอร์ตเดย์ทุกรูปแบบ', image: '' });
   const [activeCategory, setActiveCategory] = useState('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('default');
+  // What the grid is actually rendering right now — committed only after the fade-out finishes
+  const [applied, setApplied] = useState({ category: 'ทั้งหมด', sort: 'default', search: '' });
+  const [gridPhase, setGridPhase] = useState('in');
+  const [filterKey, setFilterKey] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [companyInfo, setCompanyInfo] = useState({});
 
@@ -14,6 +30,123 @@ export default function RentEquipment() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [clickOrigin, setClickOrigin] = useState({ x: 0, y: 0 });
+
+  // Sort dropdown — driven from React so it can animate on the way out as well as in
+  // (Bootstrap's Popper writes an inline transform on the menu, which fights any transform animation)
+  const [sortOpen, setSortOpen] = useState(false);
+  const [sortClosing, setSortClosing] = useState(false);
+  const sortRef = useRef(null);
+  const sortCloseTimer = useRef(null);
+
+  const [catOpen, setCatOpen] = useState(false);
+  const [catClosing, setCatClosing] = useState(false);
+  const catRef = useRef(null);
+  const catCloseTimer = useRef(null);
+
+  const transitionTimer = useRef(null);
+  useEffect(() => () => {
+    clearTimeout(transitionTimer.current);
+    clearTimeout(sortCloseTimer.current);
+    clearTimeout(catCloseTimer.current);
+  }, []);
+
+  const openSort = () => {
+    clearTimeout(sortCloseTimer.current);
+    setSortClosing(false);
+    setSortOpen(true);
+  };
+
+  const closeSort = () => {
+    clearTimeout(sortCloseTimer.current);
+    setSortClosing(true);
+    sortCloseTimer.current = setTimeout(() => {
+      setSortOpen(false);
+      setSortClosing(false);
+    }, SORT_CLOSE_MS);
+  };
+
+  const isSortOpen = sortOpen && !sortClosing;
+
+  const openCat = () => {
+    clearTimeout(catCloseTimer.current);
+    setCatClosing(false);
+    setCatOpen(true);
+  };
+
+  const closeCat = () => {
+    clearTimeout(catCloseTimer.current);
+    setCatClosing(true);
+    catCloseTimer.current = setTimeout(() => {
+      setCatOpen(false);
+      setCatClosing(false);
+    }, SORT_CLOSE_MS);
+  };
+
+  const isCatOpen = catOpen && !catClosing;
+
+  // Close the sort/cat menu on outside click / Escape
+  useEffect(() => {
+    const handlePointerDown = (e) => {
+      if (sortOpen && sortRef.current && !sortRef.current.contains(e.target)) closeSort();
+      if (catOpen && catRef.current && !catRef.current.contains(e.target)) closeCat();
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (sortOpen) closeSort();
+        if (catOpen) closeCat();
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [sortOpen, catOpen]);
+
+  // Fade the grid out, swap in the new result set, then replay the staggered card entrance
+  const commitFilters = (next) => {
+    setGridPhase('out');
+    clearTimeout(transitionTimer.current);
+    transitionTimer.current = setTimeout(() => {
+      setApplied(prev => ({ ...prev, ...next }));
+      setFilterKey(k => k + 1);
+      setGridPhase('in');
+    }, GRID_FADE_OUT_MS);
+  };
+
+  const handleCategoryChange = (cat) => {
+    closeCat();
+    if (cat === activeCategory) return;
+    setActiveCategory(cat);
+    commitFilters({ category: cat });
+  };
+
+  const handleSortChange = (value) => {
+    closeSort();
+    if (value === sortBy) return;
+    setSortBy(value);
+    commitFilters({ sort: value });
+  };
+
+  const handleResetFilters = () => {
+    setActiveCategory('ทั้งหมด');
+    setSortBy('default');
+    setSearchQuery('');
+    commitFilters({ category: 'ทั้งหมด', sort: 'default', search: '' });
+  };
+
+  // Search: debounce so the grid doesn't re-mount on every keystroke, then replay the entrance
+  useEffect(() => {
+    if (applied.search === searchQuery) return;
+    const timer = setTimeout(() => {
+      setApplied(prev => ({ ...prev, search: searchQuery }));
+      setFilterKey(k => k + 1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery, applied.search]);
+
+  useScrollReveal([loaded, applied, equipmentList]);
 
   useEffect(() => {
     Promise.all([
@@ -33,14 +166,23 @@ export default function RentEquipment() {
   // Extract unique categories
   const categories = ['ทั้งหมด', ...Array.from(new Set(equipmentList.map(item => item.category).filter(Boolean)))];
 
-  // Filter items
+  // Filter items (uses the committed filters so the grid stays stable while it fades out)
   const filteredItems = equipmentList.filter(item => {
-    const matchCategory = activeCategory === 'ทั้งหมด' || item.category === activeCategory;
-    const matchSearch = !searchQuery || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchCategory = applied.category === 'ทั้งหมด' || item.category === applied.category;
+    const matchSearch = !applied.search ||
+      item.name.toLowerCase().includes(applied.search.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(applied.search.toLowerCase()));
     return matchCategory && matchSearch;
   });
+
+  // Sort items
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (applied.sort === 'name-asc') return a.name.localeCompare(b.name, 'th');
+    if (applied.sort === 'name-desc') return b.name.localeCompare(a.name, 'th');
+    return 0;
+  });
+
+  const currentSort = SORT_OPTIONS.find(o => o.value === sortBy) || SORT_OPTIONS[0];
 
   const openLightbox = (item, e) => {
     if (e && e.currentTarget) {
@@ -85,11 +227,11 @@ export default function RentEquipment() {
         image={hero.image} 
       />
 
-      <section className="py-5" style={{ background: '#f8fafc', minHeight: '60vh' }}>
+      <section className="py-5 overflow-hidden" style={{ background: '#f8fafc', minHeight: '60vh' }}>
         <div className="container py-4">
           
           {/* Header Title */}
-          <div className="text-center mb-5">
+          <div className="text-center mb-5 reveal-up">
             <span className="badge bg-primary bg-opacity-15 text-primary px-3 py-2 rounded-pill fw-bold text-uppercase mb-2" style={{ letterSpacing: '2px', fontSize: '0.82rem' }}>
               OUR RENTAL CATALOG
             </span>
@@ -102,20 +244,20 @@ export default function RentEquipment() {
           </div>
 
           {/* Search & Category Filter Controls */}
-          <div className="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-5">
+          <div className="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-5 reveal-up" style={{ position: 'relative', zIndex: 10 }}>
             <div className="row g-3 align-items-center">
               
               {/* Search input */}
-              <div className="col-lg-4">
+              <div className="col-lg-5 col-12">
                 <div className="position-relative">
                   <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                   <input
                     type="text"
-                    className="form-control ps-5 py-2.5 rounded-pill border-light-subtle shadow-none"
+                    className="form-control ps-5 rounded-pill shadow-none eq-search-input"
                     placeholder="ค้นหาชื่ออุปกรณ์..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ background: '#f8fafc', fontSize: '0.95rem' }}
+                    style={{ background: '#f8fafc', fontSize: '0.95rem', height: '46px', border: '1px solid #e2e8f0' }}
                   />
                   {searchQuery && (
                     <button 
@@ -128,50 +270,130 @@ export default function RentEquipment() {
                 </div>
               </div>
 
-              {/* Category Pills */}
-              <div className="col-lg-8">
-                <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      className="btn rounded-pill px-3.5 py-2 fw-semibold transition-all text-nowrap"
-                      style={{
-                        fontSize: '0.88rem',
-                        background: activeCategory === cat ? 'var(--navy, #0f172a)' : '#f1f5f9',
-                        color: activeCategory === cat ? '#fff' : '#475569',
-                        border: activeCategory === cat ? '1px solid var(--navy, #0f172a)' : '1px solid #e2e8f0',
-                        boxShadow: activeCategory === cat ? '0 4px 12px rgba(15, 23, 42, 0.15)' : 'none'
-                      }}
+              {/* Category Selector */}
+              <div className="col-lg-4 col-md-6">
+                <div className="dropdown eq-sort w-100" ref={catRef}>
+                  <button
+                    type="button"
+                    className="eq-sort-toggle w-100 d-flex align-items-center justify-content-between rounded-pill px-3"
+                    onClick={() => (isCatOpen ? closeCat() : openCat())}
+                    aria-expanded={isCatOpen}
+                    aria-haspopup="listbox"
+                  >
+                    <span className="d-flex align-items-center gap-2 overflow-hidden">
+                      <i className="bi bi-collection text-muted"></i>
+                      <span className="text-muted d-none d-sm-inline" style={{ fontSize: '0.85rem' }}>หมวดหมู่</span>
+                      <span key={activeCategory} className="fw-semibold text-dark text-truncate eq-sort-value" style={{ fontSize: '0.9rem' }}>{activeCategory}</span>
+                    </span>
+                    <i className="bi bi-chevron-down text-muted eq-sort-caret" style={{ fontSize: '0.75rem' }}></i>
+                  </button>
+                  {(catOpen || catClosing) && (
+                    <ul
+                      className={`dropdown-menu eq-sort-menu show border-0 p-2 w-100 ${catClosing ? 'is-closing' : ''}`}
+                      style={{ borderRadius: '16px', zIndex: 1050 }}
+                      role="listbox"
                     >
-                      {cat}
-                    </button>
-                  ))}
+                      {categories.map((cat, i) => {
+                        const count = cat === 'ทั้งหมด'
+                          ? equipmentList.length
+                          : equipmentList.filter(item => item.category === cat).length;
+                        const isDisabled = count === 0;
+
+                        return (
+                          <li key={cat} className="eq-sort-item" style={{ animationDelay: `${0.03 + i * 0.045}s` }}>
+                            <button
+                              type="button"
+                              role="option"
+                              disabled={isDisabled}
+                              aria-selected={activeCategory === cat}
+                              className={`dropdown-item d-flex align-items-center gap-2 rounded-3 py-2 ${activeCategory === cat ? 'bg-primary bg-opacity-10 text-primary fw-bold' : ''} ${isDisabled ? 'disabled' : ''}`}
+                              onClick={() => handleCategoryChange(cat)}
+                              style={{ opacity: isDisabled ? 0.5 : 1 }}
+                            >
+                              <i className={`bi ${cat === 'ทั้งหมด' ? 'bi-grid-fill' : 'bi-folder2'} ${activeCategory === cat ? 'text-primary' : 'text-muted'}`}></i>
+                              <span className="flex-grow-1 text-start" style={{ fontSize: '0.9rem' }}>{cat}</span>
+                              <span className="badge rounded-pill ms-2" style={{ background: activeCategory === cat ? 'rgba(163,217,0,0.2)' : '#f1f5f9', color: activeCategory === cat ? 'var(--primary)' : '#64748b', fontSize: '0.75rem' }}>{count}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
               </div>
+
+              {/* Sort Selector */}
+              <div className="col-lg-3 col-md-6">
+                <div className="dropdown eq-sort w-100" ref={sortRef}>
+                  <button
+                    type="button"
+                    className="eq-sort-toggle w-100 d-flex align-items-center justify-content-between rounded-pill px-3"
+                    onClick={() => (isSortOpen ? closeSort() : openSort())}
+                    aria-expanded={isSortOpen}
+                    aria-haspopup="listbox"
+                  >
+                    <span className="d-flex align-items-center gap-2 overflow-hidden">
+                      <i className="bi bi-sort-down text-muted"></i>
+                      <span className="text-muted d-none d-sm-inline" style={{ fontSize: '0.85rem' }}>เรียงตาม</span>
+                      <span key={sortBy} className="fw-semibold text-dark text-truncate eq-sort-value" style={{ fontSize: '0.9rem' }}>{currentSort.label}</span>
+                    </span>
+                    <i className="bi bi-chevron-down text-muted eq-sort-caret" style={{ fontSize: '0.75rem' }}></i>
+                  </button>
+                  {(sortOpen || sortClosing) && (
+                    <ul
+                      className={`dropdown-menu eq-sort-menu show border-0 p-2 w-100 ${sortClosing ? 'is-closing' : ''}`}
+                      style={{ borderRadius: '16px', zIndex: 1050 }}
+                      role="listbox"
+                    >
+                      {SORT_OPTIONS.map((opt, i) => (
+                        <li key={opt.value} className="eq-sort-item" style={{ animationDelay: `${0.03 + i * 0.045}s` }}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={sortBy === opt.value}
+                            className={`dropdown-item d-flex align-items-center gap-2 rounded-3 py-2 ${sortBy === opt.value ? 'bg-primary bg-opacity-10 text-primary fw-bold' : ''}`}
+                            onClick={() => handleSortChange(opt.value)}
+                          >
+                            <i className={`bi ${opt.icon} ${sortBy === opt.value ? 'text-primary' : 'text-muted'}`}></i>
+                            <span className="flex-grow-1 text-start" style={{ fontSize: '0.9rem' }}>{opt.label}</span>
+                            {sortBy === opt.value && <i className="bi bi-check2 text-primary"></i>}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+
 
             </div>
           </div>
 
           {/* Equipment Items Grid */}
-          {filteredItems.length === 0 ? (
-            <div className="text-center py-5 bg-white rounded-4 shadow-sm my-4">
+          <div className={`eq-grid ${gridPhase === 'out' ? 'eq-grid-out' : ''}`}>
+          {sortedItems.length === 0 ? (
+            <div className="text-center py-5 bg-white rounded-4 shadow-sm my-4 equipment-animated-card" key={filterKey}>
               <i className="bi bi-box-seam text-muted" style={{ fontSize: '3.5rem' }}></i>
               <h4 className="fw-bold mt-3 text-dark">ไม่พบอุปกรณ์ที่ค้นหา</h4>
               <p className="text-muted mb-3">ลองเปลี่ยนคำค้นหาหรือหมวดหมู่เพื่อค้นหาอุปกรณ์ที่คุณต้องการ</p>
-              <button className="btn btn-outline-dark rounded-pill px-4" onClick={() => { setActiveCategory('ทั้งหมด'); setSearchQuery(''); }}>
+              <button className="btn btn-outline-dark rounded-pill px-4" onClick={handleResetFilters}>
                 ล้างการค้นหาทั้งหมด
               </button>
             </div>
           ) : (
-            <div className="row g-4">
-              {filteredItems.map((item) => {
+            <div className="row g-4" key={filterKey}>
+              {sortedItems.map((item, index) => {
                 const imgList = item.images && item.images.length > 0 ? item.images : [item.coverImage].filter(Boolean);
                 const mainImg = item.coverImage || (imgList[0] || '');
                 const photoCount = imgList.length;
 
                 return (
-                  <div key={item.id} className="col-12 col-md-6 col-lg-4 col-xl-3">
+                  <div 
+                    key={item.id} 
+                    className="col-12 col-md-6 col-lg-4 col-xl-3 equipment-animated-card"
+                    style={{ animationDelay: `${(index % 12) * 0.05}s` }}
+                  >
                     <div 
                       className="card h-100 border-0 rounded-4 overflow-hidden eq-card position-relative shadow-sm d-flex flex-column"
                       onClick={(e) => openLightbox(item, e)}
@@ -275,6 +497,7 @@ export default function RentEquipment() {
               })}
             </div>
           )}
+          </div>
 
         </div>
       </section>
@@ -469,6 +692,116 @@ export default function RentEquipment() {
 
       {/* Hover & Card Zoom Expansion Animations CSS */}
       <style>{`
+        /* ── Search input (kept visually in step with the sort dropdown) ── */
+        .eq-search-input {
+          transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+        .eq-search-input:focus {
+          background: #fff !important;
+          border-color: var(--primary, #a3d900) !important;
+          box-shadow: 0 0 0 3px rgba(163, 217, 0, 0.15) !important;
+        }
+
+        /* ── Sort Dropdown (matches the custom dropdowns used across the system) ── */
+        .eq-sort-toggle {
+          height: 46px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          cursor: pointer;
+          transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+        .eq-sort-toggle:hover {
+          border-color: #cbd5e1;
+          background: #fff;
+        }
+        .eq-sort-toggle[aria-expanded="true"] {
+          background: #fff;
+          border-color: var(--primary, #a3d900);
+          box-shadow: 0 0 0 3px rgba(163, 217, 0, 0.15);
+        }
+        .eq-sort-toggle:active {
+          transform: scale(0.985);
+        }
+        .eq-sort-caret {
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .eq-sort-toggle[aria-expanded="true"] .eq-sort-caret {
+          transform: rotate(180deg);
+        }
+        /* Selected label swaps with a quick fade-up (keyed on sortBy to re-trigger) */
+        .eq-sort-value {
+          animation: eqSortValueSwap 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes eqSortValueSwap {
+          0% { opacity: 0; transform: translateY(6px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Menu: positioned by CSS (no Popper), so transforms are free to animate */
+        .eq-sort-menu {
+          top: 100%;
+          left: 0;
+          margin-top: 8px;
+          transform-origin: top center;
+          box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14) !important;
+          animation: eqSortMenuIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .eq-sort-menu.is-closing {
+          animation: eqSortMenuOut 0.15s ease-in both;
+          pointer-events: none;
+        }
+        @keyframes eqSortMenuIn {
+          0% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes eqSortMenuOut {
+          0% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-8px) scale(0.97); }
+        }
+
+        /* Options cascade in one after another */
+        .eq-sort-item {
+          animation: eqSortItemIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes eqSortItemIn {
+          0% { opacity: 0; transform: translateY(-8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .eq-sort-menu.is-closing .eq-sort-item {
+          animation: none;
+        }
+
+        .eq-sort-menu .dropdown-item {
+          transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+        .eq-sort-menu .dropdown-item:hover {
+          transform: translateX(3px);
+        }
+        .eq-sort-menu .dropdown-item:active {
+          background: rgba(163, 217, 0, 0.18);
+          color: #0f172a;
+          transform: scale(0.98);
+        }
+
+        /* ── Category Pills ── */
+        .eq-cat-pill {
+          transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease,
+                      box-shadow 0.25s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .eq-cat-pill:not(.disabled):not(.is-active):hover {
+          background: #e2e8f0 !important;
+          transform: translateY(-2px);
+        }
+        .eq-cat-pill.is-active {
+          transform: translateY(-1px);
+        }
+        .eq-cat-pill:not(.disabled):active {
+          transform: scale(0.96);
+        }
+        .eq-cat-count {
+          transition: background 0.25s ease, color 0.25s ease;
+        }
+
         .eq-card {
           border-radius: 20px !important;
         }

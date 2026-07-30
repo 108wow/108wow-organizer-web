@@ -6,10 +6,25 @@ import StatusModal from '../../components/admin/StatusModal';
 import ImageUploader from '../../components/admin/ImageUploader';
 
 export default function AdminSettings() {
-  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900', about: '', address: '', email: '', officeHours: '', footerName: '', ctaTitle: '', ctaSubtitle: '', ctaButtonText: '' });
+  const [form, setForm] = useState({ name: '', tagline: '', logoUrl: '', faviconUrl: '', primaryColor: '#a3d900', navyColor: '#0f172a', about: '', address: '', email: '', officeHours: '', footerName: '', ctaTitle: '', ctaSubtitle: '', ctaButtonText: '' });
 
   useEffect(() => {
-    companyAPI.get().then(d => setForm(p => ({ ...p, name: d.name || '', tagline: d.tagline || '', logoUrl: d.logoUrl || '', about: d.about || '', address: d.address || '', email: d.email || '', officeHours: d.officeHours || '', footerName: d.footerName || '', ctaTitle: d.ctaTitle || '', ctaSubtitle: d.ctaSubtitle || '', ctaButtonText: d.ctaButtonText || '' }))).catch(() => {});
+    companyAPI.get().then(d => setForm(p => ({
+      ...p,
+      name: d.name || '',
+      tagline: d.tagline || '',
+      logoUrl: d.logoUrl || '',
+      primaryColor: d.primaryColor || '#a3d900',
+      navyColor: d.navyColor || '#0f172a',
+      about: d.about || '',
+      address: d.address || '',
+      email: d.email || '',
+      officeHours: d.officeHours || '',
+      footerName: d.footerName || '',
+      ctaTitle: d.ctaTitle || '',
+      ctaSubtitle: d.ctaSubtitle || '',
+      ctaButtonText: d.ctaButtonText || ''
+    }))).catch(() => {});
   }, []);
   const [confirm, setConfirm] = useState({ show: false, action: null, title: '', message: '', type: 'info' });
   const [loading, setLoading] = useState(false);
@@ -19,8 +34,47 @@ export default function AdminSettings() {
   const exec = useCallback(async (action) => { setConfirm(p=>({...p,show:false})); setLoading(true); try { await action(); setLoading(false); setStatusM({ show: true, status: 'success', message: 'บันทึกการตั้งค่าเรียบร้อย' }); } catch(e) { setLoading(false); setStatusM({ show: true, status: 'error', message: e.message }); } }, []);
 
   const handleSave = () => {
-    setConfirm({ show: true, type: 'info', title: 'บันทึกการตั้งค่า', message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?', action: async () => { await companyAPI.update({ name: form.name, tagline: form.tagline, logoUrl: form.logoUrl, about: form.about, address: form.address, email: form.email, officeHours: form.officeHours, footerName: form.footerName, ctaTitle: form.ctaTitle, ctaSubtitle: form.ctaSubtitle, ctaButtonText: form.ctaButtonText }); } });
+    setConfirm({
+      show: true,
+      type: 'info',
+      title: 'บันทึกการตั้งค่า',
+      message: 'ยืนยันบันทึกการตั้งค่าเว็บไซต์?',
+      action: async () => {
+        await companyAPI.update({
+          name: form.name,
+          tagline: form.tagline,
+          logoUrl: form.logoUrl,
+          primaryColor: form.primaryColor,
+          navyColor: form.navyColor,
+          about: form.about,
+          address: form.address,
+          email: form.email,
+          officeHours: form.officeHours,
+          footerName: form.footerName,
+          ctaTitle: form.ctaTitle,
+          ctaSubtitle: form.ctaSubtitle,
+          ctaButtonText: form.ctaButtonText
+        });
+
+        // Apply dynamic CSS variables immediately on save
+        document.documentElement.style.setProperty('--primary', form.primaryColor);
+        document.documentElement.style.setProperty('--navy', form.navyColor);
+      }
+    });
   };
+
+  const applyPreset = (primary, navy) => {
+    setForm(p => ({ ...p, primaryColor: primary, navyColor: navy }));
+  };
+
+  const presets = [
+    { name: 'Neon Lime (Default)', primary: '#a3d900', navy: '#0f172a' },
+    { name: 'Cyber Blue', primary: '#0070f3', navy: '#0a1128' },
+    { name: 'Crimson Red', primary: '#ff2a5f', navy: '#180812' },
+    { name: 'Royal Gold', primary: '#f59e0b', navy: '#1c150c' },
+    { name: 'Emerald Green', primary: '#10b981', navy: '#062016' },
+    { name: 'Sunset Purple', primary: '#8b5cf6', navy: '#130924' },
+  ];
 
   return (
     <div className="anim d1">
@@ -29,7 +83,7 @@ export default function AdminSettings() {
       <StatusModal show={statusM.show} status={statusM.status} message={statusM.message} onClose={()=>setStatusM(p=>({...p,show:false}))} />
 
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <div><h3 className="fw-bold m-0 text-dark">ตั้งค่าทั่วไป (Settings)</h3><p className="text-muted m-0">จัดการโลโก้ ชื่อเว็บไซต์ และการตั้งค่าพื้นฐาน</p></div>
+        <div><h3 className="fw-bold m-0 text-dark">ตั้งค่าทั่วไป (Settings)</h3><p className="text-muted m-0">จัดการโลโก้ ชื่อเว็บไซต์ และธีมดีไซน์ระบบ</p></div>
         <button className="btn btn-primary fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2" onClick={handleSave}><i className="bi bi-save"></i>บันทึกการตั้งค่า</button>
       </div>
 
@@ -108,7 +162,7 @@ export default function AdminSettings() {
                 recommendedSize="แนะนำขนาด: 300 x 100 px (สัดส่วน 3:1)"
               />
               {/* Preview */}
-              <div className="mt-3 p-3 rounded-3" style={{ background: '#0a0f0d' }}>
+              <div className="mt-3 p-3 rounded-3" style={{ background: form.navyColor }}>
                 <div className="d-flex align-items-center gap-2">
                   {form.logoUrl ? (
                     <img src={form.logoUrl} alt="logo" style={{ maxHeight: 36, maxWidth: 150 }} onError={e => e.target.style.display = 'none'} />
@@ -116,21 +170,51 @@ export default function AdminSettings() {
                     <span className="fw-bold text-white" style={{ fontSize: '1.2rem', fontStyle: 'italic' }}>{form.name}</span>
                   )}
                 </div>
-                <small className="text-white" style={{ opacity: 0.4 }}>ตัวอย่างการแสดงผลบน Navbar</small>
+                <small className="text-white" style={{ opacity: 0.5 }}>ตัวอย่างการแสดงผลบน Navbar</small>
               </div>
             </div>
           </div>
 
           <div className="card border-0 shadow-sm rounded-4">
-            <div className="card-header bg-white border-bottom pt-4 pb-3 px-4"><h5 className="fw-bold m-0"><i className="bi bi-palette me-2 text-primary"></i>สี Primary</h5></div>
+            <div className="card-header bg-white border-bottom pt-4 pb-3 px-4"><h5 className="fw-bold m-0"><i className="bi bi-palette me-2 text-primary"></i>ธีมและสีเว็บไซต์ (Dynamic Theme Tokens)</h5></div>
             <div className="card-body p-4">
               <div className="admin-form-group">
-                <label>สีหลัก (Primary Color)</label>
+                <label>สีหลัก (Primary Brand Color)</label>
                 <div className="d-flex align-items-center gap-3">
                   <input type="color" name="primaryColor" value={form.primaryColor} onChange={handleChange} style={{ width: 50, height: 40, border: 'none', borderRadius: 8, cursor: 'pointer' }} />
-                  <input type="text" name="primaryColor" value={form.primaryColor} onChange={handleChange} style={{ flex: 1 }} />
+                  <input type="text" name="primaryColor" value={form.primaryColor} onChange={handleChange} className="form-control" style={{ flex: 1 }} />
                 </div>
-                <small className="text-muted">ใช้สำหรับปุ่ม, ลิงก์, และ accent color ทั่วเว็บ</small>
+                <small className="text-muted d-block mt-1">ใช้สำหรับปุ่ม, ไอคอนไฮไลต์, และแอกเซนท์ทั่วเว็บ</small>
+              </div>
+
+              <div className="admin-form-group mt-4">
+                <label>สีเข้ม/พื้นหลังหลัก (Navy / Dark Theme Color)</label>
+                <div className="d-flex align-items-center gap-3">
+                  <input type="color" name="navyColor" value={form.navyColor} onChange={handleChange} style={{ width: 50, height: 40, border: 'none', borderRadius: 8, cursor: 'pointer' }} />
+                  <input type="text" name="navyColor" value={form.navyColor} onChange={handleChange} className="form-control" style={{ flex: 1 }} />
+                </div>
+                <small className="text-muted d-block mt-1">ใช้สำหรับส่วน Navbar, Hero caption, และการ์ดสไตล์เข้ม</small>
+              </div>
+
+              <hr className="my-4" />
+
+              <label className="fw-bold mb-2 small text-uppercase text-muted">ชุดสีแนะนำสำเร็จรูป (Theme Presets)</label>
+              <div className="d-flex flex-column gap-2">
+                {presets.map((p, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="btn btn-light border d-flex align-items-center justify-content-between p-2 rounded-3"
+                    onClick={() => applyPreset(p.primary, p.navy)}
+                    style={{ transition: 'all 0.2s' }}
+                  >
+                    <span className="small fw-bold">{p.name}</span>
+                    <div className="d-flex align-items-center gap-1">
+                      <span className="d-inline-block rounded-circle" style={{ width: 18, height: 18, background: p.primary, border: '1px solid rgba(0,0,0,0.1)' }}></span>
+                      <span className="d-inline-block rounded-circle" style={{ width: 18, height: 18, background: p.navy }}></span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>

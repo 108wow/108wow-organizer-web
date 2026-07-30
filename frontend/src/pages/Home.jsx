@@ -61,36 +61,29 @@ export default function Home() {
   return (
     <>
       {/* ──── Hero ──── */}
-      <div id="homeCarousel" className="carousel slide home-carousel" data-bs-ride="carousel" data-bs-interval="5000">
-        <div className="carousel-indicators">
-          {heroSlides.map((_, i) => <button key={i} type="button" data-bs-target="#homeCarousel" data-bs-slide-to={i} className={i === 0 ? 'active' : ''} />)}
-        </div>
-        <div className="carousel-inner">
-          {heroSlides.map((s, i) => (
-            <div key={s.id} className={`carousel-item ${i === 0 ? 'active' : ''}`}>
-              <div className="hero-bg" style={{ backgroundImage: `url(${s.image})` }} />
-              <div className="hero-overlay" />
-              <div className="carousel-caption">
-                <div className="container position-relative">
-                  {/* Ghost Text — large faded text behind title */}
-                  <div className="ghost-text" aria-hidden="true">{s.ghostText || s.title}</div>
-                  <div className="position-relative" style={{ zIndex: 3 }}>
-                    <p style={{ fontSize: '.72rem', fontWeight: 700, letterSpacing: '2px', color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', marginBottom: 8 }}>{companyInfo.name}</p>
-                    <h1>{s.title}</h1>
-                    <p>{s.subtitle}</p>
-                    <div className="d-flex gap-3 hero-btn-wrap">
-                      <Link to="/services" className="btn btn-main">ดูบริการ</Link>
-                      <Link to="/contact" className="btn btn-ghost">ติดต่อเรา</Link>
-                    </div>
+      <Carousel fade interval={7000} pause={false} className="home-carousel" controls={heroSlides.length > 1} indicators={heroSlides.length > 1}>
+        {heroSlides.map((s) => (
+          <Carousel.Item key={s.id}>
+            <div className="hero-bg" style={{ backgroundImage: `url(${s.image})` }} />
+            <div className="hero-overlay" />
+            <div className="carousel-caption">
+              <div className="container position-relative">
+                {/* Ghost Text — large faded text behind title */}
+                <div className="ghost-text" aria-hidden="true">{s.ghostText || s.title}</div>
+                <div className="position-relative" style={{ zIndex: 3 }}>
+                  <p style={{ fontSize: '.72rem', fontWeight: 700, letterSpacing: '2px', color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', marginBottom: 8 }}>{companyInfo.name}</p>
+                  <h1>{s.title}</h1>
+                  <p>{s.subtitle}</p>
+                  <div className="d-flex gap-3 hero-btn-wrap">
+                    <Link to="/services" className="btn btn-main">ดูบริการ</Link>
+                    <Link to="/contact" className="btn btn-ghost">ติดต่อเรา</Link>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-        <button className="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" /></button>
-        <button className="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next"><span className="carousel-control-next-icon" /></button>
-      </div>
+          </Carousel.Item>
+        ))}
+      </Carousel>
 
       {/* ──── About ──── */}
       {homeConfig.showAbout && (() => {

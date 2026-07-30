@@ -67,7 +67,26 @@ export default function App() {
   useEffect(() => {
     // Wake up the backend and wait for essential APIs
     Promise.all([
-      companyAPI.get().catch(() => {}),
+      companyAPI.get().then(info => {
+        if (info) {
+          const primary = info.primaryColor || '#a3d900';
+          const navy = info.navyColor || '#0f172a';
+          document.documentElement.style.setProperty('--primary', primary);
+          document.documentElement.style.setProperty('--navy', navy);
+
+          const hexToRgb = (hex) => {
+            let c = hex.replace('#', '');
+            if (c.length === 3) c = c.split('').map(x => x + x).join('');
+            const num = parseInt(c, 16);
+            return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
+          };
+
+          try {
+            document.documentElement.style.setProperty('--primary-rgb', hexToRgb(primary));
+            document.documentElement.style.setProperty('--navy-rgb', hexToRgb(navy));
+          } catch (e) {}
+        }
+      }).catch(() => {}),
       homeConfigAPI.get().catch(() => {})
     ]).finally(() => {
       // Add a slight delay for smooth aesthetic transition

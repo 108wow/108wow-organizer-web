@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/common/HeroSection';
 import { companyAPI, pageHeroAPI, aboutConfigAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function About() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -11,6 +12,8 @@ export default function About() {
 
   const [stats, setStats] = useState([]);
   const [aboutConfig, setAboutConfig] = useState(null);
+
+  useScrollReveal([loaded]);
 
   useEffect(() => {
     Promise.all([companyAPI.get(), pageHeroAPI.list(), companyAPI.listStats(), aboutConfigAPI.get()])
@@ -29,10 +32,10 @@ export default function About() {
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
       {/* Top Section: Who We Are */}
-      <section className="section-padding" style={{ background: 'var(--bg-white)', overflow: 'hidden' }}>
+      <section className="section-padding overflow-hidden" style={{ background: 'var(--bg-white)' }}>
         <div className="container">
           <div className="row g-5 align-items-center">
-            <div className="col-lg-6">
+            <div className="col-lg-6 reveal-left">
               <div className="about-hero-img-wrap">
                 <div className="position-relative shadow-lg" style={{ borderRadius: '50% 50% 10px 10px', overflow: 'hidden', height: '500px', cursor: 'pointer' }} onClick={() => setIsPlaying(true)}>
                   <img src={aboutConfig?.videoThumbnail || 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80'} alt="Team Building Video Thumbnail" className="img-fluid w-100 h-100" style={{ objectFit: 'cover' }} />
@@ -41,7 +44,7 @@ export default function About() {
                   </div>
                 </div>
 
-                <div className="about-exp-box">
+                <div className="about-exp-box reveal-scale delay-2">
                   <div className="num">{stats.length > 0 ? stats[0].value : '24'}</div>
                   <div className="text" style={{ fontSize: '0.8rem', whiteSpace: 'pre-line' }}>
                     {stats.length > 0 ? stats[0].label : 'Years Of\nExperience'}
@@ -49,7 +52,7 @@ export default function About() {
                 </div>
               </div>
             </div>
-            <div className="col-lg-6 ps-lg-5">
+            <div className="col-lg-6 ps-lg-5 reveal-right">
               <h2 className="fw-bold text-primary mb-3" style={{ fontSize: '2.2rem', lineHeight: '1.3' }}>
                 {companyInfo.tagline || 'รับจัดกิจกรรม Team Building สร้างสัมพันธ์ในองค์กร'}
               </h2>

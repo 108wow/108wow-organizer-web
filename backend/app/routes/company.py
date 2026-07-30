@@ -32,7 +32,8 @@ def update_company(current_user):
                       ('lineId', 'line_id'), ('showLine', 'show_line'),
                       ('instagram', 'instagram'), ('showInstagram', 'show_instagram'),
                       ('ctaTitle', 'cta_title'), ('ctaSubtitle', 'cta_subtitle'),
-                      ('ctaButtonText', 'cta_button_text'), ('ctaButtonLink', 'cta_button_link')]:
+                      ('ctaButtonText', 'cta_button_text'), ('ctaButtonLink', 'cta_button_link'),
+                      ('primaryColor', 'primary_color'), ('navyColor', 'navy_color')]:
         if key in data:
             setattr(info, attr, data[key])
     db.session.commit()

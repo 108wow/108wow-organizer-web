@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import HeroSection from '../components/common/HeroSection';
 import { teamAPI, pageHeroAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function Team() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [hero, setHero] = useState({ title: '', subtitle: '', image: '' });
   const [loaded, setLoaded] = useState(false);
+
+  useScrollReveal([loaded, teamMembers]);
 
   useEffect(() => {
     Promise.all([teamAPI.list(), pageHeroAPI.list()])
@@ -21,9 +24,9 @@ export default function Team() {
   return (
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
-      <section className="section-padding" style={{ background: 'var(--bg-white)' }}>
+      <section className="section-padding overflow-hidden" style={{ background: 'var(--bg-white)' }}>
         <div className="container">
-          <div className="section-header text-center">
+          <div className="section-header text-center reveal-up">
             <span className="section-label">Our Team</span>
             <h2 className="section-title">พบกับทีมของเรา</h2>
             <div className="underline mx-auto"></div>
@@ -31,7 +34,7 @@ export default function Team() {
           </div>
           <div className="row g-4">
             {teamMembers.map((m, i) => (
-              <div key={m.id} className={`col-md-6 col-lg-4 anim d${(i % 6) + 1}`}>
+              <div key={m.id} className={`col-md-6 col-lg-4 reveal-scale delay-${(i % 4) + 1}`}>
                 <div className="team-card-premium">
                   <div className="tc-img-wrap">
                     <img src={m.photo} alt={m.name} />

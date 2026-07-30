@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import HeroSection from '../components/common/HeroSection';
 import { companyAPI, pageHeroAPI, contactAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function Contact() {
   const [companyInfo, setCompanyInfo] = useState({});
@@ -9,6 +10,8 @@ export default function Contact() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [loaded, setLoaded] = useState(false);
+
+  useScrollReveal([loaded]);
 
   useEffect(() => {
     Promise.all([companyAPI.get(), pageHeroAPI.list()])
@@ -52,12 +55,12 @@ export default function Contact() {
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
 
       {/* ─── Main Content: Contact Info & Form ─── */}
-      <section className="section-padding position-relative" style={{ background: 'var(--bg-light)' }}>
+      <section className="section-padding position-relative overflow-hidden" style={{ background: 'var(--bg-light)' }}>
         <div className="container">
           <div className="row g-5 align-items-center">
             
             {/* ─── Left Column: Info & Socials ─── */}
-            <div className="col-lg-5 anim d1">
+            <div className="col-lg-5 reveal-left">
               <div className="pe-lg-4">
                 <div className="mb-4">
                   <span className="section-label">Get In Touch</span>
@@ -110,7 +113,7 @@ export default function Contact() {
             </div>
 
             {/* ─── Right Column: Form ─── */}
-            <div className="col-lg-7 anim d2">
+            <div className="col-lg-7 reveal-right">
               <div className="contact-form-card shadow-sm" style={{ border: '1px solid var(--border)', background: '#fff' }}>
                 <div className="contact-form-header mb-4">
                   <div>

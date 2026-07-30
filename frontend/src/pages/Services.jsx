@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import HeroSection from '../components/common/HeroSection';
 import { serviceAPI, pageHeroAPI, galleryAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function Services() {
   const [services, setServices] = useState([]);
@@ -10,6 +11,8 @@ export default function Services() {
   const [loaded, setLoaded] = useState(false);
   const sliderRef = useRef(null);
   const location = useLocation();
+
+  useScrollReveal([loaded, services, galleryItems]);
 
   useEffect(() => {
     Promise.all([serviceAPI.list(), pageHeroAPI.list(), galleryAPI.list()])
@@ -38,7 +41,6 @@ export default function Services() {
     if (sliderRef.current) {
       const slider = sliderRef.current;
       if (slider.scrollLeft <= 0) {
-        // หมุนวนกลับไปท้ายสุด
         slider.scrollTo({ left: slider.scrollWidth, behavior: 'smooth' });
       } else {
         slider.scrollBy({ left: -400, behavior: 'smooth' });
@@ -49,9 +51,7 @@ export default function Services() {
   const scrollRight = () => {
     if (sliderRef.current) {
       const slider = sliderRef.current;
-      // เช็กว่าเลื่อนไปจนสุดทางขวาหรือยัง (เผื่อค่าทศนิยมเล็กน้อย 10px)
       if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10) {
-        // หมุนวนกลับไปเริ่มต้น
         slider.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
         slider.scrollBy({ left: 400, behavior: 'smooth' });
@@ -66,9 +66,9 @@ export default function Services() {
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
       
       {/* Services Bento Grid (Modern Creative Layout) */}
-      <section className="section-padding" style={{ background: '#f4f6f3' }}>
+      <section className="section-padding overflow-hidden" style={{ background: '#f4f6f3' }}>
         <div className="container">
-          <div className="section-header text-center mb-5">
+          <div className="section-header text-center mb-5 reveal-up">
             <span className="section-label">บริการของเรา</span>
             <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR SERVICES</h2>
             <p className="mt-3 text-muted mx-auto" style={{ maxWidth: '600px' }}>
@@ -80,15 +80,16 @@ export default function Services() {
             {services.filter(s => s.isActive !== false).map((svc, i) => {
               let theme = 'bento-img';
               
-              // If no image is uploaded, use colorful solid themes based on index
               if (!svc.image) {
                 if (i % 3 === 0) theme = 'bento-dark';
                 else if (i % 3 === 1) theme = 'bento-lime';
                 else theme = 'bento-white';
               }
               
+              const delayClass = `delay-${(i % 5) + 1}`;
+              
               return (
-                <div key={svc.id} id={`service-${svc.id}`} className={`bento-item anim d${(i % 6) + 1} ${theme}`}>
+                <div key={svc.id} id={`service-${svc.id}`} className={`bento-item reveal-scale ${delayClass} ${theme}`}>
                   {svc.image && (
                     <img src={svc.image} alt={svc.title} className="bento-bg-img" />
                   )}
@@ -111,7 +112,7 @@ export default function Services() {
           </div>
 
           {/* Promo Banner */}
-          <div className="promo-banner-wrap mt-5 anim d2">
+          <div className="promo-banner-wrap mt-5 reveal-up">
             <div className="promo-content">
               <h2>Ready to Start?</h2>
               <p>ติดต่อเราวันนี้ เพื่อรับข้อเสนอและดีลสุดพิเศษที่คัดสรรมาเพื่อคุณ</p>
@@ -125,14 +126,14 @@ export default function Services() {
 
       {/* Featured Projects (ความสำเร็จของเรา) */}
       {galleryItems.length > 0 && (
-        <section className="section-padding" style={{ background: 'var(--bg-white)' }}>
+        <section className="section-padding overflow-hidden" style={{ background: 'var(--bg-white)' }}>
           <div className="container">
-            <div className="section-header text-center mb-5">
+            <div className="section-header text-center mb-5 reveal-up">
               <span className="section-label" style={{ fontSize: '1.2rem', fontWeight: 700 }}>ความสำเร็จของเรา</span>
               <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR FEATURED PROJECTS</h2>
             </div>
             
-            <div className="position-relative feat-slider-wrapper">
+            <div className="position-relative feat-slider-wrapper reveal-up">
               {/* Real Slider Arrows */}
               <button className="feat-arrow left d-none d-md-flex" onClick={scrollLeft}><i className="bi bi-chevron-left"></i></button>
               <button className="feat-arrow right d-none d-md-flex" onClick={scrollRight}><i className="bi bi-chevron-right"></i></button>

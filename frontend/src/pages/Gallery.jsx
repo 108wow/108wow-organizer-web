@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import HeroSection from '../components/common/HeroSection';
 import { galleryAPI, pageHeroAPI, galleryCategoryAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function Gallery() {
   const [galleryItems, setGalleryItems] = useState([]);
@@ -10,6 +11,8 @@ export default function Gallery() {
   const [loaded, setLoaded] = useState(false);
 
   const [categories, setCategories] = useState([]);
+
+  useScrollReveal([loaded, active, galleryItems]);
 
   useEffect(() => {
     Promise.all([galleryAPI.list(), pageHeroAPI.list(), galleryCategoryAPI.list()])
@@ -37,19 +40,32 @@ export default function Gallery() {
   return (
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
-      <section className="section-padding" style={{ background: '#f4f6f3' }}>
+      <section className="section-padding overflow-hidden" style={{ background: '#f4f6f3' }}>
         <div className="container">
-          <div className="section-header text-center mb-5">
+          <div className="section-header text-center mb-5 reveal-up">
             <span className="section-label" style={{ letterSpacing: '2px', fontWeight: 700, color: 'var(--primary)' }}>OUR GALLERY</span>
             <h2 className="section-title text-uppercase mt-2" style={{ color: '#0a0f0d', fontSize: '2.5rem', fontWeight: 900 }}>แกลลอรี่ กิจกรรม</h2>
           </div>
-          <div className="d-flex flex-wrap justify-content-center gap-3 gap-md-4 mb-5">
-            {categories.map((c) => (
-              <button key={c.name} className={`gallery-ref-filter ${active === c.name ? 'active' : ''}`} onClick={() => handleFilter(c.name)}>
-                <div className="filter-icon-box"><i className={`bi ${c.icon}`}></i></div>
-                <span className="filter-text">{c.name === 'All' ? 'ทั้งหมด' : c.name}</span>
-              </button>
-            ))}
+          <div className="d-flex flex-wrap justify-content-center gap-3 gap-md-4 mb-5 reveal-up">
+            {categories.map((c) => {
+              const count = c.name === 'All'
+                ? galleryItems.length
+                : galleryItems.filter((g) => g.category === c.name).length;
+              const isDisabled = count === 0;
+
+              return (
+                <button
+                  key={c.name}
+                  disabled={isDisabled}
+                  className={`gallery-ref-filter ${active === c.name ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  onClick={() => !isDisabled && handleFilter(c.name)}
+                  title={isDisabled ? 'ไม่มีผลงานในหมวดหมู่นี้' : ''}
+                >
+                  <div className="filter-icon-box"><i className={`bi ${c.icon}`}></i></div>
+                  <span className="filter-text">{c.name === 'All' ? 'ทั้งหมด' : c.name}</span>
+                </button>
+              );
+            })}
           </div>
           <div className={`gallery-grid ${isAnimating ? 'filtering' : ''}`}>
             {filtered.map((item, i) => (

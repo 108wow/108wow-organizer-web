@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import HeroSection from '../components/common/HeroSection';
 import { clientAPI, pageHeroAPI } from '../api';
+import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
   const [hero, setHero] = useState({ title: '', subtitle: '', image: '' });
   const [loaded, setLoaded] = useState(false);
+
+  useScrollReveal([loaded, clients]);
 
   useEffect(() => {
     Promise.all([clientAPI.list(), pageHeroAPI.list()])
@@ -23,15 +26,15 @@ export default function Clients() {
   return (
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
-      <section className="section-padding" style={{ background: 'var(--bg-white)' }}>
+      <section className="section-padding overflow-hidden" style={{ background: 'var(--bg-white)' }}>
         <div className="container">
-          <div className="section-header text-center">
+          <div className="section-header text-center reveal-up">
             <span className="section-label">Our Clients</span>
             <h2 className="section-title">ลูกค้าที่ไว้วางใจเรา</h2>
             <div className="underline mx-auto"></div>
           </div>
           {categories.map((cat, ci) => (
-            <div key={cat} className={`mb-5 anim d${(ci % 4) + 1}`}>
+            <div key={cat} className={`mb-5 reveal-up delay-${(ci % 4) + 1}`}>
               <h5 className="fw-bold text-muted mb-3"><i className="bi bi-grid-3x3-gap-fill me-2"></i>{cat}</h5>
               <div className="row g-3">
                 {clients.filter(c => c.category === cat).map(c => (
