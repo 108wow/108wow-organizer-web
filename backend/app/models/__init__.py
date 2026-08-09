@@ -10,6 +10,8 @@ from app.models.company import CompanyInfo, CompanyStat
 from app.models.page_hero import PageHero
 from app.models.home_config import HomeConfig
 from app.models.contact import ContactMessage
+from app.models.mail_settings import MailSettings
+from app.models.line_settings import LineSettings, LineRecipient
 from app.models.user import AdminUser
 from app.models.about_config import AboutConfig
 from app.models.equipment import Equipment

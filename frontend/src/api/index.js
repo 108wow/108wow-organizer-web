@@ -201,6 +201,26 @@ export const contactAPI = {
   deleteMessage: (id) => del(`/contact/messages/${id}`),
 };
 
+// ─── Mail Settings (admin) ───
+export const mailSettingsAPI = {
+  get: () => get('/mail-settings'),
+  update: (data) => put('/mail-settings', data),
+  sendTest: () => post('/mail-settings/test', {}),
+};
+
+// ─── LINE notifications (admin) ───
+export const lineAPI = {
+  getSettings: () => get('/line/settings'),
+  updateSettings: (data) => put('/line/settings', data),
+  sendTest: () => post('/line/test', {}),
+  regenerateCode: () => post('/line/register-code/regenerate', {}),
+  getBotInfo: () => get('/line/bot-info'),
+  listRecipients: () => get('/line/recipients'),
+  addRecipient: (data) => post('/line/recipients', data),
+  updateRecipient: (id, data) => put(`/line/recipients/${id}`, data),
+  deleteRecipient: (id) => del(`/line/recipients/${id}`),
+};
+
 // ─── Equipment ───
 export const equipmentAPI = {
   list: (params) => {

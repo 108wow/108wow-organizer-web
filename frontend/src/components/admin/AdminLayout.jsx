@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getUser, logout as apiLogout, companyAPI } from '../../api';
+import { getUser, logout as apiLogout, companyAPI, contactAPI } from '../../api';
 import ConfirmModal from './ConfirmModal';
 import LoadingOverlay from './LoadingOverlay';
 import StatusModal from './StatusModal';
@@ -50,6 +50,14 @@ export default function AdminLayout() {
     companyAPI.get().then(setCompanyInfo).catch(console.error);
   }, []);
 
+  // Unread inbox badge — refreshed on every navigation so it settles after reading a message
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => {
+    contactAPI.listMessages()
+      .then(msgs => setUnreadCount((msgs || []).filter(m => m.status === 'unread').length))
+      .catch(() => {});
+  }, [path]);
+
   const handleLogout = () => {
     apiLogout();
     navigate('/admin/login');
@@ -92,7 +100,8 @@ export default function AdminLayout() {
     { name: 'ทีมงาน (Team)', path: '/admin/team', icon: 'bi-people' },
     { name: 'ลูกค้า (Clients)', path: '/admin/clients', icon: 'bi-building' },
     { name: 'เกี่ยวกับเรา (About Us)', path: '/admin/about', icon: 'bi-info-circle' },
-    { name: 'ติดต่อเรา (Contact)', path: '/admin/contact', icon: 'bi-envelope' },
+    { name: 'ติดต่อเรา (Contact)', path: '/admin/contact', icon: 'bi-telephone' },
+    { name: 'กล่องข้อความ (Inbox)', path: '/admin/messages', icon: 'bi-envelope', badge: unreadCount },
     { name: 'ตั้งค่าทั่วไป (Settings)', path: '/admin/settings', icon: 'bi-gear' },
   ];
 
@@ -145,7 +154,22 @@ export default function AdminLayout() {
               bottom: 0 !important;
               margin-left: 10px;
             }
+            /* Shrink the unread badge to a dot when there's no room for a number */
+            .admin-sidebar.collapsed .sidebar-badge {
+              position: absolute;
+              top: 8px;
+              right: 16px;
+              width: 9px;
+              height: 9px;
+              min-width: 0;
+              padding: 0 !important;
+              margin: 0 !important;
+              font-size: 0 !important;
+              line-height: 0;
+            }
           }
+
+          .admin-sidebar .nav-link { position: relative; }
           
           /* Mobile behavior */
           @media (max-width: 768px) {
@@ -290,6 +314,11 @@ export default function AdminLayout() {
                     >
                       <i className={`bi ${item.icon} ${isActive ? 'text-primary' : ''}`} style={{ fontSize: '1.05rem', marginTop: '-2px' }}></i>
                       <span className="sidebar-text">{item.name}</span>
+                      {item.badge > 0 && (
+                        <span className="sidebar-badge badge bg-danger rounded-pill ms-auto" style={{ fontSize: '0.65rem', padding: '3px 7px' }}>
+                          {item.badge > 99 ? '99+' : item.badge}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );

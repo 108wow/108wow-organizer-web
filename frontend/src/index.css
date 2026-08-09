@@ -2853,6 +2853,40 @@ body {
   font-weight: 700;
 }
 
+/* ─── Contact Form Input & Label Styles ─── */
+.contact-label {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin-bottom: 0.55rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.contact-input {
+  width: 100%;
+  padding: 13px 18px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 14px !important;
+  font-size: 1rem !important;
+  background: #ffffff !important;
+  color: #0a0f0d !important;
+  transition: all 0.25s ease !important;
+}
+
+.contact-input:focus {
+  outline: none !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(163, 217, 0, 0.25) !important;
+  background: #ffffff !important;
+}
+
+.contact-input::placeholder {
+  color: #94a3b8 !important;
+  font-size: 0.95rem !important;
+}
+
 /* Custom form-switch styling for admin */
 .form-check-input:checked {
   background-color: var(--primary) !important;
@@ -3510,6 +3544,157 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+}
+
+/* ─── Contact Form Fields ─── */
+.contact-field-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.4;
+}
+
+.contact-field-label i {
+  color: var(--primary-dark);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.contact-field-input {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.contact-field-input:hover:not(:focus) {
+  border-color: #c3cfb6;
+}
+
+.contact-field-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
+}
+
+textarea.contact-field-input {
+  min-height: 130px;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+/* Equipment multi-select: same shell as an input, but holds chips */
+.contact-multiselect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-multiselect:hover {
+  border-color: #c3cfb6;
+}
+
+.contact-multiselect.is-open {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
+}
+
+.contact-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.contact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  background: var(--primary-soft);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.contact-chip:hover {
+  background: #fff1f1;
+  border-color: #fecaca;
+}
+
+.contact-chip .contact-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-chip .bi-x-lg {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.contact-chip:hover .bi-x-lg {
+  color: #dc2626;
+}
+
+.contact-multiselect-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.contact-equip-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.contact-equip-option:hover {
+  background: var(--bg-section);
+}
+
+.contact-equip-option.is-selected {
+  background: rgba(var(--primary-rgb), 0.16);
+  font-weight: 700;
 }
 
 .contact-form-icon-deco {

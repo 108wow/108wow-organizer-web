@@ -33,6 +33,8 @@ def create_app():
     from app.routes.page_heroes import page_heroes_bp
     from app.routes.home_config import home_config_bp
     from app.routes.contact import contact_bp
+    from app.routes.mail_settings import mail_settings_bp
+    from app.routes.line_bot import line_bp
     from app.routes.upload import upload_bp
     from app.routes.auth import auth_bp
     from app.routes.about_config import about_config_bp
@@ -48,6 +50,8 @@ def create_app():
     app.register_blueprint(page_heroes_bp, url_prefix='/api/page-heroes')
     app.register_blueprint(home_config_bp, url_prefix='/api/home-config')
     app.register_blueprint(contact_bp, url_prefix='/api/contact')
+    app.register_blueprint(mail_settings_bp, url_prefix='/api/mail-settings')
+    app.register_blueprint(line_bp, url_prefix='/api/line')
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(about_config_bp, url_prefix='/api/about-config')

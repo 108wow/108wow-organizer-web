@@ -28,6 +28,8 @@ import AdminTeam from './pages/admin/AdminTeam';
 import AdminClients from './pages/admin/AdminClients';
 import AdminAbout from './pages/admin/AdminAbout';
 import AdminContact from './pages/admin/AdminContact';
+import AdminMessages from './pages/admin/AdminMessages';
+import AdminMessageDetail from './pages/admin/AdminMessageDetail';
 import AdminHomeConfig from './pages/admin/AdminHomeConfig';
 import AdminPageHeroes from './pages/admin/AdminPageHeroes';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -130,6 +132,8 @@ export default function App() {
           <Route path="clients" element={<AdminClients />} />
           <Route path="about" element={<AdminAbout />} />
           <Route path="contact" element={<AdminContact />} />
+          <Route path="messages" element={<AdminMessages />} />
+          <Route path="messages/:id" element={<AdminMessageDetail />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 
