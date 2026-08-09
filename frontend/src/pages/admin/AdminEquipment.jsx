@@ -254,7 +254,7 @@ export default function AdminEquipment() {
           </p>
         </div>
         <button 
-          className="btn btn-primary fw-bold px-4 py-2.5 rounded-3 shadow-sm d-flex align-items-center gap-2 align-self-start align-self-md-auto"
+          className="btn btn-primary fw-bold px-4 py-2 rounded-3 shadow-sm d-flex align-items-center gap-2 align-self-start align-self-md-auto"
           onClick={openAdd}
         >
           <i className="bi bi-plus-circle-fill fs-5"></i> เพิ่มอุปกรณ์ใหม่
@@ -357,7 +357,7 @@ export default function AdminEquipment() {
 
                       {/* Category */}
                       <td className="py-3">
-                        <span className="badge bg-secondary bg-opacity-10 text-dark border px-2.5 py-1.5 rounded-pill fw-semibold" style={{ fontSize: '0.78rem' }}>
+                        <span className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 rounded-pill fw-semibold" style={{ fontSize: '0.78rem' }}>
                           {item.category}
                         </span>
                       </td>
@@ -373,7 +373,7 @@ export default function AdminEquipment() {
 
                       {/* Photo Count */}
                       <td className="py-3 text-center">
-                        <span className="badge bg-primary bg-opacity-15 text-primary fw-bold px-2.5 py-1 rounded-3">
+                        <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-1 rounded-3">
                           <i className="bi bi-camera-fill me-1"></i> {imgs.length} รูป
                         </span>
                       </td>
@@ -465,7 +465,7 @@ export default function AdminEquipment() {
                     <li key={c.name}>
                       <button
                         type="button"
-                        className={`dropdown-item d-flex align-items-center gap-2 rounded-2 py-2 ${form.category === c.name && !customCategoryInput ? 'bg-primary bg-opacity-20 text-dark fw-bold' : ''}`}
+                        className={`dropdown-item d-flex align-items-center gap-2 rounded-2 py-2 ${form.category === c.name && !customCategoryInput ? 'bg-primary bg-opacity-25 text-dark fw-bold' : ''}`}
                         onClick={() => {
                           setForm(prev => ({ ...prev, category: c.name }));
                           setCustomCategoryInput('');
@@ -518,7 +518,7 @@ export default function AdminEquipment() {
 
           {/* Upload Button */}
           <div className="mb-3">
-            <label className="btn btn-outline-primary w-100 py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold" style={{ borderStyle: 'dashed', cursor: 'pointer' }}>
+            <label className="btn btn-outline-primary w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold" style={{ borderStyle: 'dashed', cursor: 'pointer' }}>
               <i className="bi bi-cloud-arrow-up-fill fs-5"></i>
               {isUploading ? 'กำลังอัปโหลดรูปภาพ...' : 'คลิกเพื่อเลือกอัปโหลดรูปภาพ (เลือกพร้อมกันได้หลายรูป)'}
               <input 

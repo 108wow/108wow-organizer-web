@@ -206,12 +206,14 @@ export const mailSettingsAPI = {
   get: () => get('/mail-settings'),
   update: (data) => put('/mail-settings', data),
   sendTest: () => post('/mail-settings/test', {}),
+  reveal: () => get('/mail-settings/reveal'),
 };
 
 // ─── LINE notifications (admin) ───
 export const lineAPI = {
   getSettings: () => get('/line/settings'),
   updateSettings: (data) => put('/line/settings', data),
+  revealSettings: () => get('/line/settings/reveal'),
   sendTest: () => post('/line/test', {}),
   regenerateCode: () => post('/line/register-code/regenerate', {}),
   getBotInfo: () => get('/line/bot-info'),

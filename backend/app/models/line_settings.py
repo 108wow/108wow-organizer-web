@@ -1,5 +1,6 @@
 import random
 from app import db
+from app.utils import mask_secret
 from datetime import datetime
 
 
@@ -44,6 +45,11 @@ class LineSettings(db.Model):
             # Credentials are never sent back to the client
             'hasAccessToken': bool(self.channel_access_token),
             'hasChannelSecret': bool(self.channel_secret),
+            # Preview only — the full values come from the /reveal endpoint on demand
+            'accessTokenMasked': mask_secret(self.channel_access_token),
+            'accessTokenLength': len(self.channel_access_token or ''),
+            'channelSecretMasked': mask_secret(self.channel_secret),
+            'channelSecretLength': len(self.channel_secret or ''),
             'siteUrl': self.site_url or '',
             'registerCode': self.register_code or '',
             'activeRecipients': active,

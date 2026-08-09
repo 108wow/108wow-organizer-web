@@ -1,4 +1,5 @@
 from app import db
+from app.utils import mask_secret
 from datetime import datetime
 
 
@@ -44,8 +45,10 @@ class MailSettings(db.Model):
             'smtpHost': self.smtp_host or '',
             'smtpPort': self.smtp_port or 587,
             'smtpUser': self.smtp_user or '',
-            # Never send the password back to the client — only whether one is stored
+            # Preview only — the full value comes from the /reveal endpoint on demand
             'hasPassword': bool(self.smtp_password),
+            'passwordMasked': mask_secret(self.smtp_password),
+            'passwordLength': len(self.smtp_password or ''),
             'useTls': bool(self.use_tls),
             'fromEmail': self.from_email or '',
             'fromName': self.from_name or '',

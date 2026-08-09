@@ -292,7 +292,7 @@ export default function EquipmentLightbox({
                   <div className="eq-modal-info-scroll flex-grow-1 p-4 pe-3">
                     {item.category && (
                       <motion.div variants={panelItem}>
-                        <span className="badge bg-primary bg-opacity-15 text-primary fw-bold px-3 py-2 rounded-pill border border-primary border-opacity-20" style={{ fontSize: '0.76rem', letterSpacing: '0.3px' }}>
+                        <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill border border-primary border-opacity-20" style={{ fontSize: '0.76rem', letterSpacing: '0.3px' }}>
                           <i className="bi bi-tag-fill me-1"></i> {item.category}
                         </span>
                       </motion.div>

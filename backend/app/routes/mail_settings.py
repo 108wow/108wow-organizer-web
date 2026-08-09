@@ -52,6 +52,19 @@ def update_settings(current_user):
     return jsonify(settings.to_dict())
 
 
+@mail_settings_bp.route('/reveal', methods=['GET'])
+@token_required
+def reveal_settings(current_user):
+    """
+    Full password, for an admin who needs to check what is stored.
+
+    Kept out of the normal GET so it isn't sitting in every settings response —
+    it is only sent when explicitly asked for.
+    """
+    settings = MailSettings.get_or_create()
+    return jsonify({'smtpPassword': settings.smtp_password or ''})
+
+
 @mail_settings_bp.route('/test', methods=['POST'])
 @token_required
 def send_test(current_user):

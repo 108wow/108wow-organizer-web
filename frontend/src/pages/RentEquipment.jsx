@@ -180,7 +180,7 @@ export default function RentEquipment() {
           
           {/* Header Title */}
           <div className="text-center mb-5 reveal-up">
-            <span className="badge bg-primary bg-opacity-15 text-primary px-3 py-2 rounded-pill fw-bold text-uppercase mb-2" style={{ letterSpacing: '2px', fontSize: '0.82rem' }}>
+            <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold text-uppercase mb-2" style={{ letterSpacing: '2px', fontSize: '0.82rem' }}>
               OUR RENTAL CATALOG
             </span>
             <h2 className="display-6 fw-black text-dark text-uppercase mt-1 mb-3" style={{ fontWeight: 900, color: '#0f172a' }}>
@@ -442,7 +442,7 @@ export default function RentEquipment() {
                         {photoCount > 1 && (
                           <div className="position-absolute top-0 end-0 m-3 z-2">
                             <span 
-                              className="badge bg-black bg-opacity-65 text-white backdrop-blur px-2.5 py-1 rounded-pill fw-bold d-flex align-items-center gap-1 border border-white border-opacity-10" 
+                              className="badge bg-black bg-opacity-65 text-white backdrop-blur px-3 py-1 rounded-pill fw-bold d-flex align-items-center gap-1 border border-white border-opacity-10" 
                               style={{ fontSize: '0.72rem', backdropFilter: 'blur(8px)' }}
                             >
                               <i className="bi bi-images text-primary"></i> {photoCount}
@@ -456,7 +456,7 @@ export default function RentEquipment() {
                         {/* Category Badge Below Image */}
                         <div className="mb-2">
                           <span 
-                            className="badge bg-secondary bg-opacity-10 text-dark border border-secondary border-opacity-20 px-3 py-1.5 rounded-pill fw-semibold" 
+                            className="badge bg-secondary bg-opacity-10 text-dark border border-secondary border-opacity-20 px-3 py-2 rounded-pill fw-semibold" 
                             style={{ fontSize: '0.73rem', letterSpacing: '0.3px' }}
                           >
                             {item.category}
@@ -496,7 +496,7 @@ export default function RentEquipment() {
                         
                         {/* Footer Action Area - Clean Button */}
                         <div className="pt-3 border-top border-light-subtle d-flex justify-content-between align-items-center mt-auto">
-                          <span className="fw-bold small text-dark d-flex align-items-center gap-1.5" style={{ fontSize: '0.85rem' }}>
+                          <span className="fw-bold small text-dark d-flex align-items-center gap-2" style={{ fontSize: '0.85rem' }}>
                             ดูรายละเอียด
                           </span>
                           <div className="eq-arrow-circle rounded-circle d-flex align-items-center justify-content-center bg-light text-dark transition-all" style={{ width: '32px', height: '32px' }}>

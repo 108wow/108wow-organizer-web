@@ -149,6 +149,22 @@ def update_settings(current_user):
     return jsonify(settings.to_dict())
 
 
+@line_bp.route('/settings/reveal', methods=['GET'])
+@token_required
+def reveal_settings(current_user):
+    """
+    Full credentials, for an admin who needs to check what is stored.
+
+    Kept out of the normal GET so the secrets aren't sitting in every settings
+    response — they are only sent when explicitly asked for.
+    """
+    settings = LineSettings.get_or_create()
+    return jsonify({
+        'channelAccessToken': settings.channel_access_token or '',
+        'channelSecret': settings.channel_secret or '',
+    })
+
+
 @line_bp.route('/register-code/regenerate', methods=['POST'])
 @token_required
 def regenerate_code(current_user):

@@ -2803,6 +2803,24 @@ body {
   font-family: inherit;
 }
 
+.admin-form-group .input-group {
+  flex-wrap: nowrap !important;
+}
+
+.admin-form-group .input-group > input:not([type="checkbox"]):not([type="radio"]),
+.admin-form-group .input-group > .form-control {
+  width: 1% !important;
+  flex: 1 1 auto !important;
+}
+
+.admin-form-group .input-group > .btn {
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+}
+
 .admin-form-group select,
 .form-select.admin-select {
   appearance: none;
@@ -2851,6 +2869,32 @@ body {
   background-color: var(--primary);
   color: #0a0f0d;
   font-weight: 700;
+}
+
+/* ─── Admin Contact Page Design Upgrades ─── */
+.admin-card-box {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 30px rgba(10, 15, 13, 0.04);
+  transition: all 0.25s ease;
+}
+
+.admin-card-box:hover {
+  box-shadow: 0 14px 35px rgba(10, 15, 13, 0.07);
+}
+
+.admin-icon-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  background: rgba(163, 217, 0, 0.15);
+  color: #0a0f0d;
 }
 
 /* ─── Contact Form Input & Label Styles ─── */
