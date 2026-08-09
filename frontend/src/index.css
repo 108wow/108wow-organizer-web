@@ -2257,33 +2257,39 @@ body {
 .gm-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10, 15, 13, 0.85) 0%, rgba(10, 15, 13, 0) 60%);
+  background: linear-gradient(to top, rgba(10, 15, 13, 0.88) 0%, rgba(10, 15, 13, 0.3) 50%, rgba(10, 15, 13, 0) 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: flex-start;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   transition: background 0.4s ease;
 }
 
 .gallery-grid-item:hover .gm-overlay {
-  background: linear-gradient(to top, rgba(10, 15, 13, 0.95) 0%, rgba(10, 15, 13, 0.5) 100%);
+  background: linear-gradient(to top, rgba(10, 15, 13, 0.95) 0%, rgba(10, 15, 13, 0.4) 100%);
 }
 
 .gm-content {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
 }
 
 .gm-overlay h4 {
   color: #fff;
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   margin: 0;
+  line-height: 1.3;
   text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .gm-overlay .badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   padding: 5px 14px;
   border-radius: 20px;
   font-weight: 800;
@@ -2293,21 +2299,39 @@ body {
   color: #0a0f0d;
   border: none;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  margin-bottom: 0.2rem;
 }
 
 .gm-desc {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.85rem;
-  margin-top: 0.8rem;
-  margin-bottom: -45px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  margin: 0;
+  max-height: 0;
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  line-height: 1.5;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
 }
 
 .gallery-grid-item:hover .gm-desc {
+  max-height: 80px;
   opacity: 1;
-  margin-bottom: 0;
+  margin-top: 0.35rem;
+}
+
+.gm-album-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.gallery-grid-item:hover .gm-album-link {
+  color: var(--primary);
 }
 
 /* ─── Premium Buttons ─── */
@@ -2773,18 +2797,60 @@ body {
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
   font-size: .88rem;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   background: #fff;
   color: #1e293b;
   font-family: inherit;
 }
 
+.admin-form-group select,
+.form-select.admin-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 14px 12px;
+  padding-right: 2.6rem !important;
+  cursor: pointer;
+}
+
 .admin-form-group input:not([type="checkbox"]):not([type="radio"]):focus,
 .admin-form-group textarea:focus,
-.admin-form-group select:focus {
+.admin-form-group select:focus,
+.form-select.admin-select:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(163, 217, 0, 0.1);
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(163, 217, 0, 0.2) !important;
+}
+
+/* Custom Admin Dropdown Menu */
+.admin-dropdown-menu {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12) !important;
+  padding: 8px !important;
+  background: #ffffff;
+}
+
+.admin-dropdown-menu .dropdown-item {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 500;
+  color: #1e293b;
+  transition: all 0.15s ease;
+}
+
+.admin-dropdown-menu .dropdown-item:hover {
+  background-color: rgba(163, 217, 0, 0.15);
+  color: #0a0f0d;
+}
+
+.admin-dropdown-menu .dropdown-item.active,
+.admin-dropdown-menu .dropdown-item:active {
+  background-color: var(--primary);
+  color: #0a0f0d;
+  font-weight: 700;
 }
 
 /* Custom form-switch styling for admin */

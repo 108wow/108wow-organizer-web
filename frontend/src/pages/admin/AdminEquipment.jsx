@@ -13,15 +13,20 @@ const emptyForm = {
   images: [],
 };
 
-const categorySuggestions = [
-  'อุปกรณ์กีฬา',
-  'เครื่องเสียง / ลำโพง',
-  'เวที / โครงสร้าง / เต็นท์',
-  'อุปกรณ์เกม / สันทนาการ',
-  'อุปกรณ์เซฟตี้ / พยาบาล',
-  'อุปกรณ์ตกแต่ง / ซุ้มประตู',
-  'ทั่วไป'
+const categoryList = [
+  { name: 'อุปกรณ์กีฬา', icon: 'bi-dribbble' },
+  { name: 'เครื่องเสียง / ลำโพง', icon: 'bi-speaker-fill' },
+  { name: 'เวที / โครงสร้าง / เต็นท์', icon: 'bi-building' },
+  { name: 'อุปกรณ์เกม / สันทนาการ', icon: 'bi-controller' },
+  { name: 'อุปกรณ์เซฟตี้ / พยาบาล', icon: 'bi-shield-check' },
+  { name: 'อุปกรณ์ตกแต่ง / ซุ้มประตู', icon: 'bi-balloon-fill' },
+  { name: 'ทั่วไป', icon: 'bi-box-seam' }
 ];
+
+const getCategoryIcon = (catName) => {
+  const match = categoryList.find(c => c.name === catName);
+  return match ? match.icon : 'bi-tag-fill';
+};
 
 export default function AdminEquipment() {
   const [items, setItems] = useState([]);
@@ -440,28 +445,53 @@ export default function AdminEquipment() {
           <label className="fw-bold text-dark small mb-1">หมวดหมู่อุปกรณ์ *</label>
           <div className="row g-2">
             <div className="col-md-6">
-              <select 
-                name="category" 
-                value={form.category} 
-                onChange={(e) => {
-                  handleChange(e);
-                  setCustomCategoryInput('');
-                }} 
-                className="form-select rounded-3"
-              >
-                {categorySuggestions.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              <div className="dropdown">
+                <button
+                  className="btn bg-white border w-100 d-flex justify-content-between align-items-center px-3 rounded-3 text-start shadow-sm"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  style={{ borderColor: '#e2e8f0', minHeight: '44px' }}
+                >
+                  <div className="d-flex align-items-center text-dark text-truncate">
+                    <i className={`bi ${getCategoryIcon(form.category)} text-primary me-2 fs-6`}></i>
+                    <span className="fw-semibold text-truncate" style={{ fontSize: '0.88rem' }}>
+                      {customCategoryInput ? customCategoryInput : (form.category || 'เลือกหมวดหมู่')}
+                    </span>
+                  </div>
+                  <i className="bi bi-chevron-down text-muted small ms-2"></i>
+                </button>
+                <ul className="dropdown-menu admin-dropdown-menu shadow-lg w-100 border-0 p-2" style={{ maxHeight: '260px', overflowY: 'auto', zIndex: 1050 }}>
+                  {categoryList.map(c => (
+                    <li key={c.name}>
+                      <button
+                        type="button"
+                        className={`dropdown-item d-flex align-items-center gap-2 rounded-2 py-2 ${form.category === c.name && !customCategoryInput ? 'bg-primary bg-opacity-20 text-dark fw-bold' : ''}`}
+                        onClick={() => {
+                          setForm(prev => ({ ...prev, category: c.name }));
+                          setCustomCategoryInput('');
+                        }}
+                      >
+                        <i className={`bi ${c.icon} ${form.category === c.name && !customCategoryInput ? 'text-dark' : 'text-primary'}`}></i>
+                        <span>{c.name}</span>
+                        {form.category === c.name && !customCategoryInput && <i className="bi bi-check-circle-fill ms-auto text-dark"></i>}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
             <div className="col-md-6">
-              <input 
-                type="text" 
-                value={customCategoryInput} 
-                onChange={(e) => setCustomCategoryInput(e.target.value)} 
-                placeholder="หรือพิมพ์ชื่อหมวดหมู่ใหม่..." 
-                className="form-control rounded-3"
-              />
+              <div className="position-relative">
+                <i className="bi bi-pencil position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input 
+                  type="text" 
+                  value={customCategoryInput} 
+                  onChange={(e) => setCustomCategoryInput(e.target.value)} 
+                  placeholder="หรือพิมพ์ชื่อหมวดหมู่ใหม่..." 
+                  className="form-control rounded-3 ps-5"
+                  style={{ minHeight: '44px', borderColor: '#e2e8f0', fontSize: '0.88rem' }}
+                />
+              </div>
             </div>
           </div>
         </div>

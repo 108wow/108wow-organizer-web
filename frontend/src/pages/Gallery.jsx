@@ -126,10 +126,15 @@ export default function Gallery() {
                       <img src={item.image} alt={item.title} />
                       <div className="gm-overlay">
                         <div className="gm-content">
-                          <span className="badge mb-2 rounded-pill px-3">{item.category}</span>
+                          <span className="badge rounded-pill px-3">{item.category}</span>
                           <h4>{item.title}</h4>
-                          <p className="gm-desc">{item.description}</p>
-                          {item.albumUrl && <small className="text-white-50"><i className="bi bi-box-arrow-up-right me-1"></i>View Album</small>}
+                          {item.description && <p className="gm-desc">{item.description}</p>}
+                          {item.albumUrl && (
+                            <div className="gm-album-link">
+                              <i className="bi bi-box-arrow-up-right"></i>
+                              <span>View Album</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
