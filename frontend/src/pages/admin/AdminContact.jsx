@@ -61,12 +61,12 @@ export default function AdminContact() {
   const [activeSection, setActiveSection] = useState('contact');
   // Which credential fields are currently unmasked
   const [revealed, setRevealed] = useState({ mailPassword: false, lineToken: false, lineSecret: false });
+  // Loading states for async refresh actions
+  const [refreshingLine, setRefreshingLine] = useState(false);
+  const [loadingBotInfo, setLoadingBotInfo] = useState(false);
 
   /**
-   * Toggle a credential field between hidden and visible. Revealing pulls the
-   * stored value from the dedicated endpoint and drops it into the input, so the
-   * admin can read or copy it; hiding clears the field again, which the save
-   * handlers read as "keep the stored value".
+   * Unmasks sensitive credential fields (password/secret) temporarily.
    */
   const revealMail = async (field) => {
     if (revealed[field]) {
@@ -75,7 +75,7 @@ export default function AdminContact() {
       return;
     }
     try {
-      const data = await mailSettingsAPI.reveal();
+      const data = await mailSettingsAPI.revealSettings();
       setMailPassword(data.smtpPassword || '');
       setRevealed(p => ({ ...p, [field]: true }));
     } catch (e) {
@@ -125,13 +125,27 @@ export default function AdminContact() {
     });
   };
 
-  const refreshLine = () => {
-    lineAPI.getSettings().then(d => setLine(d)).catch(() => {});
-    lineAPI.listRecipients().then(d => setLineRecipients(d || [])).catch(() => {});
+  const refreshLine = async () => {
+    setRefreshingLine(true);
+    try {
+      const [settingsData, recipientsData] = await Promise.all([
+        lineAPI.getSettings(),
+        lineAPI.listRecipients()
+      ]);
+      if (settingsData) setLine(settingsData);
+      if (recipientsData) setLineRecipients(recipientsData || []);
+    } catch (e) {
+      // Catch silently or error handle
+    } finally {
+      setTimeout(() => {
+        setRefreshingLine(false);
+      }, 450);
+    }
   };
 
   const loadBotInfo = useCallback(async () => {
     setBotInfoError('');
+    setLoadingBotInfo(true);
     try {
       const info = await lineAPI.getBotInfo();
       setBotInfo(info);
@@ -145,6 +159,10 @@ export default function AdminContact() {
       setBotInfo(null);
       setQrDataUrl('');
       setBotInfoError(e.message || 'ดึงข้อมูลบอทไม่สำเร็จ');
+    } finally {
+      setTimeout(() => {
+        setLoadingBotInfo(false);
+      }, 400);
     }
   }, []);
 
@@ -887,8 +905,9 @@ export default function AdminContact() {
                               {botInfoError || 'กดปุ่มด้านล่างเพื่อดึง QR Code'}
                             </p>
                             <button className="btn btn-light border fw-bold rounded-pill px-4 py-2" onClick={loadBotInfo}
-                              disabled={!line.hasAccessToken}>
-                              <i className="bi bi-arrow-clockwise me-1.5"></i>ดึง QR Code
+                              disabled={!line.hasAccessToken || loadingBotInfo}>
+                              <i className={`bi bi-arrow-clockwise me-1.5 ${loadingBotInfo ? 'spin-icon' : ''}`}></i>
+                              {loadingBotInfo ? 'กำลังดึง QR...' : 'ดึง QR Code'}
                             </button>
                           </>
                         )}
@@ -929,8 +948,9 @@ export default function AdminContact() {
                         )}
                       </h6>
                     </div>
-                    <button className="btn btn-light border btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2" onClick={refreshLine}>
-                      <i className="bi bi-arrow-clockwise"></i>รีเฟรชรายชื่อ
+                    <button className="btn btn-light border btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2" onClick={refreshLine} disabled={refreshingLine}>
+                      <i className={`bi bi-arrow-clockwise ${refreshingLine ? 'spin-icon' : ''}`}></i>
+                      {refreshingLine ? 'กำลังรีเฟรช...' : 'รีเฟรชรายชื่อ'}
                     </button>
                   </div>
 
@@ -1098,6 +1118,19 @@ export default function AdminContact() {
           margin-bottom: 8px;
         }
         .admin-settings-grid .admin-form-group { margin-bottom: 0; }
+
+        /* index.css forces width:100% on every .admin-form-group input, which
+           out-specifies Bootstrap's .input-group > .form-control rule and pushes
+           the trailing button onto its own line. Put the flex sizing back. */
+        .admin-form-group .input-group > .form-control {
+          width: 1% !important;
+          flex: 1 1 auto;
+          min-width: 0;
+        }
+        .admin-form-group .input-group > .btn {
+          z-index: 2;
+          padding-inline: 16px;
+        }
 
         /* ── Status pill ──
            Uses the site's own lime/navy pair rather than Bootstrap's green, so

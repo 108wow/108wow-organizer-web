@@ -2749,6 +2749,11 @@ body {
   }
 }
 
+.spin-icon {
+  animation: orbitSpin 0.75s linear infinite !important;
+  display: inline-block !important;
+}
+
 @keyframes orbitPulse {
 
   0%,
