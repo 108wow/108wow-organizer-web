@@ -63,12 +63,12 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
   } : {
     width: '100%',
     aspectRatio: currentAspect || aspectRatio || 16/9,
-    borderRadius: '16px',
+    borderRadius: '8px',
     overflow: 'hidden',
     position: 'relative',
-    border: '1.5px solid #e2e8f0',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-    background: '#f8fafc',
+    border: '1.5px solid #cbd5e1',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    background: '#0f172a',
   };
 
   return (
@@ -97,7 +97,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
         }
         .upload-dropzone {
           border: 2px dashed #cbd5e1;
-          border-radius: 16px;
+          border-radius: 8px;
           padding: 2rem 1.5rem;
           text-align: center;
           cursor: pointer;
@@ -136,7 +136,7 @@ export default function ImageUploader({ value = '', onChange, label = 'รูป
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
+              objectFit: 'contain',
               display: 'block'
             }}
             onError={e => {

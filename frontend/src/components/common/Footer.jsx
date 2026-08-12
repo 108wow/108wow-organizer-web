@@ -14,19 +14,51 @@ export default function Footer() {
     <>
       <footer className="footer-main">
         <div className="container">
-          <div className="row g-4">
-            <div className="col-lg-4">
-              <Link to="/" className="d-inline-block mb-2" style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff', textDecoration: 'none' }}>{info.name}</Link>
-              <p style={{ lineHeight: 1.8 }}>{(info.about || '').substring(0, 90)}...</p>
-              <div className="d-flex gap-2 mt-2">
-                {['facebook', 'instagram', 'youtube', 'line'].map((s) => (
-                  <Link key={s} to="/contact" style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '.78rem', transition: 'var(--transition)' }}><i className={`bi bi-${s}`}></i></Link>
-                ))}
+          <div className="row g-4 pt-3 justify-content-lg-between">
+            {/* Left Column */}
+            <div className="col-lg-4 pe-lg-5">
+              <div className="mb-3" style={{ marginTop: '-20px' }}>
+                {info.logoUrl && (
+                  <img src={info.logoUrl} alt="Logo" style={{ height: '70px', width: 'auto', objectFit: 'contain' }} onError={e => e.target.style.display = 'none'} />
+                )}
+              </div>
+              <Link to="/" className="d-block mb-3 text-decoration-none">
+                <div style={{ fontWeight: 800, fontSize: '1.8rem', color: '#fff', letterSpacing: '0.5px' }}>{info.footerName || info.name}</div>
+              </Link>
+              <p style={{ lineHeight: 1.8, fontSize: '0.9rem', marginBottom: 0 }}>{info.about}</p>
+            </div>
+            
+            {/* Contact Columns */}
+            <div className="col-md-4 col-lg mt-4 mt-lg-0 footer-contact-col">
+              <div className="d-flex flex-column align-items-start">
+                <i className="bi bi-geo-alt mb-3" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '3rem', lineHeight: 1 }}></i>
+                <div>
+                  <h5 className="mb-2" style={{ color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>ADDRESS</h5>
+                  <p className="mb-0" style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{info.address}</p>
+                </div>
               </div>
             </div>
-            <div className="col-6 col-lg-2"><h6>Navigation</h6><ul className="f-links">{[['/', 'Home'], ['/about', 'About'], ['/services', 'Services'], ['/gallery', 'Gallery']].map(([to, lbl]) => (<li key={to}><Link to={to}>{lbl}</Link></li>))}</ul></div>
-            <div className="col-6 col-lg-2"><h6>Company</h6><ul className="f-links">{[['/team', 'Team'], ['/clients', 'Clients'], ['/blog', 'Blog'], ['/contact', 'Contact']].map(([to, lbl]) => (<li key={to}><Link to={to}>{lbl}</Link></li>))}</ul></div>
-            <div className="col-lg-4"><h6>Contact</h6><ul className="f-links"><li><i className="bi bi-geo-alt me-2" style={{ color: 'var(--primary)' }}></i>{info.address}</li><li><i className="bi bi-telephone me-2" style={{ color: 'var(--primary)' }}></i>{info.phone}</li><li><i className="bi bi-envelope me-2" style={{ color: 'var(--primary)' }}></i>{info.email}</li></ul></div>
+            
+            <div className="col-md-4 col-lg mt-4 mt-lg-0 footer-contact-col">
+              <div className="d-flex flex-column align-items-start">
+                <i className="bi bi-envelope mb-3" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '3rem', lineHeight: 1 }}></i>
+                <div>
+                  <h5 className="mb-2" style={{ color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>MAIL TO US</h5>
+                  <p className="mb-1" style={{ fontSize: '0.9rem' }}>{info.email}</p>
+                  <p className="mb-0" style={{ fontSize: '0.9rem' }}>{info.phone}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-4 col-lg mt-4 mt-lg-0 footer-contact-col">
+              <div className="d-flex flex-column align-items-start">
+                <i className="bi bi-clock mb-3" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '3rem', lineHeight: 1 }}></i>
+                <div>
+                  <h5 className="mb-2" style={{ color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>OFFICE HOURS</h5>
+                  <p className="mb-0" style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{info.officeHours}</p>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="footer-bottom"><span>© 2026 {info.name}. All rights reserved.</span></div>
         </div>
@@ -52,7 +84,7 @@ export default function Footer() {
             <i className="bi bi-envelope-fill"></i>
           </Link>
         </div>
-        
+
         <button className="speed-dial-btn" onClick={() => setSdOpen(!sdOpen)}>
           <i className={`bi ${sdOpen ? 'bi-x-lg' : 'bi-chat-dots-fill'}`} style={{ transition: 'all 0.3s ease', transform: sdOpen ? 'rotate(90deg)' : 'rotate(0)' }}></i>
         </button>

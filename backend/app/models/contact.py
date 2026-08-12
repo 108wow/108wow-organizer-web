@@ -22,4 +22,6 @@ class ContactMessage(db.Model):
             'body': self.body,
             'status': self.status,
             'date': self.created_at.strftime('%d %b %Y') if self.created_at else '',
+            # Full timestamp so the admin inbox can show time and relative dates
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
         }

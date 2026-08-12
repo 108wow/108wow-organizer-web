@@ -23,13 +23,17 @@ def update_company(current_user):
         info = CompanyInfo(id=1)
         db.session.add(info)
     data = request.get_json()
-    for key, attr in [('name', 'name'), ('tagline', 'tagline'), ('about', 'about'),
+    for key, attr in [('name', 'name'), ('footerName', 'footer_name'), ('tagline', 'tagline'), ('about', 'about'),
                       ('mission', 'mission'), ('vision', 'vision'), ('address', 'address'),
                       ('phone', 'phone'), ('email', 'email'), ('logoUrl', 'logo_url'),
+                      ('officeHours', 'office_hours'),
                       ('googleMapEmbed', 'google_map_embed'),
                       ('facebook', 'facebook'), ('showFacebook', 'show_facebook'),
                       ('lineId', 'line_id'), ('showLine', 'show_line'),
-                      ('instagram', 'instagram'), ('showInstagram', 'show_instagram')]:
+                      ('instagram', 'instagram'), ('showInstagram', 'show_instagram'),
+                      ('ctaTitle', 'cta_title'), ('ctaSubtitle', 'cta_subtitle'),
+                      ('ctaButtonText', 'cta_button_text'), ('ctaButtonLink', 'cta_button_link'),
+                      ('primaryColor', 'primary_color'), ('navyColor', 'navy_color')]:
         if key in data:
             setattr(info, attr, data[key])
     db.session.commit()
@@ -80,3 +84,4 @@ def delete_stat(current_user, id):
     db.session.delete(s)
     db.session.commit()
     return jsonify({'message': 'Deleted'})
+

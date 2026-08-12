@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from app import db
 from app.models.contact import ContactMessage
 from app.routes.auth import token_required
+from app.services.mailer import send_contact_notification_async
+from app.services.line_bot import send_contact_notification_async as send_line_notification_async
 
 contact_bp = Blueprint('contact', __name__)
 
@@ -18,6 +20,14 @@ def submit_message():
     )
     db.session.add(msg)
     db.session.commit()
+
+    # Notify the site owner. Both channels run on their own background thread and
+    # swallow their own errors, so a slow or misconfigured provider can never make
+    # the visitor's submission fail — the message is already saved either way.
+    flask_app = current_app._get_current_object()
+    send_contact_notification_async(flask_app, msg.id)
+    send_line_notification_async(flask_app, msg.id)
+
     return jsonify({'message': 'Message sent successfully'}), 201
 
 

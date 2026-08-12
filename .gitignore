@@ -47,7 +47,6 @@ venv/
 # Backend
 backend/uploads/
 backend/instance/
-backend/migrations/
 *.db
 
 # AI Agent files

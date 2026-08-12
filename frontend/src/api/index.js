@@ -201,6 +201,45 @@ export const contactAPI = {
   deleteMessage: (id) => del(`/contact/messages/${id}`),
 };
 
+// ─── Mail Settings (admin) ───
+export const mailSettingsAPI = {
+  get: () => get('/mail-settings'),
+  update: (data) => put('/mail-settings', data),
+  sendTest: () => post('/mail-settings/test', {}),
+  reveal: () => get('/mail-settings/reveal'),
+};
+
+// ─── LINE notifications (admin) ───
+export const lineAPI = {
+  getSettings: () => get('/line/settings'),
+  updateSettings: (data) => put('/line/settings', data),
+  revealSettings: () => get('/line/settings/reveal'),
+  sendTest: () => post('/line/test', {}),
+  regenerateCode: () => post('/line/register-code/regenerate', {}),
+  getBotInfo: () => get('/line/bot-info'),
+  listRecipients: () => get('/line/recipients'),
+  addRecipient: (data) => post('/line/recipients', data),
+  updateRecipient: (id, data) => put(`/line/recipients/${id}`, data),
+  deleteRecipient: (id) => del(`/line/recipients/${id}`),
+};
+
+// ─── Equipment ───
+export const equipmentAPI = {
+  list: (params) => {
+    const q = new URLSearchParams();
+    if (params?.category) q.append('category', params.category);
+    if (params?.search) q.append('search', params.search);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return get(`/equipment${qs}`);
+  },
+  get: (id) => get(`/equipment/${id}`),
+  create: (data) => post('/equipment', data),
+  update: (id, data) => put(`/equipment/${id}`, data),
+  delete: (id) => del(`/equipment/${id}`),
+  reorder: (items) => put('/equipment/reorder', items),
+};
+
+
 // ─── Upload ───
 export async function uploadImage(file) {
   const formData = new FormData();

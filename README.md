@@ -78,7 +78,6 @@ python -m venv venv
 # สำหรับ Mac/Linux: source venv/bin/activate
 pip install -r requirements.txt
 # (อย่าลืมก็อปปี้ .env.example ไปสร้างไฟล์ .env และใส่รหัสฐานข้อมูลตัวเอง)
-python update_db.py
 python run.py
 ```
 *(Backend จะรันที่พอร์ต 5000)*

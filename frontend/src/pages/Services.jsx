@@ -1,7 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { Link, useLocation } from 'react-router-dom';
 import HeroSection from '../components/common/HeroSection';
 import { serviceAPI, pageHeroAPI, galleryAPI } from '../api';
+
+const EASE = [0.16, 1, 0.3, 1];
+
+// Section headers reveal their label / title / copy one after another
+const headerGroup = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1 } },
+};
+const headerItem = {
+  hidden: { opacity: 0, y: 26 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
+};
+const headerViewport = { once: true, amount: 0.4 };
 
 export default function Services() {
   const [services, setServices] = useState([]);
@@ -9,6 +23,7 @@ export default function Services() {
   const [galleryItems, setGalleryItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const sliderRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     Promise.all([serviceAPI.list(), pageHeroAPI.list(), galleryAPI.list()])
@@ -20,11 +35,23 @@ export default function Services() {
       }).catch(() => setLoaded(true));
   }, []);
 
+  useEffect(() => {
+    if (loaded && location.hash) {
+      setTimeout(() => {
+        const id = location.hash.replace('#', '');
+        const el = document.getElementById(id);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [loaded, location.hash]);
+
   const scrollLeft = () => {
     if (sliderRef.current) {
       const slider = sliderRef.current;
       if (slider.scrollLeft <= 0) {
-        // หมุนวนกลับไปท้ายสุด
         slider.scrollTo({ left: slider.scrollWidth, behavior: 'smooth' });
       } else {
         slider.scrollBy({ left: -400, behavior: 'smooth' });
@@ -35,9 +62,7 @@ export default function Services() {
   const scrollRight = () => {
     if (sliderRef.current) {
       const slider = sliderRef.current;
-      // เช็กว่าเลื่อนไปจนสุดทางขวาหรือยัง (เผื่อค่าทศนิยมเล็กน้อย 10px)
       if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10) {
-        // หมุนวนกลับไปเริ่มต้น
         slider.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
         slider.scrollBy({ left: 400, behavior: 'smooth' });
@@ -47,34 +72,50 @@ export default function Services() {
 
   if (!loaded) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner-border text-primary" /></div>;
 
+  const activeServices = services.filter(s => s.isActive !== false);
+
   return (
     <>
       <HeroSection title={hero.title} subtitle={hero.subtitle} image={hero.image} />
-      
+
       {/* Services Bento Grid (Modern Creative Layout) */}
-      <section className="section-padding" style={{ background: '#f4f6f3' }}>
+      <section className="section-padding overflow-hidden" style={{ background: '#f4f6f3' }}>
         <div className="container">
-          <div className="section-header text-center mb-5">
-            <span className="section-label">บริการของเรา</span>
-            <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR SERVICES</h2>
-            <p className="mt-3 text-muted mx-auto" style={{ maxWidth: '600px' }}>
+          <motion.div
+            className="section-header text-center mb-5"
+            variants={headerGroup}
+            initial="hidden"
+            whileInView="show"
+            viewport={headerViewport}
+          >
+            <motion.span className="section-label" variants={headerItem}>บริการของเรา</motion.span>
+            <motion.h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }} variants={headerItem}>OUR SERVICES</motion.h2>
+            <motion.p className="mt-3 text-muted mx-auto" style={{ maxWidth: '600px' }} variants={headerItem}>
               โซลูชันครบวงจรที่ตอบโจทย์ทุกความต้องการทางธุรกิจของคุณ
-            </p>
-          </div>
-          
+            </motion.p>
+          </motion.div>
+
           <div className="bento-services-grid mb-5">
-            {services.filter(s => s.isActive !== false).map((svc, i) => {
+            {activeServices.map((svc, i) => {
               let theme = 'bento-img';
-              
-              // If no image is uploaded, use colorful solid themes based on index
+
               if (!svc.image) {
                 if (i % 3 === 0) theme = 'bento-dark';
                 else if (i % 3 === 1) theme = 'bento-lime';
                 else theme = 'bento-white';
               }
-              
+
               return (
-                <div key={svc.id} className={`bento-item anim d${(i % 6) + 1} ${theme}`}>
+                <motion.div
+                  key={svc.id}
+                  id={`service-${svc.id}`}
+                  className={`bento-item ${theme}`}
+                  initial={{ opacity: 0, y: 44, scale: 0.94 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.65, ease: EASE, delay: (i % 3) * 0.09 }}
+                  whileHover={{ y: -8, transition: { duration: 0.3, ease: EASE } }}
+                >
                   {svc.image && (
                     <img src={svc.image} alt={svc.title} className="bento-bg-img" />
                   )}
@@ -91,41 +132,93 @@ export default function Services() {
                       <Link to="/contact" className="bento-btn"><i className="bi bi-arrow-right"></i></Link>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
           {/* Promo Banner */}
-          <div className="promo-banner-wrap mt-5 anim d2">
-            <div className="promo-content">
-              <h2>Ready to Start?</h2>
-              <p>ติดต่อเราวันนี้ เพื่อรับข้อเสนอและดีลสุดพิเศษที่คัดสรรมาเพื่อคุณ</p>
-            </div>
-            <div className="promo-action">
-              <Link to="/contact" className="btn rounded-pill shadow-lg">สอบถามเพิ่มเติม</Link>
-            </div>
-          </div>
+          <motion.div
+            className="promo-banner-wrap mt-5"
+            initial={{ opacity: 0, y: 40, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.7, ease: EASE }}
+          >
+            <motion.div
+              className="promo-content"
+              variants={headerGroup}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.3 }}
+            >
+              <motion.h2 variants={headerItem}>Ready to Start?</motion.h2>
+              <motion.p variants={headerItem}>ติดต่อเราวันนี้ เพื่อรับข้อเสนอและดีลสุดพิเศษที่คัดสรรมาเพื่อคุณ</motion.p>
+            </motion.div>
+            <motion.div
+              className="promo-action"
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.24 }}
+            >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+                <Link to="/contact" className="btn rounded-pill shadow-lg">สอบถามเพิ่มเติม</Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* Featured Projects (ความสำเร็จของเรา) */}
       {galleryItems.length > 0 && (
-        <section className="section-padding" style={{ background: 'var(--bg-white)' }}>
+        <section className="section-padding overflow-hidden" style={{ background: 'var(--bg-white)' }}>
           <div className="container">
-            <div className="section-header text-center mb-5">
-              <span className="section-label" style={{ fontSize: '1.2rem', fontWeight: 700 }}>ความสำเร็จของเรา</span>
-              <h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }}>OUR FEATURED PROJECTS</h2>
-            </div>
-            
+            <motion.div
+              className="section-header text-center mb-5"
+              variants={headerGroup}
+              initial="hidden"
+              whileInView="show"
+              viewport={headerViewport}
+            >
+              <motion.span className="section-label" style={{ fontSize: '1.2rem', fontWeight: 700 }} variants={headerItem}>ความสำเร็จของเรา</motion.span>
+              <motion.h2 className="section-title text-uppercase" style={{ color: 'var(--primary)', fontSize: '2.5rem' }} variants={headerItem}>OUR FEATURED PROJECTS</motion.h2>
+            </motion.div>
+
             <div className="position-relative feat-slider-wrapper">
               {/* Real Slider Arrows */}
-              <button className="feat-arrow left d-none d-md-flex" onClick={scrollLeft}><i className="bi bi-chevron-left"></i></button>
-              <button className="feat-arrow right d-none d-md-flex" onClick={scrollRight}><i className="bi bi-chevron-right"></i></button>
-              
+              <motion.button
+                className="feat-arrow left d-none d-md-flex"
+                onClick={scrollLeft}
+                aria-label="เลื่อนไปทางซ้าย"
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.2, ease: EASE }}
+              >
+                <i className="bi bi-chevron-left"></i>
+              </motion.button>
+              <motion.button
+                className="feat-arrow right d-none d-md-flex"
+                onClick={scrollRight}
+                aria-label="เลื่อนไปทางขวา"
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.2, ease: EASE }}
+              >
+                <i className="bi bi-chevron-right"></i>
+              </motion.button>
+
               <div className="feat-slider-container" ref={sliderRef}>
                 {galleryItems.map((project, i) => (
-                  <div key={project.id} className="feat-slide-item">
+                  <motion.div
+                    key={project.id}
+                    className="feat-slide-item"
+                    initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.6, ease: EASE, delay: (i % 3) * 0.09 }}
+                    whileHover={{ y: -8, transition: { duration: 0.3, ease: EASE } }}
+                  >
                     <div className="feat-project-card">
                       <img src={project.image} alt={project.title} />
                       <div className="feat-overlay">
@@ -133,7 +226,7 @@ export default function Services() {
                         <h4>{project.title}</h4>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
